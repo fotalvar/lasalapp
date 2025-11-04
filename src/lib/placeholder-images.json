@@ -1,3 +1,58 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "user-avatar-1",
+      "description": "User avatar for Anna",
+      "imageUrl": "https://images.unsplash.com/photo-1580489944761-15a19d654956?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc2MjI0NDMxOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "user-avatar-2",
+      "description": "User avatar for Bernat",
+      "imageUrl": "https://images.unsplash.com/photo-1594672830234-ba4cfe1202dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bWFuJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzYyMjI0OTMwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "user-avatar-3",
+      "description": "User avatar for Carles",
+      "imageUrl": "https://images.unsplash.com/photo-1616442690473-2ec0c452715c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bWFuJTIwZ2xhc3Nlc3xlbnwwfHx8fDE3NjIyMDE3NTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man glasses"
+    },
+    {
+      "id": "user-avatar-4",
+      "description": "User avatar for Diana",
+      "imageUrl": "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx3b21hbiUyMHNtaWxlfGVufDB8fHx8MTc2MjIxNDQ2NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman smile"
+    },
+    {
+      "id": "user-avatar-5",
+      "description": "User avatar for Elena",
+      "imageUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHByb2ZpbGV8ZW58MHx8fHwxNzYyMTgyNjExfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman profile"
+    },
+    {
+      "id": "user-avatar-6",
+      "description": "User avatar for guest collaborator",
+      "imageUrl": "https://images.unsplash.com/photo-1544502062-f82887f03d1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjBzaWxob3VldHRlfGVufDB8fHx8MTc2MjIwNDA2Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person silhouette"
+    },
+    {
+      "id": "production-poster-1",
+      "description": "Poster for a theater production 'Eco'",
+      "imageUrl": "https://images.unsplash.com/photo-1761772229966-c1423a70bc4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxhYnN0cmFjdCUyMHBlcmZvcm1hbmNlfGVufDB8fHx8MTc2MjI2MDIwOXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract performance"
+    },
+    {
+      "id": "production-poster-2",
+      "description": "Poster for a theater production 'Laberint'",
+      "imageUrl": "https://images.unsplash.com/photo-1622631407413-bfb7d4aec3b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkYXJrJTIwbWF6ZXxlbnwwfHx8fDE3NjIyNjAyMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dark maze"
+    },
+    {
+      "id": "production-poster-3",
+      "description": "Poster for a theater production 'Memòria'",
+      "imageUrl": "https://images.unsplash.com/photo-1617027228013-84006c5e2d98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxvbGQlMjBwaG90b2dyYXBofGVufDB8fHx8MTc2MjE2NTQzMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "old photograph"
+    }
+  ]
 }
