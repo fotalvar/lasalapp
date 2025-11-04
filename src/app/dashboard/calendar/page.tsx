@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { add, endOfDay, endOfMonth, endOfWeek, isSameDay, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
+import { add, endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -291,12 +291,12 @@ export default function CalendarPage() {
                 months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
                 month: 'space-y-4 w-full',
                 caption_label: 'text-base font-bold',
-                table: 'w-full border-collapse',
-                head_row: 'flex justify-around border-b',
+                table: 'w-full border-separate border-spacing-1',
+                head_row: 'flex',
                 head_cell: 'text-muted-foreground font-normal text-sm w-full py-2',
-                row: 'flex w-full mt-2 justify-around',
-                cell: 'h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20',
-                day: 'h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-none',
+                row: 'flex w-full',
+                cell: 'h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20 w-full',
+                day: 'h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-md',
                 day_selected: 'bg-primary text-primary-foreground hover:bg-primary',
                 day_today: 'bg-accent text-accent-foreground',
                 day_outside: 'text-muted-foreground opacity-50',
