@@ -1,29 +1,8 @@
+'use client';
 
-'use client'
-
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarTrigger,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ReactNode } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -34,144 +13,73 @@ import {
   ListTodo,
   Film,
   Lightbulb,
-  Settings,
-  LogOut,
-  ChevronDown,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { ReactNode } from "react";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import PageHeader from '@/components/dashboard/page-header';
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/dashboard/team", icon: Users, label: "Team" },
-  { href: "/dashboard/programming", icon: Theater, label: "Programming" },
-  { href: "/dashboard/calendar", icon: Calendar, label: "Calendar" },
-  { href: "/dashboard/expenses", icon: Banknote, label: "Expenses" },
-  { href: "/dashboard/meetings", icon: BookUser, label: "Meetings" },
-  { href: "/dashboard/todos", icon: ListTodo, label: "To-Do List" },
-  { href: "/dashboard/productions", icon: Film, label: "Productions" },
-  { href: "/dashboard/ideas", icon: Lightbulb, label: "Ideas" },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/dashboard/team', icon: Users, label: 'Team' },
+  { href: '/dashboard/programming', icon: Theater, label: 'Programming' },
+  { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
+  { href: '/dashboard/expenses', icon: Banknote, label: 'Expenses' },
+  { href: '/dashboard/meetings', icon: BookUser, label: 'Meetings' },
+  { href: '/dashboard/todos', icon: ListTodo, label: 'To-Do List' },
+  { href: '/dashboard/productions', icon: Film, label: 'Productions' },
+  { href: '/dashboard/ideas', icon: Lightbulb, label: 'Ideas' },
 ];
 
-const UserAvatar = () => {
-    const userImage = PlaceHolderImages.find(img => img.id === 'user-avatar-1');
-    return (
-        <Avatar className="h-8 w-8">
-            <AvatarImage src={userImage?.imageUrl} alt="User Avatar" data-ai-hint={userImage?.imageHint} />
-            <AvatarFallback>AN</AvatarFallback>
-        </Avatar>
-    )
-}
-
-function MainSidebar() {
+function BottomNavBar() {
   const pathname = usePathname();
 
+  const mainNavItems = navItems.filter((item) =>
+    ['/dashboard', '/dashboard/team', '/dashboard/calendar', '/dashboard/productions'].includes(
+      item.href
+    )
+  );
+
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <Link href="/dashboard" className="flex items-center gap-2 px-2">
-          <Theater className="w-6 h-6 text-primary-foreground" />
-          <span className="font-bold font-headline text-lg">laSalapp</span>
-        </Link>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href}>
-                <SidebarMenuButton
-                  isActive={pathname === item.href}
-                  tooltip={{ children: item.label }}
-                >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
-         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <button className="flex items-center w-full gap-2 p-2 rounded-md text-left hover:bg-sidebar-accent transition-colors">
-                    <UserAvatar />
-                    <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
-                        <p className="font-semibold text-sm truncate">Anna</p>
-                        <p className="text-xs text-sidebar-foreground/70 truncate">Director</p>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden" />
-                </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <Link href="/">
-                  <DropdownMenuItem>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                  </DropdownMenuItem>
-                </Link>
-            </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarFooter>
-    </Sidebar>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+      <div className="flex h-16 items-center justify-around">
+        {mainNavItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              href={item.href}
+              key={item.href}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 text-xs transition-colors',
+                isActive
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
-function MobileHeader() {
-    const { isMobile } = useSidebar();
-    if (!isMobile) return null;
-
-    return (
-        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
-            <SidebarTrigger />
-             <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-                <Theater className="h-6 w-6" />
-                <span className="">laSalapp</span>
-            </Link>
-            <div className="ml-auto">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <UserAvatar />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Settings</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                         <Link href="/">
-                            <DropdownMenuItem>Logout</DropdownMenuItem>
-                         </Link>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-        </header>
-    );
-}
-
-
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const currentNavItem = navItems.find((item) => item.href === pathname);
+
+  const showHeader = pathname !== '/dashboard';
+
   return (
-    <SidebarProvider>
-      <div className="min-h-screen w-full">
-        <MainSidebar />
-        <div className="flex flex-col md:ml-[--sidebar-width] group-data-[collapsible=icon]:md:ml-[--sidebar-width-icon]">
-            <MobileHeader />
-            <SidebarInset>
-                {children}
-            </SidebarInset>
-        </div>
-      </div>
-    </SidebarProvider>
+    <div className="min-h-screen w-full bg-background pb-16">
+      <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-40">
+        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+          <Theater className="h-6 w-6 text-primary" />
+          <span className="font-bold text-lg">laSalapp</span>
+        </Link>
+      </header>
+      <div className="flex flex-col">{children}</div>
+      <BottomNavBar />
+    </div>
   );
 }

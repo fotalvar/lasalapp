@@ -18,18 +18,20 @@ function GoogleIcon() {
 export default function LoginPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/30 via-background to-background"></div>
-      <Card className="w-full max-w-sm z-10 shadow-xl">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background"></div>
+      <Card className="w-full max-w-sm z-10 shadow-xl border">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-4">
-            <Theater className="h-10 w-10 text-primary-foreground" />
+            <div className="bg-primary/20 p-3 rounded-full">
+              <Theater className="h-10 w-10 text-primary" />
+            </div>
           </div>
           <CardTitle className="text-3xl font-bold font-headline">laSalapp</CardTitle>
           <CardDescription>Welcome to your creative space management tool</CardDescription>
         </CardHeader>
         <CardContent>
           <Link href="/dashboard" className="w-full">
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full h-12 text-base">
               <GoogleIcon />
               Sign in with Google
             </Button>
