@@ -291,12 +291,12 @@ export default function CalendarPage() {
                 months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
                 month: 'space-y-4 w-full',
                 caption_label: 'text-base font-bold',
-                table: 'w-full border-separate border-spacing-1',
+                table: 'w-full border-collapse',
                 head_row: 'flex',
-                head_cell: 'text-muted-foreground font-normal text-sm w-full py-2',
-                row: 'flex w-full',
-                cell: 'h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20 w-full',
-                day: 'h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-md',
+                head_cell: 'text-muted-foreground font-normal text-sm w-[14.28%] py-2',
+                row: 'flex w-full mt-2 gap-2',
+                cell: 'h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20 w-[14.28%]',
+                day: 'h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-md border',
                 day_selected: 'bg-primary text-primary-foreground hover:bg-primary',
                 day_today: 'bg-accent text-accent-foreground',
                 day_outside: 'text-muted-foreground opacity-50',
@@ -316,9 +316,9 @@ export default function CalendarPage() {
                           const config = eventConfig[event.type];
                           return (
                             <AddEditEventDialog key={event.id} event={event} onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
-                              <button className={cn('w-full text-left text-xs p-1 rounded-sm flex items-center', config.bgColor, config.color)}>
-                                {config.icon}
-                                <span className='ml-1 truncate'>{event.title}</span>
+                               <button className={cn('w-full text-left text-xs p-1 rounded-sm flex items-center overflow-hidden', config.bgColor, config.color)}>
+                                <div className="flex-shrink-0">{config.icon}</div>
+                                <span className='ml-1 truncate flex-grow'>{event.title}</span>
                               </button>
                             </AddEditEventDialog>
                           )
