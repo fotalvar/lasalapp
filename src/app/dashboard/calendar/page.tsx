@@ -292,7 +292,7 @@ export default function CalendarPage() {
                 month: 'space-y-4 w-full',
                 caption_label: 'text-base font-bold',
                 table: 'w-full border-collapse space-y-2',
-                head_row: 'grid grid-cols-7',
+                head_row: 'grid grid-cols-7 gap-2',
                 head_cell: 'text-muted-foreground font-normal text-sm text-center py-2',
                 row: 'grid grid-cols-7 gap-2',
                 cell: 'h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20',
@@ -369,3 +369,5 @@ export default function CalendarPage() {
     </div>
   );
 }
+
+    
