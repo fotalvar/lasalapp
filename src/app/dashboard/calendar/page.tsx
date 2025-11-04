@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Calendar as CalendarIcon,
   Megaphone,
@@ -218,10 +218,10 @@ function AddEditEventDialog({
   );
 }
 
-function EventItem({ event, onEdit }: { event: Event; onEdit: (event: Event) => void }) {
+function EventItem({ event, onEdit, onDelete }: { event: Event; onEdit: (event: Event) => void; onDelete: (id: string) => void; }) {
   const config = eventConfig[event.type];
   return (
-    <AddEditEventDialog event={event} onSave={onEdit}>
+    <AddEditEventDialog event={event} onSave={onEdit} onDelete={onDelete}>
       <button className="flex w-full items-center gap-3 text-left p-2 rounded-lg hover:bg-muted transition-colors">
         <div className={cn('flex h-8 w-8 items-center justify-center rounded-full', config.bgColor, config.color)}>
           {config.icon}
@@ -240,6 +240,12 @@ function EventItem({ event, onEdit }: { event: Event; onEdit: (event: Event) => 
 export default function CalendarPage() {
   const [events, setEvents] = useState<Event[]>(initialEvents.sort((a,b) => a.date.getTime() - b.date.getTime()));
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [today, setToday] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setToday(new Date());
+  }, []);
+
 
   const handleSaveEvent = (event: Event) => {
     setEvents((prev) => {
@@ -254,8 +260,11 @@ export default function CalendarPage() {
   const handleDeleteEvent = (id: string) => {
     setEvents(prev => prev.filter(e => e.id !== id));
   }
+  
+  if (!today) {
+    return null; // or a loading skeleton
+  }
 
-  const today = new Date();
   const startOfCurrentWeek = startOfWeek(today, { locale: es });
   const endOfCurrentWeek = endOfWeek(today, { locale: es });
   const startOfCurrentMonth = startOfMonth(today);
@@ -272,7 +281,7 @@ export default function CalendarPage() {
         description="Gestiona horarios de eventos, funciones confirmadas y actividades de marketing."
       >
         <div className="p-6 pt-0">
-          <AddEditEventDialog onSave={handleSaveEvent}>
+          <AddEditEventDialog onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
             <Button size="sm">
               <PlusCircle className="mr-2 h-4 w-4" />
               Añadir Evento
@@ -294,7 +303,7 @@ export default function CalendarPage() {
                 table: 'w-full border-collapse space-y-1',
                 head_row: 'grid grid-cols-7 gap-1',
                 head_cell: 'text-muted-foreground font-normal text-sm text-center py-2',
-                row: 'grid grid-cols-7 gap-1 mt-1',
+                row: 'grid grid-cols-7 gap-1 mt-2',
                 cell: 'h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20',
                 day: 'h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-md border',
                 day_selected: 'bg-primary text-primary-foreground hover:bg-primary',
@@ -308,7 +317,7 @@ export default function CalendarPage() {
                   );
                   return (
                     <div className="relative h-full w-full">
-                      <time dateTime={props.date.toISOString()} className={cn("absolute top-1 left-1.5", isSameDay(props.date, new Date()) && "font-bold text-primary")}>
+                      <time dateTime={props.date.toISOString()} className={cn("absolute top-1 left-1.5", isSameDay(props.date, today) && "font-bold text-primary")}>
                         {props.date.getDate()}
                       </time>
                       <div className='space-y-1 mt-6 overflow-y-auto max-h-[80px]'>
@@ -343,21 +352,21 @@ export default function CalendarPage() {
               </TabsList>
               <TabsContent value="today" className="space-y-2 mt-4">
                 {eventsToday.length > 0 ? (
-                  eventsToday.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} />)
+                  eventsToday.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} onDelete={handleDeleteEvent} />)
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">No hay eventos para hoy.</p>
                 )}
               </TabsContent>
               <TabsContent value="week" className="space-y-2 mt-4">
                 {eventsWeek.length > 0 ? (
-                  eventsWeek.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} />)
+                  eventsWeek.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} onDelete={handleDeleteEvent} />)
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">No hay eventos esta semana.</p>
                 )}
               </TabsContent>
               <TabsContent value="month" className="space-y-2 mt-4">
                  {eventsMonth.length > 0 ? (
-                  eventsMonth.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} />)
+                  eventsMonth.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} onDelete={handleDeleteEvent} />)
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">No hay eventos este mes.</p>
                 )}
@@ -369,5 +378,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-
-    
