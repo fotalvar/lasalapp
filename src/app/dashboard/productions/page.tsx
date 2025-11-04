@@ -16,14 +16,14 @@ export default function ProductionsPage() {
   return (
     <div className="flex-1">
       <PageHeader
-        title="In-House Productions"
-        description="Private hubs for your productions, with view-only access for external collaborators."
+        title="Producciones Propias"
+        description="Espacios privados para tus producciones, con acceso de solo lectura para colaboradores externos."
       />
       <main className="p-4 md:p-6">
         <div className="flex justify-end mb-4">
             <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                New Production
+                Nueva Producción
             </Button>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -37,7 +37,7 @@ export default function ProductionsPage() {
                                     {posterImage ? (
                                         <Image 
                                             src={posterImage.imageUrl} 
-                                            alt={`Poster for ${prod.title}`} 
+                                            alt={`Póster para ${prod.title}`} 
                                             fill 
                                             className="object-cover"
                                             data-ai-hint={posterImage.imageHint}

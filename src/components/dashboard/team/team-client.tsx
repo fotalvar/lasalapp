@@ -28,8 +28,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const roleColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Director': 'default',
-    'Producer': 'secondary',
-    'Technician': 'outline',
+    'Productor': 'secondary',
+    'Técnico': 'outline',
     'Marketing': 'default',
     'Admin': 'secondary',
 }
@@ -65,14 +65,14 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{member ? 'Edit Member' : 'Add New Member'}</DialogTitle>
+                    <DialogTitle>{member ? 'Editar Miembro' : 'Añadir Nuevo Miembro'}</DialogTitle>
                     <DialogDescription>
-                        {member ? 'Update the details for this team member.' : 'Add a new member to your team.'}
+                        {member ? 'Actualiza los detalles de este miembro del equipo.' : 'Añade un nuevo miembro a tu equipo.'}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name">Nombre</Label>
                         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
                     <div className="grid gap-2">
@@ -80,15 +80,15 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
                         <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="role">Role</Label>
+                        <Label htmlFor="role">Rol</Label>
                         <Select value={role} onValueChange={(value: TeamMember['role']) => setRole(value)}>
                             <SelectTrigger id="role">
-                                <SelectValue placeholder="Select a role" />
+                                <SelectValue placeholder="Selecciona un rol" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Director">Director</SelectItem>
-                                <SelectItem value="Producer">Producer</SelectItem>
-                                <SelectItem value="Technician">Technician</SelectItem>
+                                <SelectItem value="Productor">Productor</SelectItem>
+                                <SelectItem value="Técnico">Técnico</SelectItem>
                                 <SelectItem value="Marketing">Marketing</SelectItem>
                                 <SelectItem value="Admin">Admin</SelectItem>
                             </SelectContent>
@@ -96,7 +96,7 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button onClick={handleSave}>Save</Button>
+                    <Button onClick={handleSave}>Guardar</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -126,7 +126,7 @@ export default function TeamClient({ initialMembers }: { initialMembers: TeamMem
         <AddEditMemberDialog onSave={handleSaveMember}>
             <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Add Member
+                Añadir Miembro
             </Button>
         </AddEditMemberDialog>
       </div>
@@ -134,10 +134,10 @@ export default function TeamClient({ initialMembers }: { initialMembers: TeamMem
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="hidden md:table-cell">Current Tasks</TableHead>
-              <TableHead><span className="sr-only">Actions</span></TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead className="hidden md:table-cell">Tareas Actuales</TableHead>
+              <TableHead><span className="sr-only">Acciones</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -174,12 +174,12 @@ export default function TeamClient({ initialMembers }: { initialMembers: TeamMem
                          <AddEditMemberDialog member={member} onSave={handleSaveMember}>
                             <button className='relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full'>
                                 <FilePenLine className="mr-2 h-4 w-4" />
-                                Edit
+                                Editar
                             </button>
                         </AddEditMemberDialog>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteMember(member.id)}>
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          Borrar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

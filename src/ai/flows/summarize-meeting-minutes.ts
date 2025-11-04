@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SummarizeMeetingMinutesInputSchema = z.object({
-  minutes: z.string().describe('The meeting minutes to summarize.'),
+  minutes: z.string().describe('Las actas de la reunión a resumir.'),
 });
 
 export type SummarizeMeetingMinutesInput = z.infer<
@@ -20,7 +20,7 @@ export type SummarizeMeetingMinutesInput = z.infer<
 >;
 
 const SummarizeMeetingMinutesOutputSchema = z.object({
-  summary: z.string().describe('A summary of the meeting minutes.'),
+  summary: z.string().describe('Un resumen de las actas de la reunión.'),
 });
 
 export type SummarizeMeetingMinutesOutput = z.infer<
@@ -37,9 +37,9 @@ const prompt = ai.definePrompt({
   name: 'summarizeMeetingMinutesPrompt',
   input: {schema: SummarizeMeetingMinutesInputSchema},
   output: {schema: SummarizeMeetingMinutesOutputSchema},
-  prompt: `You are an AI assistant helping to summarize meeting minutes.
+  prompt: `Eres un asistente de IA que ayuda a resumir las actas de las reuniones.
 
-  Please provide a concise summary of the key decisions and action items from the following meeting minutes:
+  Proporcione un resumen conciso de las decisiones clave y los puntos de acción de las siguientes actas de la reunión:
 
   {{minutes}}
   `,

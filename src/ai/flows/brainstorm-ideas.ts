@@ -13,13 +13,13 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const BrainstormIdeasInputSchema = z.object({
-  prompt: z.string().describe('A prompt to generate brainstorm ideas from.'),
+  prompt: z.string().describe('Un prompt para generar ideas de lluvia de ideas.'),
 });
 
 export type BrainstormIdeasInput = z.infer<typeof BrainstormIdeasInputSchema>;
 
 const BrainstormIdeasOutputSchema = z.object({
-  ideas: z.array(z.string()).describe('An array of brainstormed ideas.'),
+  ideas: z.array(z.string()).describe('Un array de ideas de lluvia de ideas.'),
 });
 
 export type BrainstormIdeasOutput = z.infer<typeof BrainstormIdeasOutputSchema>;
@@ -32,7 +32,7 @@ const brainstormIdeasPrompt = ai.definePrompt({
   name: 'brainstormIdeasPrompt',
   input: {schema: BrainstormIdeasInputSchema},
   output: {schema: BrainstormIdeasOutputSchema},
-  prompt: `You are a creative brainstorming assistant. Generate a list of creative and novel ideas based on the following prompt:\n\nPrompt: {{{prompt}}}`,
+  prompt: `Eres un asistente de lluvia de ideas creativo. Genera una lista de ideas creativas y novedosas basadas en el siguiente prompt:\n\nPrompt: {{{prompt}}}`,
 });
 
 const brainstormIdeasFlow = ai.defineFlow(

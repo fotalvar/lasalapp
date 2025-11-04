@@ -2,7 +2,7 @@ export type TeamMember = {
   id: string;
   name: string;
   email: string;
-  role: 'Director' | 'Technician' | 'Producer' | 'Marketing' | 'Admin';
+  role: 'Director' | 'Técnico' | 'Productor' | 'Marketing' | 'Admin';
   avatar: string;
   currentTasks: string[];
   upcomingDeadlines: string[];
@@ -21,7 +21,7 @@ export type Show = {
   id: string;
   title: string;
   company: string;
-  status: 'Idea' | 'In talks' | 'Confirmed' | 'Archived';
+  status: 'Idea' | 'En conversaciones' | 'Confirmado' | 'Archivado';
   interactions: { date: Date; note: string }[];
 };
 
@@ -29,7 +29,7 @@ export type Expense = {
   id: string;
   date: Date;
   description: string;
-  category: 'Structural' | 'Materials' | 'Production' | 'Marketing' | 'Other';
+  category: 'Estructural' | 'Materiales' | 'Producción' | 'Marketing' | 'Otros';
   amount: number;
   amortization: number;
 };

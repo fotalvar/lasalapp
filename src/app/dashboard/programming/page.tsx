@@ -6,8 +6,8 @@ export default function ProgrammingPage() {
   return (
     <div className="flex-1">
       <PageHeader
-        title="Programming Management"
-        description="Track shows and companies interested in performing at laSala."
+        title="Gestión de Programación"
+        description="Realiza un seguimiento de los espectáculos y compañías interesadas en actuar en laSala."
       />
       <main className="p-4 md:p-6">
         <ProgrammingClient initialShows={shows} />

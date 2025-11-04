@@ -34,26 +34,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const chartConfig = {
   amount: {
-    label: 'Amount',
+    label: 'Cantidad',
   },
-  Structural: {
-    label: 'Structural',
+  Estructural: {
+    label: 'Estructural',
     color: 'hsl(var(--chart-1))',
   },
-  Materials: {
-    label: 'Materials',
+  Materiales: {
+    label: 'Materiales',
     color: 'hsl(var(--chart-2))',
   },
-  Production: {
-    label: 'Production',
+  Producción: {
+    label: 'Producción',
     color: 'hsl(var(--chart-3))',
   },
   Marketing: {
     label: 'Marketing',
     color: 'hsl(var(--chart-4))',
   },
-  Other: {
-    label: 'Other',
+  Otros: {
+    label: 'Otros',
     color: 'hsl(var(--chart-5))',
   },
 } satisfies ChartConfig;
@@ -88,42 +88,42 @@ function AddExpenseDialog({ onSave }: { onSave: (expense: Expense) => void }) {
             <DialogTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Expense
+                    Añadir Gasto
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Add New Expense</DialogTitle>
+                    <DialogTitle>Añadir Nuevo Gasto</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="description">Descripción</Label>
                         <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="amount">Amount (€)</Label>
+                        <Label htmlFor="amount">Cantidad (€)</Label>
                         <Input id="amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="category">Category</Label>
+                        <Label htmlFor="category">Categoría</Label>
                         <Select value={category} onValueChange={(v: Expense['category']) => setCategory(v)}>
-                            <SelectTrigger id="category"><SelectValue placeholder="Select category" /></SelectTrigger>
+                            <SelectTrigger id="category"><SelectValue placeholder="Seleccionar categoría" /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Structural">Structural</SelectItem>
-                                <SelectItem value="Materials">Materials</SelectItem>
-                                <SelectItem value="Production">Production</SelectItem>
+                                <SelectItem value="Estructural">Estructural</SelectItem>
+                                <SelectItem value="Materiales">Materiales</SelectItem>
+                                <SelectItem value="Producción">Producción</SelectItem>
                                 <SelectItem value="Marketing">Marketing</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
+                                <SelectItem value="Otros">Otros</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="amortization">Amortization (years)</Label>
+                        <Label htmlFor="amortization">Amortización (años)</Label>
                         <Input id="amortization" type="number" value={amortization} onChange={(e) => setAmortization(e.target.value)} />
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button onClick={handleSave}>Save Expense</Button>
+                    <Button onClick={handleSave}>Guardar Gasto</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -161,7 +161,7 @@ export default function ExpensesClient({ initialExpenses }: { initialExpenses: E
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Expenses by Category</CardTitle>
+          <CardTitle>Gastos por Categoría</CardTitle>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
@@ -183,22 +183,22 @@ export default function ExpensesClient({ initialExpenses }: { initialExpenses: E
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-center">Amortization</TableHead>
-                <TableHead><span className="sr-only">Actions</span></TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead>Categoría</TableHead>
+                <TableHead className="text-right">Cantidad</TableHead>
+                <TableHead className="text-center">Amortización</TableHead>
+                <TableHead><span className="sr-only">Acciones</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {expenses.map((expense) => (
                 <TableRow key={expense.id}>
-                  <TableCell>{format(expense.date, 'MMM d, yyyy')}</TableCell>
+                  <TableCell>{format(expense.date, 'd MMM, yyyy')}</TableCell>
                   <TableCell className="font-medium">{expense.description}</TableCell>
                   <TableCell>{expense.category}</TableCell>
                   <TableCell className="text-right">€{expense.amount.toLocaleString()}</TableCell>
-                  <TableCell className="text-center">{expense.amortization} yr(s)</TableCell>
+                  <TableCell className="text-center">{expense.amortization} año(s)</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -206,7 +206,7 @@ export default function ExpensesClient({ initialExpenses }: { initialExpenses: E
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteExpense(expense.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                          <Trash2 className="mr-2 h-4 w-4" /> Borrar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

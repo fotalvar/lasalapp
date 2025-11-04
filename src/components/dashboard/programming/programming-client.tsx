@@ -27,10 +27,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
-    'Confirmed': 'default',
-    'In talks': 'secondary',
+    'Confirmado': 'default',
+    'En conversaciones': 'secondary',
     'Idea': 'outline',
-    'Archived': 'destructive',
+    'Archivado': 'destructive',
 }
 
 function AddEditShowSheet({ show, onSave, children }: { show?: Show, onSave: (show: Show) => void, children: React.ReactNode }) {
@@ -70,55 +70,55 @@ function AddEditShowSheet({ show, onSave, children }: { show?: Show, onSave: (sh
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="sm:max-w-lg overflow-y-auto">
                 <SheetHeader>
-                    <SheetTitle>{show ? 'Edit Show' : 'Add New Show'}</SheetTitle>
+                    <SheetTitle>{show ? 'Editar Espectáculo' : 'Añadir Nuevo Espectáculo'}</SheetTitle>
                     <SheetDescription>
-                        {show ? 'Update details for this show.' : 'Add a new show to your programming tracker.'}
+                        {show ? 'Actualiza los detalles de este espectáculo.' : 'Añade un nuevo espectáculo a tu seguimiento de programación.'}
                     </SheetDescription>
                 </SheetHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="title">Show Title</Label>
+                        <Label htmlFor="title">Título del Espectáculo</Label>
                         <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="company">Company</Label>
+                        <Label htmlFor="company">Compañía</Label>
                         <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="status">Status</Label>
+                        <Label htmlFor="status">Estado</Label>
                         <Select value={status} onValueChange={(value: Show['status']) => setStatus(value)}>
                             <SelectTrigger id="status">
-                                <SelectValue placeholder="Select a status" />
+                                <SelectValue placeholder="Selecciona un estado" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Idea">Idea</SelectItem>
-                                <SelectItem value="In talks">In talks</SelectItem>
-                                <SelectItem value="Confirmed">Confirmed</SelectItem>
-                                <SelectItem value="Archived">Archived</SelectItem>
+                                <SelectItem value="En conversaciones">En conversaciones</SelectItem>
+                                <SelectItem value="Confirmado">Confirmado</SelectItem>
+                                <SelectItem value="Archivado">Archivado</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid gap-2">
-                        <Label>Interaction History</Label>
+                        <Label>Historial de Interacciones</Label>
                         <div className="space-y-2 max-h-40 overflow-y-auto rounded-md border p-2">
                             {interactions.length > 0 ? interactions.map((interaction, index) => (
                                 <div key={index} className="text-sm">
-                                    <span className="font-semibold">{format(interaction.date, 'MMM d, yyyy')}: </span>
+                                    <span className="font-semibold">{format(interaction.date, 'd MMM, yyyy')}: </span>
                                     <span>{interaction.note}</span>
                                 </div>
-                            )) : <p className="text-xs text-muted-foreground p-2">No interactions yet.</p>}
+                            )) : <p className="text-xs text-muted-foreground p-2">Aún no hay interacciones.</p>}
                         </div>
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="interaction">Add New Interaction</Label>
-                        <Textarea id="interaction" value={newInteraction} onChange={e => setNewInteraction(e.target.value)} placeholder="Record a new interaction..."/>
+                        <Label htmlFor="interaction">Añadir Nueva Interacción</Label>
+                        <Textarea id="interaction" value={newInteraction} onChange={e => setNewInteraction(e.target.value)} placeholder="Registra una nueva interacción..."/>
                     </div>
                 </div>
                 <SheetFooter>
                     <SheetClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <Button variant="outline">Cancelar</Button>
                     </SheetClose>
-                    <Button onClick={handleSave}>Save</Button>
+                    <Button onClick={handleSave}>Guardar</Button>
                 </SheetFooter>
             </SheetContent>
         </Sheet>
@@ -148,7 +148,7 @@ export default function ProgrammingClient({ initialShows }: { initialShows: Show
         <AddEditShowSheet onSave={handleSaveShow}>
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Show
+            Añadir Espectáculo
           </Button>
         </AddEditShowSheet>
       </div>
@@ -156,11 +156,11 @@ export default function ProgrammingClient({ initialShows }: { initialShows: Show
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Show Title</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last Interaction</TableHead>
-              <TableHead><span className="sr-only">Actions</span></TableHead>
+              <TableHead>Título del Espectáculo</TableHead>
+              <TableHead>Compañía</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Última Interacción</TableHead>
+              <TableHead><span className="sr-only">Acciones</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -172,7 +172,7 @@ export default function ProgrammingClient({ initialShows }: { initialShows: Show
                   <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
                 </TableCell>
                 <TableCell>
-                  {show.interactions.length > 0 ? format(show.interactions[show.interactions.length - 1].date, 'MMM d, yyyy') : 'N/A'}
+                  {show.interactions.length > 0 ? format(show.interactions[show.interactions.length - 1].date, 'd MMM, yyyy') : 'N/A'}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -185,12 +185,12 @@ export default function ProgrammingClient({ initialShows }: { initialShows: Show
                        <AddEditShowSheet show={show} onSave={handleSaveShow}>
                            <button className='relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full'>
                               <FilePenLine className="mr-2 h-4 w-4" />
-                              Edit
+                              Editar
                           </button>
                        </AddEditShowSheet>
                       <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteShow(show.id)}>
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                        Borrar
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

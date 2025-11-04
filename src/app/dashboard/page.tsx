@@ -16,13 +16,13 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard/team", icon: Users, label: "Team", color: "text-sky-500" },
-  { href: "/dashboard/programming", icon: Theater, label: "Programming", color: "text-rose-500" },
-  { href: "/dashboard/calendar", icon: Calendar, label: "Calendar", color: "text-amber-500" },
-  { href: "/dashboard/expenses", icon: Banknote, label: "Expenses", color: "text-emerald-500" },
-  { href: "/dashboard/meetings", icon: BookUser, label: "Meetings", color: "text-indigo-500" },
-  { href: "/dashboard/todos", icon: ListTodo, label: "To-Do List", color: "text-pink-500" },
-  { href: "/dashboard/productions", icon: Film, label: "Productions", color: "text-teal-500" },
+  { href: "/dashboard/team", icon: Users, label: "Equipo", color: "text-sky-500" },
+  { href: "/dashboard/programming", icon: Theater, label: "Programación", color: "text-rose-500" },
+  { href: "/dashboard/calendar", icon: Calendar, label: "Calendario", color: "text-amber-500" },
+  { href: "/dashboard/expenses", icon: Banknote, label: "Gastos", color: "text-emerald-500" },
+  { href: "/dashboard/meetings", icon: BookUser, label: "Reuniones", color: "text-indigo-500" },
+  { href: "/dashboard/todos", icon: ListTodo, label: "Tareas", color: "text-pink-500" },
+  { href: "/dashboard/productions", icon: Film, label: "Producciones", color: "text-teal-500" },
   { href: "/dashboard/ideas", icon: Lightbulb, label: "Ideas", color: "text-orange-500" },
 ];
 
@@ -30,7 +30,7 @@ export default function DashboardPage() {
   return (
     <div className="flex-1">
       <main className="p-4 md:p-6">
-        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        <h1 className="text-2xl font-bold mb-6">Panel Principal</h1>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {navItems.map((item) => (
                 <Link href={item.href} key={item.href}>

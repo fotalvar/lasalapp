@@ -6,8 +6,8 @@ export default function ExpensesPage() {
   return (
     <div className="flex-1">
       <PageHeader
-        title="Expense Tracking"
-        description="Record and monitor all expenses, from structural costs to daily materials."
+        title="Seguimiento de Gastos"
+        description="Registra y monitorea todos los gastos, desde costos estructurales hasta materiales diarios."
       />
       <main className="p-4 md:p-6">
         <ExpensesClient initialExpenses={expenses} />

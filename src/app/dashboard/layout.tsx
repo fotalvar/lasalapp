@@ -18,14 +18,14 @@ import { cn } from '@/lib/utils';
 import PageHeader from '@/components/dashboard/page-header';
 
 const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/team', icon: Users, label: 'Team' },
-  { href: '/dashboard/programming', icon: Theater, label: 'Programming' },
-  { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
-  { href: '/dashboard/expenses', icon: Banknote, label: 'Expenses' },
-  { href: '/dashboard/meetings', icon: BookUser, label: 'Meetings' },
-  { href: '/dashboard/todos', icon: ListTodo, label: 'To-Do List' },
-  { href: '/dashboard/productions', icon: Film, label: 'Productions' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Principal' },
+  { href: '/dashboard/team', icon: Users, label: 'Equipo' },
+  { href: '/dashboard/programming', icon: Theater, label: 'Programación' },
+  { href: '/dashboard/calendar', icon: Calendar, label: 'Calendario' },
+  { href: '/dashboard/expenses', icon: Banknote, label: 'Gastos' },
+  { href: '/dashboard/meetings', icon: BookUser, label: 'Reuniones' },
+  { href: '/dashboard/todos', icon: ListTodo, label: 'Tareas' },
+  { href: '/dashboard/productions', icon: Film, label: 'Producciones' },
   { href: '/dashboard/ideas', icon: Lightbulb, label: 'Ideas' },
 ];
 

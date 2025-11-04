@@ -20,7 +20,7 @@ export default function IdeaClient() {
     if (!prompt) {
       toast({
         title: "Error",
-        description: "Please enter a prompt to brainstorm ideas.",
+        description: "Por favor, introduce un prompt para la lluvia de ideas.",
         variant: "destructive",
       });
       return;
@@ -33,8 +33,8 @@ export default function IdeaClient() {
     } catch (error) {
       console.error(error);
       toast({
-        title: "AI Brainstorm Failed",
-        description: "Could not generate ideas. Please try again.",
+        title: "Fallo en la Lluvia de Ideas con IA",
+        description: "No se pudieron generar ideas. Por favor, inténtalo de nuevo.",
         variant: "destructive",
       });
     } finally {
@@ -47,18 +47,18 @@ export default function IdeaClient() {
       <Card>
         <CardContent className="p-6">
           <div className="grid gap-2 mb-4">
-            <Label htmlFor="prompt">Brainstorming Prompt</Label>
+            <Label htmlFor="prompt">Prompt de Lluvia de Ideas</Label>
             <Textarea
               id="prompt"
               rows={3}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g., 'A play set in a library after closing time' or 'Marketing ideas for a family-friendly show'"
+              placeholder="p. ej., 'Una obra de teatro ambientada en una biblioteca después del cierre' o 'Ideas de marketing para un espectáculo familiar'"
             />
           </div>
           <Button onClick={handleBrainstorm} disabled={isLoading} className="w-full">
             <Bot className="mr-2 h-4 w-4" />
-            {isLoading ? "Generating Ideas..." : "Brainstorm with AI"}
+            {isLoading ? "Generando Ideas..." : "Lluvia de Ideas con IA"}
           </Button>
         </CardContent>
       </Card>
@@ -66,7 +66,7 @@ export default function IdeaClient() {
       {(isLoading || ideas.length > 0) && (
         <div>
             <h2 className="text-xl font-semibold mb-4 font-headline flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-primary-foreground" /> Generated Ideas
+                <Lightbulb className="h-5 w-5 text-primary-foreground" /> Ideas Generadas
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {isLoading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}

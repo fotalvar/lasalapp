@@ -15,17 +15,17 @@ import { Input } from '@/components/ui/input';
 const pastMeetings = [
     {
         id: 'meeting1',
-        title: 'Q3 Planning Session',
+        title: 'Sesión de Planificación Q3',
         date: new Date('2024-06-15'),
-        summary: 'Decided on the main production for the fall season ("Eco") and allocated initial budget. Marketing to start campaign in August.',
-        minutes: 'Full minutes text for Q3 Planning...'
+        summary: 'Se decidió la producción principal para la temporada de otoño ("Eco") y se asignó el presupuesto inicial. Marketing comenzará la campaña en agosto.',
+        minutes: 'Texto completo de las actas de la Planificación del Q3...'
     },
     {
         id: 'meeting2',
-        title: 'Technical Team Sync',
+        title: 'Sincronización del Equipo Técnico',
         date: new Date('2024-07-01'),
-        summary: 'Bernat confirmed new lighting rig installation by end of July. Sound system check is complete. No major issues reported.',
-        minutes: 'Full minutes text for Technical Team Sync...'
+        summary: 'Bernat confirmó la instalación de la nueva plataforma de iluminación para finales de julio. La revisión del sistema de sonido está completa. No se reportaron problemas importantes.',
+        minutes: 'Texto completo de las actas de la Sincronización del Equipo Técnico...'
     }
 ]
 
@@ -39,7 +39,7 @@ export default function MeetingsClient() {
     if (!minutes) {
       toast({
         title: 'Error',
-        description: 'Please enter some meeting minutes to summarize.',
+        description: 'Por favor, introduce las actas de la reunión para resumir.',
         variant: 'destructive',
       });
       return;
@@ -52,8 +52,8 @@ export default function MeetingsClient() {
     } catch (error) {
       console.error(error);
       toast({
-        title: 'AI Summarization Failed',
-        description: 'Could not generate a summary. Please try again.',
+        title: 'Fallo en la Sumarización con IA',
+        description: 'No se pudo generar un resumen. Por favor, inténtalo de nuevo.',
         variant: 'destructive',
       });
     } finally {
@@ -65,31 +65,31 @@ export default function MeetingsClient() {
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Generate Meeting Summary</CardTitle>
+          <CardTitle>Generar Resumen de Reunión</CardTitle>
           <CardDescription>
-            Paste your meeting minutes below and let AI extract the key points.
+            Pega las actas de tu reunión a continuación y deja que la IA extraiga los puntos clave.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-2">
-            <Label htmlFor="minutes">Meeting Minutes</Label>
+            <Label htmlFor="minutes">Actas de la Reunión</Label>
             <Textarea
               id="minutes"
               rows={10}
               value={minutes}
               onChange={(e) => setMinutes(e.target.value)}
-              placeholder="Paste your raw meeting notes here..."
+              placeholder="Pega aquí tus notas de la reunión en bruto..."
             />
           </div>
           <Button onClick={handleSummarize} disabled={isLoading} className="w-full">
             <Bot className="mr-2 h-4 w-4" />
-            {isLoading ? 'Summarizing...' : 'Generate Summary'}
+            {isLoading ? 'Resumiendo...' : 'Generar Resumen'}
           </Button>
           {isLoading && <Skeleton className="h-24 w-full" />}
           {summary && (
             <div className="p-4 bg-secondary/50 rounded-lg border space-y-2">
               <h4 className="font-semibold flex items-center gap-2">
-                <FileText className="h-4 w-4" /> AI-Generated Summary
+                <FileText className="h-4 w-4" /> Resumen Generado por IA
               </h4>
               <p className="text-sm whitespace-pre-wrap">{summary}</p>
             </div>
@@ -99,15 +99,15 @@ export default function MeetingsClient() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Past Meetings</CardTitle>
+          <CardTitle>Reuniones Anteriores</CardTitle>
           <CardDescription>
-            Browse and search through previous meeting records.
+            Navega y busca en los registros de reuniones anteriores.
           </CardDescription>
         </CardHeader>
         <CardContent>
             <div className="relative mb-4">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search meetings..." className="pl-8" />
+                <Input placeholder="Buscar reuniones..." className="pl-8" />
             </div>
             <Accordion type="single" collapsible className="w-full">
                 {pastMeetings.map(meeting => (

@@ -14,26 +14,26 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AssignResponsibilityInputSchema = z.object({
-  responsibility: z.string().describe('The new responsibility to be assigned.'),
+  responsibility: z.string().describe('La nueva responsabilidad a asignar.'),
   teamMembers: z
     .array(z.object({
-      name: z.string().describe('The name of the team member.'),
-      currentTasks: z.array(z.string()).describe('The current tasks assigned to the team member.'),
+      name: z.string().describe('El nombre del miembro del equipo.'),
+      currentTasks: z.array(z.string()).describe('Las tareas actuales asignadas al miembro del equipo.'),
       upcomingDeadlines: z
         .array(z.string())
-        .describe('The upcoming deadlines for the team member (ISO date format).'),
+        .describe('Las próximas fechas límite para el miembro del equipo (formato de fecha ISO).'),
     }))
-    .describe('The list of team members and their current workload.'),
+    .describe('La lista de miembros del equipo y su carga de trabajo actual.'),
 });
 export type AssignResponsibilityInput = z.infer<typeof AssignResponsibilityInputSchema>;
 
 const AssignResponsibilityOutputSchema = z.object({
   suggestedTeamMember: z
     .string()
-    .describe('The name of the team member suggested for the new responsibility.'),
+    .describe('El nombre del miembro del equipo sugerido para la nueva responsabilidad.'),
   reasoning: z
     .string()
-    .describe('The reasoning behind the suggestion, considering workload and deadlines.'),
+    .describe('El razonamiento detrás de la sugerencia, considerando la carga de trabajo y las fechas límite.'),
 });
 export type AssignResponsibilityOutput = z.infer<typeof AssignResponsibilityOutputSchema>;
 
@@ -47,21 +47,21 @@ const prompt = ai.definePrompt({
   name: 'assignResponsibilityPrompt',
   input: {schema: AssignResponsibilityInputSchema},
   output: {schema: AssignResponsibilityOutputSchema},
-  prompt: `You are an AI assistant helping to manage team responsibilities. Given a new responsibility and a list of team members with their current tasks and upcoming deadlines, suggest the best team member to assign the new responsibility to. Consider their current workload and upcoming deadlines to avoid overburdening any one individual.
+  prompt: `Eres un asistente de IA que ayuda a gestionar las responsabilidades del equipo. Dada una nueva responsabilidad y una lista de miembros del equipo con sus tareas actuales y próximas fechas límite, sugiere el mejor miembro del equipo para asignar la nueva responsabilidad. Considera su carga de trabajo actual y las próximas fechas límite para evitar sobrecargar a cualquier individuo.
 
-New Responsibility: {{{responsibility}}}
+Nueva Responsabilidad: {{{responsibility}}}
 
-Team Members:
+Miembros del equipo:
 {{#each teamMembers}}
-- Name: {{{name}}}
-  Current Tasks: {{#each currentTasks}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-  Upcoming Deadlines: {{#each upcomingDeadlines}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+- Nombre: {{{name}}}
+  Tareas actuales: {{#each currentTasks}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+  Próximas fechas límite: {{#each upcomingDeadlines}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/each}}
 
-Based on this information, who is the best team member to assign this new responsibility to? Explain your reasoning.
+Basado en esta información, ¿quién es el mejor miembro del equipo para asignar esta nueva responsabilidad? Explica tu razonamiento.
 
-Suggested Team Member: {{suggestedTeamMember}}
-Reasoning: {{reasoning}}`,
+Miembro del equipo sugerido: {{suggestedTeamMember}}
+Razonamiento: {{reasoning}}`,
 });
 
 const assignResponsibilityFlow = ai.defineFlow(

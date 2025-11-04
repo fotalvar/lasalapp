@@ -6,22 +6,22 @@ import { Calendar } from "@/components/ui/calendar";
 const events = [
   {
     date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    title: "Eco - Opening Night",
+    title: "Eco - Noche de estreno",
     type: "performance",
   },
   {
     date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-    title: "Social media post for Laberint",
+    title: "Publicación en redes sociales para Laberint",
     type: "marketing",
   },
   {
     date: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
-    title: "Early bird tickets on sale",
+    title: "Entradas anticipadas a la venta",
     type: "tickets",
   },
   {
     date: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000),
-    title: "Eco - Performance",
+    title: "Eco - Función",
     type: "performance",
   },
 ];
@@ -36,8 +36,8 @@ export default function CalendarPage() {
   return (
     <div className="flex-1">
       <PageHeader
-        title="Calendar & Scheduling"
-        description="Manage event schedules, confirmed performances, and marketing activities."
+        title="Calendario y Programación"
+        description="Gestiona horarios de eventos, funciones confirmadas y actividades de marketing."
       />
       <main className="p-4 md:p-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -62,7 +62,7 @@ export default function CalendarPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Events</CardTitle>
+            <CardTitle>Próximos Eventos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

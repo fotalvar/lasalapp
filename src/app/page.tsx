@@ -27,19 +27,19 @@ export default function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold font-headline">laSalapp</CardTitle>
-          <CardDescription>Welcome to your creative space management tool</CardDescription>
+          <CardDescription>Bienvenido a tu herramienta de gestión de espacios creativos</CardDescription>
         </CardHeader>
         <CardContent>
           <Link href="/dashboard" className="w-full">
             <Button variant="outline" className="w-full h-12 text-base">
               <GoogleIcon />
-              Sign in with Google
+              Iniciar sesión con Google
             </Button>
           </Link>
         </CardContent>
         <CardFooter>
           <p className="text-xs text-muted-foreground text-center w-full">
-            Access restricted to @atresquarts.com accounts.
+            Acceso restringido a cuentas @atresquarts.com.
           </p>
         </CardFooter>
       </Card>

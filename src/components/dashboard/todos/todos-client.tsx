@@ -40,12 +40,12 @@ export default function TodosClient({ initialTodos }: { initialTodos: Todo[] }) 
     <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>My Tasks</CardTitle>
+          <CardTitle>Mis Tareas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 mb-4">
             <Input
-              placeholder="Add a new task..."
+              placeholder="Añadir una nueva tarea..."
               value={newTodo}
               onChange={(e) => setNewTodo(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
@@ -65,7 +65,7 @@ export default function TodosClient({ initialTodos }: { initialTodos: Todo[] }) 
                             <label htmlFor={todo.id} className="text-sm font-medium">
                             {todo.text}
                             </label>
-                            {todo.dueDate && <p className="text-xs text-muted-foreground">{format(todo.dueDate, 'MMM d')}</p>}
+                            {todo.dueDate && <p className="text-xs text-muted-foreground">{format(todo.dueDate, 'd MMM')}</p>}
                         </div>
                         <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteTodo(todo.id)}>
                             <Trash2 className="h-4 w-4 text-muted-foreground" />
@@ -76,7 +76,7 @@ export default function TodosClient({ initialTodos }: { initialTodos: Todo[] }) 
 
             {completedTodos.length > 0 && (
                 <div>
-                    <h3 className="text-sm font-medium text-muted-foreground my-4">Completed ({completedTodos.length})</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground my-4">Completadas ({completedTodos.length})</h3>
                     <div className="space-y-2">
                         {completedTodos.map((todo) => (
                             <div key={todo.id} className="flex items-center gap-3 p-3 rounded-md border bg-muted/30 group">

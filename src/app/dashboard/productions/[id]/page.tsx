@@ -8,15 +8,15 @@ import { teamMembers } from "@/lib/data";
 import { FileText, Music, Link as LinkIcon, PlusCircle, Share2, Users } from "lucide-react";
 import Image from "next/image";
 
-const production = { id: 'eco-2024', title: 'Eco', year: 2024, posterImageId: 'production-poster-1', description: 'An immersive performance about the relationship between humanity and nature.' };
+const production = { id: 'eco-2024', title: 'Eco', year: 2024, posterImageId: 'production-poster-1', description: 'Una performance inmersiva sobre la relación entre la humanidad y la naturaleza.' };
 const collaborators = [teamMembers[0], teamMembers[2]];
 const externalCollaborators = [
-    { name: 'Guest Writer', avatarId: 'user-avatar-6' }
+    { name: 'Escritor Invitado', avatarId: 'user-avatar-6' }
 ];
 
 const assets = [
-    { name: 'Final Script.pdf', type: 'script', link: '#', icon: FileText },
-    { name: 'Main Theme.mp3', type: 'song', link: '#', icon: Music },
+    { name: 'Guion Final.pdf', type: 'script', link: '#', icon: FileText },
+    { name: 'Tema Principal.mp3', type: 'song', link: '#', icon: Music },
     { name: 'Moodboard', type: 'other', link: '#', icon: LinkIcon },
 ]
 
@@ -26,7 +26,7 @@ export default function ProductionDetailPage({ params }: { params: { id: string 
     <div className="flex-1">
       <div className="relative h-48 md:h-64 w-full">
         {posterImage && (
-            <Image src={posterImage.imageUrl} alt={`Poster for ${production.title}`} fill className="object-cover object-top" data-ai-hint={posterImage.imageHint} />
+            <Image src={posterImage.imageUrl} alt={`Póster de ${production.title}`} fill className="object-cover object-top" data-ai-hint={posterImage.imageHint} />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
       </div>
@@ -40,7 +40,7 @@ export default function ProductionDetailPage({ params }: { params: { id: string 
                     <p className="mt-2 text-muted-foreground">{production.description}</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline"><Share2 className="mr-2 h-4 w-4" /> Share</Button>
+                    <Button variant="outline"><Share2 className="mr-2 h-4 w-4" /> Compartir</Button>
                 </div>
             </header>
 
@@ -48,8 +48,8 @@ export default function ProductionDetailPage({ params }: { params: { id: string 
                 <div className="md:col-span-2 space-y-6">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Assets</CardTitle>
-                            <Button variant="ghost" size="sm"><PlusCircle className="mr-2 h-4 w-4" />Add Link</Button>
+                            <CardTitle>Recursos</CardTitle>
+                            <Button variant="ghost" size="sm"><PlusCircle className="mr-2 h-4 w-4" />Añadir Enlace</Button>
                         </CardHeader>
                         <CardContent>
                            <ul className="space-y-2">
@@ -69,7 +69,7 @@ export default function ProductionDetailPage({ params }: { params: { id: string 
                 <div>
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Collaborators</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Colaboradores</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {collaborators.map(member => {
@@ -86,7 +86,7 @@ export default function ProductionDetailPage({ params }: { params: { id: string 
                                     </div>
                                 </div>
                             )})}
-                            <h4 className="text-sm font-medium text-muted-foreground pt-2 border-t">External</h4>
+                            <h4 className="text-sm font-medium text-muted-foreground pt-2 border-t">Externos</h4>
                             {externalCollaborators.map(member => {
                                 const avatar = PlaceHolderImages.find(p => p.id === member.avatarId);
                                 return (
@@ -97,7 +97,7 @@ export default function ProductionDetailPage({ params }: { params: { id: string 
                                     </Avatar>
                                     <div>
                                         <p className="text-sm font-medium">{member.name}</p>
-                                        <Badge variant="outline">View Only</Badge>
+                                        <Badge variant="outline">Solo Ver</Badge>
                                     </div>
                                 </div>
                             )})}

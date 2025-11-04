@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { format, formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Trash2, CheckCircle2 } from "lucide-react";
@@ -49,11 +50,11 @@ export default function ResponsibilityCard({ responsibility, onUpdate, onDelete 
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={handleToggleComplete}>
                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                        <span>{completed ? 'Mark as Incomplete' : 'Mark as Complete'}</span>
+                        <span>{completed ? 'Marcar como Incompleta' : 'Marcar como Completa'}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-destructive" onClick={() => onDelete(responsibility.id)}>
                         <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Delete</span>
+                        <span>Borrar</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -64,7 +65,7 @@ export default function ResponsibilityCard({ responsibility, onUpdate, onDelete 
             new Date() > deadline && !completed ? "text-destructive font-semibold" : ""
           )}
         >
-          Due {formatDistanceToNow(deadline, { addSuffix: true })} ({format(deadline, "MMM d")})
+          Vence {formatDistanceToNow(deadline, { addSuffix: true, locale: es })} ({format(deadline, "d MMM", { locale: es })})
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
@@ -98,7 +99,7 @@ export default function ResponsibilityCard({ responsibility, onUpdate, onDelete 
             </div>
             <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
         </div>
-        <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} />
+        <Progress value={progress} aria-label={`${Math.round(progress)}% completado`} />
       </CardFooter>
     </Card>
   );
