@@ -24,7 +24,7 @@ const navItems = [
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendario' },
   { href: '/dashboard/expenses', icon: Banknote, label: 'Gastos' },
   { href: '/dashboard/meetings', icon: BookUser, label: 'Reuniones' },
-  { href: '/dashboard/todos', icon: ListTodo, label: 'Tareas' },
+  { href: '/dashboard/responsibilities', icon: ListTodo, label: 'Responsabilidades' },
   { href: '/dashboard/productions', icon: Film, label: 'Producciones' },
   { href: '/dashboard/ideas', icon: Lightbulb, label: 'Ideas' },
 ];
