@@ -291,10 +291,10 @@ export default function CalendarPage() {
                 months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
                 month: 'space-y-4 w-full',
                 caption_label: 'text-base font-bold',
-                table: 'w-full border-collapse space-y-2',
-                head_row: 'grid grid-cols-7 gap-2',
+                table: 'w-full border-collapse space-y-1',
+                head_row: 'grid grid-cols-7 gap-1',
                 head_cell: 'text-muted-foreground font-normal text-sm text-center py-2',
-                row: 'grid grid-cols-7 gap-2',
+                row: 'grid grid-cols-7 gap-1 mt-1',
                 cell: 'h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20',
                 day: 'h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-md border',
                 day_selected: 'bg-primary text-primary-foreground hover:bg-primary',
@@ -316,10 +316,10 @@ export default function CalendarPage() {
                           const config = eventConfig[event.type];
                           return (
                             <AddEditEventDialog key={event.id} event={event} onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
-                               <button className={cn('w-full text-left text-xs p-1 rounded-sm flex items-center overflow-hidden', config.bgColor, config.color)}>
+                               <div role="button" className={cn('w-full text-left text-xs p-1 rounded-sm flex items-center overflow-hidden cursor-pointer', config.bgColor, config.color)}>
                                 <div className="flex-shrink-0">{config.icon}</div>
                                 <span className='ml-1 truncate flex-grow'>{event.title}</span>
-                              </button>
+                              </div>
                             </AddEditEventDialog>
                           )
                         })}
