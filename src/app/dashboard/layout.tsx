@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Principal' },
@@ -33,21 +34,28 @@ const navItems = [
 function DesktopNav() {
   const pathname = usePathname();
   return (
-    <nav className="hidden md:flex gap-4 items-center">
-      {navItems.map((item) => {
-        const isActive = pathname === item.href;
-        return (
-          <Link
-            href={item.href}
-            key={item.href}
-          >
-            <Button variant={isActive ? 'secondary' : 'ghost'} size="sm">
-                {item.label}
-            </Button>
-          </Link>
-        );
-      })}
-    </nav>
+    <TooltipProvider>
+      <nav className="hidden md:flex gap-2 items-center">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Tooltip key={item.href}>
+              <TooltipTrigger asChild>
+                <Link href={item.href}>
+                  <Button variant={isActive ? 'secondary' : 'ghost'} size="icon">
+                    <item.icon className="h-5 w-5" />
+                    <span className="sr-only">{item.label}</span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{item.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </nav>
+    </TooltipProvider>
   );
 }
 
