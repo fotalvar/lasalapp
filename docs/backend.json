@@ -74,24 +74,29 @@
           "type": "string",
           "description": "Unique identifier for the team member."
         },
-        "userProfileId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: TeamMember 1:1 UserProfile)"
+        "name": {
+            "type": "string"
         },
-        "position": {
-          "type": "string",
-          "description": "The team member's position or title."
+        "email": {
+            "type": "string"
         },
-        "responsibilities": {
-          "type": "string",
-          "description": "Description of the team member's responsibilities."
+        "role": {
+            "type": "string"
+        },
+        "avatar": {
+            "type": "object",
+            "properties": {
+                "icon": { "type": "string" },
+                "color": { "type": "string" }
+            }
         }
       },
       "required": [
         "id",
-        "userProfileId",
-        "position",
-        "responsibilities"
+        "name",
+        "email",
+        "role",
+        "avatar"
       ]
     },
     "Show": {
@@ -472,8 +477,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "google.com"
     ]
   },
   "firestore": {
