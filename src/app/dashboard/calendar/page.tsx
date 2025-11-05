@@ -16,13 +16,13 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -119,7 +119,7 @@ const eventConfig: Record<
   },
 };
 
-function AddEditEventDialog({
+function AddEditEventSheet({
   event,
   onSave,
   onDelete,
@@ -160,12 +160,12 @@ function AddEditEventDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{event ? 'Editar Evento' : 'Añadir Nuevo Evento'}</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>{children}</SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>{event ? 'Editar Evento' : 'Añadir Nuevo Evento'}</SheetTitle>
+        </SheetHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="title">Título del Evento</Label>
@@ -201,27 +201,29 @@ function AddEditEventDialog({
             </Select>
           </div>
         </div>
-        <DialogFooter className='sm:justify-between'>
-          {event && onDelete ? (
-            <Button variant="destructive" onClick={handleDelete} className='mr-auto'>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar
-            </Button>
-          ) : <div></div>}
-          <div className='space-x-2'>
-             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-             <Button onClick={handleSave}>Guardar Evento</Button>
+        <SheetFooter>
+          <div className='flex justify-between w-full'>
+            {event && onDelete ? (
+              <Button variant="destructive" onClick={handleDelete} className='mr-auto'>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Eliminar
+              </Button>
+            ) : <div></div>}
+            <div className='space-x-2'>
+               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+               <Button onClick={handleSave}>Guardar Evento</Button>
+            </div>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
 function EventItem({ event, onEdit, onDelete }: { event: Event; onEdit: (event: Event) => void; onDelete: (id: string) => void; }) {
   const config = eventConfig[event.type];
   return (
-    <AddEditEventDialog event={event} onSave={onEdit} onDelete={onDelete}>
+    <AddEditEventSheet event={event} onSave={onEdit} onDelete={onDelete}>
       <button className="flex w-full items-center gap-3 text-left p-2 rounded-lg hover:bg-muted transition-colors">
         <div className={cn('flex h-8 w-8 items-center justify-center rounded-full', config.bgColor, config.color)}>
           {config.icon}
@@ -233,7 +235,7 @@ function EventItem({ event, onEdit, onDelete }: { event: Event; onEdit: (event: 
           </p>
         </div>
       </button>
-    </AddEditEventDialog>
+    </AddEditEventSheet>
   );
 }
 
@@ -281,12 +283,12 @@ export default function CalendarPage() {
         description="Gestiona horarios de eventos, funciones confirmadas y actividades de marketing."
       >
         <div className="p-6 pt-0">
-          <AddEditEventDialog onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
+          <AddEditEventSheet onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
             <Button size="sm">
               <PlusCircle className="mr-2 h-4 w-4" />
               Añadir Evento
             </Button>
-          </AddEditEventDialog>
+          </AddEditEventSheet>
         </div>
       </PageHeader>
       <main className="p-4 md:p-6 grid gap-6 lg:grid-cols-3">
@@ -324,12 +326,12 @@ export default function CalendarPage() {
                         {dayEvents.map(event => {
                           const config = eventConfig[event.type];
                           return (
-                            <AddEditEventDialog key={event.id} event={event} onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
+                            <AddEditEventSheet key={event.id} event={event} onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
                                <div role="button" className={cn('w-full text-left text-xs p-1 rounded-sm flex items-center overflow-hidden cursor-pointer', config.bgColor, config.color)}>
                                 <div className="flex-shrink-0">{config.icon}</div>
                                 <span className='ml-1 truncate flex-grow'>{event.title}</span>
                               </div>
-                            </AddEditEventDialog>
+                            </AddEditEventSheet>
                           )
                         })}
                       </div>

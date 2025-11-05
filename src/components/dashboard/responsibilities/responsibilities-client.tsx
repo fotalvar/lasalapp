@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Bot } from "lucide-react";
 import ResponsibilityCard from "./responsibility-card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { assignResponsibility } from "@/ai/flows/assign-responsibilities";
@@ -33,7 +33,7 @@ type ResponsibilitiesClientProps = {
   teamMembers: TeamMember[];
 };
 
-function AddResponsibilityDialog({
+function AddResponsibilitySheet({
   teamMembers,
   onAdd,
 }: {
@@ -70,7 +70,7 @@ function AddResponsibilityDialog({
       console.error(error);
       toast({
         title: "Sugerencia de IA fallida",
-        description: "No se pudo obtener una sugerencia de la IA. Por favor, asigna manualmente.",
+        description: "No se pudo obtener una sugerencia de la IA. Por favor, asigna manually.",
         variant: "destructive",
       });
     } finally {
@@ -99,20 +99,20 @@ function AddResponsibilityDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
           Añadir Responsabilidad
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Añadir Nueva Responsabilidad</DialogTitle>
-          <DialogDescription>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Añadir Nueva Responsabilidad</SheetTitle>
+          <SheetDescription>
             Describe la nueva tarea y obtén una sugerencia de IA para el mejor asignado.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="responsibility">Responsabilidad</Label>
@@ -159,11 +159,12 @@ function AddResponsibilityDialog({
                 </Select>
             </div>
         </div>
-        <DialogFooter>
-          <Button onClick={handleAddResponsibility}>Añadir Responsabilidad</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <SheetFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={handleAddResponsibility}>Añadir Responsabilidad</Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -192,7 +193,7 @@ export default function ResponsibilitiesClient({
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <AddResponsibilityDialog teamMembers={teamMembers} onAdd={handleAddResponsibility} />
+        <AddResponsibilitySheet teamMembers={teamMembers} onAdd={handleAddResponsibility} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {responsibilities.map((resp) => (

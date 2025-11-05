@@ -27,7 +27,7 @@ import {
   ChartConfig,
 } from '@/components/ui/chart';
 import { Bar, BarChart, XAxis, YAxis } from 'recharts';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -58,7 +58,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-function AddExpenseDialog({ onSave }: { onSave: (expense: Expense) => void }) {
+function AddExpenseSheet({ onSave }: { onSave: (expense: Expense) => void }) {
     const [open, setOpen] = useState(false);
     const [description, setDescription] = useState('');
     const [amount, setAmount] = useState('');
@@ -84,17 +84,17 @@ function AddExpenseDialog({ onSave }: { onSave: (expense: Expense) => void }) {
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Añadir Gasto
                 </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Añadir Nuevo Gasto</DialogTitle>
-                </DialogHeader>
+            </SheetTrigger>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>Añadir Nuevo Gasto</SheetTitle>
+                </SheetHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                         <Label htmlFor="description">Descripción</Label>
@@ -122,11 +122,12 @@ function AddExpenseDialog({ onSave }: { onSave: (expense: Expense) => void }) {
                         <Input id="amortization" type="number" value={amortization} onChange={(e) => setAmortization(e.target.value)} />
                     </div>
                 </div>
-                <DialogFooter>
+                <SheetFooter>
+                    <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
                     <Button onClick={handleSave}>Guardar Gasto</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
     )
 }
 
@@ -177,7 +178,7 @@ export default function ExpensesClient({ initialExpenses }: { initialExpenses: E
       
       <div>
         <div className="flex justify-end mb-4">
-            <AddExpenseDialog onSave={handleSaveExpense} />
+            <AddExpenseSheet onSave={handleSaveExpense} />
         </div>
         <div className="border rounded-lg">
           <Table>

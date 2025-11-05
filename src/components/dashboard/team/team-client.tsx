@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, PlusCircle, FilePenLine, Trash2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -69,7 +69,7 @@ function Icon({ name }: { name: string }) {
     return <IconComponent className="h-5 w-5" />;
 }
 
-function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember, onSave: (member: Omit<TeamMember, 'id'> | TeamMember) => void, children: React.ReactNode }) {
+function AddEditMemberSheet({ member, onSave, children }: { member?: TeamMember, onSave: (member: Omit<TeamMember, 'id'> | TeamMember) => void, children: React.ReactNode }) {
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -111,15 +111,15 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{member ? 'Editar Miembro' : 'Añadir Nuevo Miembro'}</DialogTitle>
-                    <DialogDescription>
+        <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>{children}</SheetTrigger>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>{member ? 'Editar Miembro' : 'Añadir Nuevo Miembro'}</SheetTitle>
+                    <SheetDescription>
                         {member ? 'Actualiza los detalles de este miembro del equipo.' : 'Añade un nuevo miembro a tu equipo.'}
-                    </DialogDescription>
-                </DialogHeader>
+                    </SheetDescription>
+                </SheetHeader>
                 <div className="grid gap-4 py-4">
                     <div className='flex items-center gap-4'>
                         <Avatar className="h-16 w-16 text-white" style={{ backgroundColor: color }}>
@@ -185,12 +185,12 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
                         </Select>
                     </div>
                 </div>
-                <DialogFooter>
+                <SheetFooter>
                      <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
                     <Button onClick={handleSave}>Guardar</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
     )
 }
 
@@ -242,12 +242,12 @@ export default function TeamClient() {
   return (
     <>
       <div className="flex justify-end mb-4">
-        <AddEditMemberDialog onSave={handleSaveMember}>
+        <AddEditMemberSheet onSave={handleSaveMember}>
             <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Añadir Miembro
             </Button>
-        </AddEditMemberDialog>
+        </AddEditMemberSheet>
       </div>
       <div className="border rounded-lg">
         <Table>
@@ -286,12 +286,12 @@ export default function TeamClient() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                         <AddEditMemberDialog member={member} onSave={handleSaveMember}>
+                         <AddEditMemberSheet member={member} onSave={handleSaveMember}>
                             <button className='relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full'>
                                 <FilePenLine className="mr-2 h-4 w-4" />
                                 Editar
                             </button>
-                        </AddEditMemberDialog>
+                        </AddEditMemberSheet>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteMember(member.id)}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           Borrar
