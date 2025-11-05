@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -15,7 +16,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import PageHeader from '@/components/dashboard/page-header';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Principal' },
@@ -29,19 +30,34 @@ const navItems = [
   { href: '/dashboard/ideas', icon: Lightbulb, label: 'Ideas' },
 ];
 
+function DesktopNav() {
+  const pathname = usePathname();
+  return (
+    <nav className="hidden md:flex gap-4 items-center">
+      {navItems.map((item) => {
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            href={item.href}
+            key={item.href}
+          >
+            <Button variant={isActive ? 'secondary' : 'ghost'} size="sm">
+                {item.label}
+            </Button>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 function BottomNavBar() {
   const pathname = usePathname();
 
-  const mainNavItems = navItems.filter((item) =>
-    ['/dashboard', '/dashboard/team', '/dashboard/calendar', '/dashboard/productions'].includes(
-      item.href
-    )
-  );
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
       <div className="flex h-16 items-center justify-around">
-        {mainNavItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -65,18 +81,14 @@ function BottomNavBar() {
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const currentNavItem = navItems.find((item) => item.href === pathname);
-
-  const showHeader = pathname !== '/dashboard';
-
   return (
-    <div className="min-h-screen w-full bg-background pb-16">
-      <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-40">
+    <div className="min-h-screen w-full bg-background pb-16 md:pb-0">
+      <header className="flex h-14 items-center justify-between gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-40">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <Theater className="h-6 w-6 text-primary" />
           <span className="font-bold text-lg">laSalapp</span>
         </Link>
+        <DesktopNav />
       </header>
       <div className="flex flex-col">{children}</div>
       <BottomNavBar />
