@@ -30,11 +30,11 @@ export default function LoginPage() {
           <CardDescription>Bienvenido a tu herramienta de gestión de espacios creativos</CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href="/dashboard" className="w-full">
-            <Button variant="outline" className="w-full h-12 text-base">
+          <Button variant="outline" className="w-full h-12 text-base" asChild>
+            <Link href="/dashboard">
               Acceder al Panel
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </CardContent>
         <CardFooter>
           <p className="text-xs text-muted-foreground text-center w-full">
