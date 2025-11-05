@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Theater } from 'lucide-react';
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from '@/lib/utils';
 
 function GoogleIcon() {
   return (
@@ -30,11 +32,9 @@ export default function LoginPage() {
           <CardDescription>Bienvenido a tu herramienta de gestión de espacios creativos</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" className="w-full h-12 text-base" asChild>
-            <Link href="/dashboard">
+          <Link href="/dashboard" className={cn(buttonVariants({ variant: "outline" }), "w-full h-12 text-base")}>
               Acceder al Panel
-            </Link>
-          </Button>
+          </Link>
         </CardContent>
         <CardFooter>
           <p className="text-xs text-muted-foreground text-center w-full">
