@@ -2,10 +2,14 @@ export type TeamMember = {
   id: string;
   name: string;
   email: string;
-  role: 'Director' | 'Técnico' | 'Productor' | 'Marketing' | 'Admin';
-  avatar: string;
-  currentTasks: string[];
-  upcomingDeadlines: string[];
+  role: 'Administrador' | 'Técnico' | 'Usuario';
+  avatar: {
+    icon: string;
+    color: string;
+  };
+  // Campos ya no necesarios para la nueva implementación de equipo
+  // currentTasks: string[];
+  // upcomingDeadlines: string[];
 };
 
 export type Responsibility = {
