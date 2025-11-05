@@ -1,0 +1,188 @@
+/**
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for user profiles and public read access for all other collections.
+ *
+ * Data Structure:
+ * - User profiles are stored under `/users/{userId}/userProfile`, ensuring only the user can access their profile.
+ * - All other collections (roles, teamMembers, companies, shows, interactions, events, expenses, meetingMinutes, responsibilities, todoItems, productionPages, ideas) are stored at the top level.
+ *
+ * Key Security Decisions:
+ * - User profiles are private and only accessible to the owning user.
+ * - All other data is considered public and accessible to all users.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces document ownership for user profiles, ensuring only the owner can read and write.
+     * @path /users/{userId}/userProfile
+     * @allow (create) - User with ID 'user123' creates their profile at /users/user123/userProfile
+     * @allow (get, update, delete) - User with ID 'user123' reads/updates/deletes their profile at /users/user123/userProfile
+     * @deny (create, update, delete) - User with ID 'user456' attempts to modify profile at /users/user123/userProfile
+     * @deny (list) - Prevents listing of user profiles.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/userProfile {
+      //function isOwner(userId) {
+       // return request.auth.uid == userId;
+     // }
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+          return isOwner(userId) && resource != null;
+        }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) ;
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Allows public read access to roles and restricts writes.
+     * @path /roles/{roleId}
+     * @allow (get, list) - Any user can read role data.
+     * @deny (create, update, delete) - No one can create, update, or delete roles.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /roles/{roleId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to teamMembers and restricts writes.
+     * @path /teamMembers/{teamMemberId}
+     * @allow (get, list) - Any user can read teamMembers data.
+     * @deny (create, update, delete) - No one can create, update, or delete teamMembers.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /teamMembers/{teamMemberId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to companies and restricts writes.
+     * @path /companies/{companyId}
+     * @allow (get, list) - Any user can read companies data.
+     * @deny (create, update, delete) - No one can create, update, or delete companies.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /companies/{companyId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to shows and restricts writes.
+     * @path /shows/{showId}
+     * @allow (get, list) - Any user can read shows data.
+     * @deny (create, update, delete) - No one can create, update, or delete shows.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /shows/{showId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to interactions and restricts writes.
+     * @path /shows/{showId}/interactions/{interactionId}
+     * @allow (get, list) - Any user can read interactions data.
+     * @deny (create, update, delete) - No one can create, update, or delete interactions.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /shows/{showId}/interactions/{interactionId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to events and restricts writes.
+     * @path /events/{eventId}
+     * @allow (get, list) - Any user can read events data.
+     * @deny (create, update, delete) - No one can create, update, or delete events.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /events/{eventId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to expenses and restricts writes.
+     * @path /expenses/{expenseId}
+     * @allow (get, list) - Any user can read expenses data.
+     * @deny (create, update, delete) - No one can create, update, or delete expenses.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /expenses/{expenseId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to meetingMinutes and restricts writes.
+     * @path /meetingMinutes/{meetingMinutesId}
+     * @allow (get, list) - Any user can read meetingMinutes data.
+     * @deny (create, update, delete) - No one can create, update, or delete meetingMinutes.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /meetingMinutes/{meetingMinutesId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to responsibilities and restricts writes.
+     * @path /responsibilities/{responsibilityId}
+     * @allow (get, list) - Any user can read responsibilities data.
+     * @deny (create, update, delete) - No one can create, update, or delete responsibilities.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /responsibilities/{responsibilityId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to todoItems and restricts writes.
+     * @path /todoItems/{todoItemId}
+     * @allow (get, list) - Any user can read todoItems data.
+     * @deny (create, update, delete) - No one can create, update, or delete todoItems.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /todoItems/{todoItemId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to productionPages and restricts writes.
+     * @path /productionPages/{productionPageId}
+     * @allow (get, list) - Any user can read productionPages data.
+     * @deny (create, update, delete) - No one can create, update, or delete productionPages.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /productionPages/{productionPageId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to ideas and restricts writes.
+     * @path /ideas/{ideaId}
+     * @allow (get, list) - Any user can read ideas data.
+     * @deny (create, update, delete) - No one can create, update, or delete ideas.
+     * @principle Allows public read access and restricts writes to no one.
+     */
+    match /ideas/{ideaId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+  }
+}
