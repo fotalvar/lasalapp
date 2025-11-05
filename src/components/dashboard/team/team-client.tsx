@@ -71,11 +71,11 @@ function Icon({ name }: { name: string }) {
 
 function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember, onSave: (member: Omit<TeamMember, 'id'> | TeamMember) => void, children: React.ReactNode }) {
     const [open, setOpen] = useState(false);
-    const [name, setName] = useState(member?.name || '');
-    const [email, setEmail] = useState(member?.email || '');
-    const [role, setRole] = useState<TeamMember['role'] | undefined>(member?.role);
-    const [icon, setIcon] = useState(member?.avatar?.icon || 'User');
-    const [color, setColor] = useState(member?.avatar?.color || '#2563eb');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [role, setRole] = useState<TeamMember['role'] | undefined>();
+    const [icon, setIcon] = useState('User');
+    const [color, setColor] = useState('#2563eb');
     const { toast } = useToast();
 
     useEffect(() => {
@@ -213,10 +213,12 @@ export default function TeamClient() {
     if (!db) return;
     try {
         if ('id' in memberData) {
+            // Update existing member
             const { id, ...dataToSave } = memberData;
             await setDoc(doc(db, 'team', id), dataToSave, { merge: true });
             toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` });
         } else {
+            // Add new member
             await addDoc(collection(db, 'team'), memberData);
             toast({ title: "Miembro añadido", description: `${memberData.name} ha sido añadido al equipo.` });
         }
