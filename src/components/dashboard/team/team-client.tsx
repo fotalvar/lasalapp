@@ -94,7 +94,7 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
             return;
         }
         
-        const memberData: Omit<TeamMember, 'id'> = {
+        const memberData = {
             name,
             email,
             role,
