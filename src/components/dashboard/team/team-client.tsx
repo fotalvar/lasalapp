@@ -212,21 +212,21 @@ export default function TeamClient() {
   const handleSaveMember = async (memberData: Omit<TeamMember, 'id'> | TeamMember) => {
     if (!db) return;
     try {
-        if ('id' in memberData) {
-            // Update existing member
-            const { id, ...dataToSave } = memberData;
-            await setDoc(doc(db, 'team', id), dataToSave);
-            toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` });
-        } else {
-            // Add new member
-            await addDoc(collection(db, 'team'), memberData);
-            toast({ title: "Miembro añadido", description: `${memberData.name} ha sido añadido al equipo.` });
-        }
+      if ('id' in memberData) {
+        // Update existing member
+        const { id, ...dataToSave } = memberData;
+        await setDoc(doc(db, 'team', id), dataToSave);
+        toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` });
+      } else {
+        // Add new member
+        await addDoc(collection(db, 'team'), memberData);
+        toast({ title: "Miembro añadido", description: `${memberData.name} ha sido añadido al equipo.` });
+      }
     } catch (error) {
-        console.error("Error saving member: ", error);
-        toast({ title: "Error", description: "No se pudo guardar el miembro.", variant: "destructive" });
+      console.error("Error saving member: ", error);
+      toast({ title: "Error", description: "No se pudo guardar el miembro.", variant: "destructive" });
     }
-  }
+  };
   
   const handleDeleteMember = async (id: string) => {
     if (!db) return;
