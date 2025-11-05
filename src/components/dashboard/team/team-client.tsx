@@ -201,7 +201,7 @@ export default function TeamClient() {
 
   useEffect(() => {
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'team'), (snapshot) => {
+    const unsub = onSnapshot(collection(db, 'teamMembers'), (snapshot) => {
         const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
         setMembers(fetchedMembers);
     });
@@ -215,11 +215,11 @@ export default function TeamClient() {
       if ('id' in memberData) {
         // Update existing member
         const { id, ...dataToSave } = memberData;
-        await setDoc(doc(db, 'team', id), dataToSave);
+        await setDoc(doc(db, 'teamMembers', id), dataToSave);
         toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` });
       } else {
         // Add new member
-        await addDoc(collection(db, 'team'), memberData);
+        await addDoc(collection(db, 'teamMembers'), memberData);
         toast({ title: "Miembro añadido", description: `${memberData.name} ha sido añadido al equipo.` });
       }
     } catch (error) {
@@ -231,7 +231,7 @@ export default function TeamClient() {
   const handleDeleteMember = async (id: string) => {
     if (!db) return;
      try {
-        await deleteDoc(doc(db, 'team', id));
+        await deleteDoc(doc(db, 'teamMembers', id));
         toast({ title: "Miembro eliminado", description: "El miembro del equipo ha sido eliminado." });
     } catch (error) {
         console.error("Error deleting member: ", error);
