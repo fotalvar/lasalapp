@@ -32,14 +32,13 @@ export default function LoginPage() {
         <CardContent>
           <Link href="/dashboard" className="w-full">
             <Button variant="outline" className="w-full h-12 text-base">
-              <GoogleIcon />
-              Iniciar sesión con Google
+              Acceder al Panel
             </Button>
           </Link>
         </CardContent>
         <CardFooter>
           <p className="text-xs text-muted-foreground text-center w-full">
-            Acceso restringido a cuentas @atresquarts.com.
+            Inicio de sesión temporalmente desactivado.
           </p>
         </CardFooter>
       </Card>
