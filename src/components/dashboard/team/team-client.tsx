@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, FilePenLine, Trash2, User, Palette, Cog } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, FilePenLine, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -35,14 +35,35 @@ const roleColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'ou
     'Usuario': 'outline',
 }
 
-const availableIcons = ['User', 'Cog', 'Palette', 'Anchor', 'Briefcase', 'Feather', 'Heart', 'Sun', 'Moon', 'Star', 'Camera'] as const;
-type AvailableIcon = typeof availableIcons[number];
+const availableIcons = {
+    'Usuario': 'User',
+    'Engranaje': 'Cog',
+    'Paleta': 'Palette',
+    'Ancla': 'Anchor',
+    'Maletín': 'Briefcase',
+    'Pluma': 'Feather',
+    'Corazón': 'Heart',
+    'Sol': 'Sun',
+    'Luna': 'Moon',
+    'Estrella': 'Star',
+    'Cámara': 'Camera',
+    'Gato': 'Cat',
+    'Perro': 'Dog',
+    'Pájaro': 'Bird',
+    'Pez': 'Fish',
+    'Conejo': 'Rabbit',
+    'Tortuga': 'Turtle',
+} as const;
+
+type SpanishIconName = keyof typeof availableIcons;
+type LucideIconName = typeof availableIcons[SpanishIconName];
+
 
 const availableColors = ['#dc2626', '#f97316', '#facc15', '#4d7c0f', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#be123c'];
 
 function Icon({ name }: { name: string }) {
     const IconComponent = LucideIcons[name as keyof typeof LucideIcons] as React.ElementType;
-    if (!IconComponent) return <User className="h-5 w-5" />;
+    if (!IconComponent) return <LucideIcons.User className="h-5 w-5" />;
     return <IconComponent className="h-5 w-5" />;
 }
 
@@ -105,14 +126,14 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
                              <Popover>
                                 <PopoverTrigger asChild>
                                     <Button variant="outline" className='w-full justify-start'>
-                                        <Icon name={icon} /> <span className='ml-2'>{icon}</span>
+                                        <Icon name={icon} /> <span className='ml-2'>{Object.entries(availableIcons).find(([, lucideName]) => lucideName === icon)?.[0] || icon}</span>
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className='w-auto p-2'>
                                     <div className='grid grid-cols-4 gap-2'>
-                                        {availableIcons.map(iconName => (
-                                            <Button key={iconName} variant={icon === iconName ? "secondary" : "ghost"} size="icon" onClick={() => setIcon(iconName)}>
-                                                <Icon name={iconName} />
+                                        {(Object.keys(availableIcons) as SpanishIconName[]).map(spanishName => (
+                                            <Button key={spanishName} variant={icon === availableIcons[spanishName] ? "secondary" : "ghost"} size="icon" onClick={() => setIcon(availableIcons[spanishName])} title={spanishName}>
+                                                <Icon name={availableIcons[spanishName]} />
                                             </Button>
                                         ))}
                                     </div>
