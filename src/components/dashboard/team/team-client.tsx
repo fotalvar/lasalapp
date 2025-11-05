@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { TeamMember } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +28,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
+import { collection, onSnapshot, addDoc, setDoc, deleteDoc, doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 const roleColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Administrador': 'default',
@@ -72,8 +74,8 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
     const [name, setName] = useState(member?.name || '');
     const [email, setEmail] = useState(member?.email || '');
     const [role, setRole] = useState<TeamMember['role'] | undefined>(member?.role);
-    const [icon, setIcon] = useState(member?.avatar.icon || 'User');
-    const [color, setColor] = useState(member?.avatar.color || '#2563eb');
+    const [icon, setIcon] = useState(member?.avatar?.icon || 'User');
+    const [color, setColor] = useState(member?.avatar?.color || '#2563eb');
     const { toast } = useToast();
 
     const handleSave = () => {
@@ -192,27 +194,25 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
 export default function TeamClient() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const { toast } = useToast();
-  // TODO: Replace with firebase call
-  // useEffect(() => {
-  //   const unsub = onSnapshot(collection(db, 'team'), (snapshot) => {
-  //       setMembers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember)));
-  //   });
-  //   return unsub;
-  // }, []);
+  const db = useFirestore();
+
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, 'team'), (snapshot) => {
+        setMembers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember)));
+    });
+    return unsub;
+  }, [db]);
 
 
   const handleSaveMember = async (memberData: Omit<TeamMember, 'id'> | TeamMember) => {
+    if (!db) return;
     try {
         if ('id' in memberData) {
-            // TODO: Replace with firebase call
-            // await setDoc(doc(db, 'team', memberData.id), memberData, { merge: true });
-            setMembers(prev => prev.map(m => m.id === memberData.id ? memberData : m));
+            await setDoc(doc(db, 'team', memberData.id), memberData, { merge: true });
             toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` });
         } else {
-            // TODO: Replace with firebase call
-            // const docRef = await addDoc(collection(db, 'team'), memberData);
-            const newMember = { id: `mem-${Date.now()}`, ...memberData }
-            setMembers(prev => [newMember, ...prev]);
+            await addDoc(collection(db, 'team'), memberData);
             toast({ title: "Miembro añadido", description: `${memberData.name} ha sido añadido al equipo.` });
         }
     } catch (error) {
@@ -222,10 +222,9 @@ export default function TeamClient() {
   }
   
   const handleDeleteMember = async (id: string) => {
+    if (!db) return;
      try {
-        // TODO: Replace with firebase call
-        // await deleteDoc(doc(db, 'team', id));
-        setMembers(prev => prev.filter(m => m.id !== id));
+        await deleteDoc(doc(db, 'team', id));
         toast({ title: "Miembro eliminado", description: "El miembro del equipo ha sido eliminado." });
     } catch (error) {
         console.error("Error deleting member: ", error);
@@ -260,7 +259,7 @@ export default function TeamClient() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 text-white" style={{ backgroundColor: member.avatar.color }}>
                         <AvatarFallback className="bg-transparent">
-                          <Icon name={member.avatar.icon} />
+                          {member.avatar?.icon ? <Icon name={member.avatar.icon} /> : member.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <div>

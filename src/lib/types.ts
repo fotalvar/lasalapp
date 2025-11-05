@@ -7,9 +7,6 @@ export type TeamMember = {
     icon: string;
     color: string;
   };
-  // Campos ya no necesarios para la nueva implementación de equipo
-  // currentTasks: string[];
-  // upcomingDeadlines: string[];
 };
 
 export type Responsibility = {
