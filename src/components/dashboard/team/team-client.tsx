@@ -78,6 +78,16 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
     const [color, setColor] = useState(member?.avatar?.color || '#2563eb');
     const { toast } = useToast();
 
+    useEffect(() => {
+      if (open) {
+        setName(member?.name || '');
+        setEmail(member?.email || '');
+        setRole(member?.role);
+        setIcon(member?.avatar?.icon || 'User');
+        setColor(member?.avatar?.color || '#2563eb');
+      }
+    }, [open, member]);
+
     const handleSave = () => {
         if (!name || !email || !role || !icon || !color) {
             toast({ title: "Faltan campos", description: "Por favor, completa todos los campos para guardar el miembro.", variant: "destructive" });
@@ -98,13 +108,6 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
         }
 
         setOpen(false);
-        if (!member) {
-            setName('');
-            setEmail('');
-            setRole(undefined);
-            setIcon('User');
-            setColor('#2563eb');
-        }
     }
 
     return (
@@ -199,9 +202,10 @@ export default function TeamClient() {
   useEffect(() => {
     if (!db) return;
     const unsub = onSnapshot(collection(db, 'team'), (snapshot) => {
-        setMembers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember)));
+        const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
+        setMembers(fetchedMembers);
     });
-    return unsub;
+    return () => unsub();
   }, [db]);
 
 
@@ -209,7 +213,8 @@ export default function TeamClient() {
     if (!db) return;
     try {
         if ('id' in memberData) {
-            await setDoc(doc(db, 'team', memberData.id), memberData, { merge: true });
+            const { id, ...dataToSave } = memberData;
+            await setDoc(doc(db, 'team', id), dataToSave, { merge: true });
             toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` });
         } else {
             await addDoc(collection(db, 'team'), memberData);
