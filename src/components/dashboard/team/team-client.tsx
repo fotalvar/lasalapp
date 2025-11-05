@@ -94,14 +94,14 @@ function AddEditMemberDialog({ member, onSave, children }: { member?: TeamMember
             return;
         }
         
-        const memberData = {
+        const memberData: Omit<TeamMember, 'id'> = {
             name,
             email,
             role,
             avatar: { icon, color },
         };
         
-        if (member) {
+        if (member?.id) {
             onSave({ id: member.id, ...memberData });
         } else {
             onSave(memberData);
@@ -215,7 +215,7 @@ export default function TeamClient() {
         if ('id' in memberData) {
             // Update existing member
             const { id, ...dataToSave } = memberData;
-            await setDoc(doc(db, 'team', id), dataToSave, { merge: true });
+            await setDoc(doc(db, 'team', id), dataToSave);
             toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` });
         } else {
             // Add new member
