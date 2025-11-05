@@ -42,6 +42,16 @@ service cloud.firestore {
     }
 
     /**
+     * @description Allows authenticated users to read and write to the team collection.
+     * @path /team/{memberId}
+     * @allow (get, list, create, update, delete) - Any authenticated user can manage team members.
+     * @principle Allows full access to authenticated users.
+     */
+    match /team/{memberId} {
+        allow read, write: if request.auth != null;
+    }
+
+    /**
      * @description Allows public read access to roles and restricts writes.
      * @path /roles/{roleId}
      * @allow (get, list) - Any user can read role data.
@@ -177,7 +187,7 @@ service cloud.firestore {
      * @description Allows public read access to ideas and restricts writes.
      * @path /ideas/{ideaId}
      * @allow (get, list) - Any user can read ideas data.
-     * @deny (create, update, delete) - No one can create, update, or delete ideas.
+     deny (create, update, delete) - No one can create, update, or delete ideas.
      * @principle Allows public read access and restricts writes to no one.
      */
     match /ideas/{ideaId} {
@@ -186,3 +196,4 @@ service cloud.firestore {
     }
   }
 }
+    
