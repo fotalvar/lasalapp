@@ -306,7 +306,7 @@ function AddEditEventSheet({
   );
 }
 
-function ScheduleInstagramSheet({ open, onOpenChange, shows, onSchedule }: { open: boolean, onOpenChange: (open: boolean) => void, shows: Event[], onSchedule: (newEvents: Event[]) => void }) {
+function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSchedule }: { open: boolean, onOpenChange: (open: boolean) => void, shows: Event[], teamMembers: TeamMember[], onSchedule: (newEvents: Event[]) => void }) {
     const [selectedShowId, setSelectedShowId] = useState<string | undefined>();
     
     const [useStory, setUseStory] = useState(false);
@@ -317,6 +317,9 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, onSchedule }: { ope
 
     const [useReel, setUseReel] = useState(false);
     const [reelCount, setReelCount] = useState(1);
+    
+    const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
+    const [isAssigneePopoverOpen, setIsAssigneePopoverOpen] = useState(false);
 
     const selectedShow = shows.find(s => s.id === selectedShowId);
 
@@ -325,41 +328,38 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, onSchedule }: { ope
         { type: 'Publicación', enabled: usePost, count: postCount, icon: Camera, timing: (date: Date, i: number) => subDays(date, 7 + i * 3) },
         { type: 'Reel', enabled: useReel, count: reelCount, icon: Film, timing: (date: Date, i: number) => subDays(date, 10 + i * 5) }
     ];
+    
+    const toggleAssignee = (id: string) => {
+        setAssigneeIds(prev => prev.includes(id) ? prev.filter(memberId => memberId !== id) : [...prev, id]);
+    }
+  
+    const selectedMembers = useMemo(() => teamMembers.filter(m => assigneeIds.includes(m.id)), [assigneeIds, teamMembers]);
 
     const handleSchedule = () => {
         if (!selectedShow) return;
 
         const newEvents: Event[] = [];
+        
+        const createEventsForType = (type: string, count: number, timingFn: (date: Date, i: number) => Date, titlePrefix: string) => {
+            for (let i = 0; i < count; i++) {
+                newEvents.push({
+                    id: `ig-${type.toLowerCase()}-${selectedShow.id}-${i}-${Date.now()}`,
+                    title: `${titlePrefix} para "${selectedShow.title}" (${i + 1}/${count})`,
+                    date: timingFn(selectedShow.date, i),
+                    type: 'Publicaciones en redes',
+                    assigneeIds: assigneeIds,
+                });
+            }
+        }
 
         if (useStory) {
-            for (let i = 0; i < storyCount; i++) {
-                newEvents.push({
-                    id: `ig-story-${selectedShow.id}-${i}-${Date.now()}`,
-                    title: `Story para "${selectedShow.title}" (${i + 1}/${storyCount})`,
-                    date: scheduleConfig[0].timing(selectedShow.date, i),
-                    type: 'Publicaciones en redes'
-                });
-            }
+            createEventsForType('story', storyCount, scheduleConfig[0].timing, 'Story');
         }
         if (usePost) {
-            for (let i = 0; i < postCount; i++) {
-                newEvents.push({
-                    id: `ig-post-${selectedShow.id}-${i}-${Date.now()}`,
-                    title: `Publicación para "${selectedShow.title}" (${i + 1}/${postCount})`,
-                    date: scheduleConfig[1].timing(selectedShow.date, i),
-                    type: 'Publicaciones en redes'
-                });
-            }
+            createEventsForType('post', postCount, scheduleConfig[1].timing, 'Publicación');
         }
         if (useReel) {
-            for (let i = 0; i < reelCount; i++) {
-                newEvents.push({
-                    id: `ig-reel-${selectedShow.id}-${i}-${Date.now()}`,
-                    title: `Reel para "${selectedShow.title}" (${i + 1}/${reelCount})`,
-                    date: scheduleConfig[2].timing(selectedShow.date, i),
-                    type: 'Publicaciones en redes'
-                });
-            }
+            createEventsForType('reel', reelCount, scheduleConfig[2].timing, 'Reel');
         }
         
         onSchedule(newEvents);
@@ -381,6 +381,48 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, onSchedule }: { ope
                                 {shows.map(show => <SelectItem key={show.id} value={show.id}>{show.title}</SelectItem>)}
                             </SelectContent>
                         </Select>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label>Responsables</Label>
+                        <Popover open={isAssigneePopoverOpen} onOpenChange={setIsAssigneePopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" aria-expanded={isAssigneePopoverOpen} className="w-full justify-between h-auto">
+                                <div className='flex flex-wrap gap-1'>
+                                    {selectedMembers.length > 0 ? selectedMembers.map(member => (
+                                        <div key={member.id} className="flex items-center gap-2 p-1 rounded-md" style={{backgroundColor: `${member.avatar.color}30`}}>
+                                            <Avatar className="h-5 w-5 text-white" style={{ backgroundColor: member.avatar.color }}>
+                                                <AvatarFallback className="bg-transparent text-xs">
+                                                    <MemberIcon member={member} className="h-3 w-3" />
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <span className='text-xs'>{member.name}</span>
+                                        </div>
+                                    )) : "Seleccionar responsables..."}
+                                </div>
+                                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                <CommandInput placeholder="Buscar miembro..." />
+                                <CommandEmpty>No se encontró ningún miembro del equipo.</CommandEmpty>
+                                <CommandGroup>
+                                    {teamMembers.map(member => (
+                                        <CommandItem key={member.id} onSelect={() => toggleAssignee(member.id)} className="flex items-center gap-2">
+                                            <Checkbox checked={assigneeIds.includes(member.id)} />
+                                            <Avatar className="h-6 w-6 text-white" style={{ backgroundColor: member.avatar.color }}>
+                                                <AvatarFallback className="bg-transparent text-sm">
+                                                    <MemberIcon member={member} className="h-4 w-4" />
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <span>{member.name}</span>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </Command>
+                        </PopoverContent>
+                        </Popover>
                     </div>
 
                     <div className="space-y-4 rounded-md border p-4">
@@ -649,6 +691,7 @@ export default function CalendarPage() {
         open={isScheduleSheetOpen}
         onOpenChange={setIsScheduleSheetOpen}
         shows={futureShows}
+        teamMembers={teamMembers}
         onSchedule={handleScheduleInstagram}
       />
     </>
