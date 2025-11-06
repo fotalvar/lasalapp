@@ -30,6 +30,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -123,7 +129,7 @@ function AddEditEventSheet({
   useEffect(() => {
     if (open) {
       setTitle(event?.title || '');
-      setDate(event?.date);
+      setDate(event?.date ? (event.date instanceof Timestamp ? event.date.toDate() : event.date) : undefined);
       setType(event?.type);
       setAssigneeIds(event?.assigneeIds || []);
     }
@@ -297,12 +303,13 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
         if (!selectedShow) return;
 
         const newEvents: Omit<CalendarEvent, 'id'>[] = [];
+        const showDate = selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date;
         
         const createEventsForType = (type: string, count: number, timingFn: (date: Date, i: number) => Date, titlePrefix: string) => {
             for (let i = 0; i < count; i++) {
                 newEvents.push({
                     title: `${titlePrefix} para "${selectedShow.title}" (${i + 1}/${count})`,
-                    date: timingFn(selectedShow.date, i),
+                    date: timingFn(showDate, i),
                     type: 'Publicaciones en redes',
                     assigneeIds: assigneeIds,
                 });
@@ -396,7 +403,7 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
                             )}
                         </div>
                         {selectedShow && useStory && Array.from({length: storyCount}).map((_, i) => (
-                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[0].timing(selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[0].timing(selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
                         ))}
                         
                         <div className="flex items-center gap-4">
@@ -410,7 +417,7 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
                             )}
                         </div>
                          {selectedShow && usePost && Array.from({length: postCount}).map((_, i) => (
-                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[1].timing(selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[1].timing(selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
                         ))}
 
                          <div className="flex items-center gap-4">
@@ -424,7 +431,7 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
                             )}
                         </div>
                         {selectedShow && useReel && Array.from({length: reelCount}).map((_, i) => (
-                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[2].timing(selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[2].timing(selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
                         ))}
                     </div>
                  </div>
@@ -437,20 +444,58 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
     )
 }
 
-function EventItem({ event, onEditClick }: { event: CalendarEvent; onEditClick: (event: CalendarEvent) => void; }) {
+function EventItem({ event, onEditClick, teamMembers }: { event: CalendarEvent; onEditClick: (event: CalendarEvent) => void; teamMembers: TeamMember[] }) {
   const config = eventConfig[event.type];
+  const eventDate = event.date instanceof Timestamp ? event.date.toDate() : event.date;
+  const assignedMembers = useMemo(() => teamMembers.filter(m => event.assigneeIds?.includes(m.id)), [event.assigneeIds, teamMembers]);
+  
   return (
-      <button onClick={() => onEditClick(event)} className="flex w-full items-center gap-3 text-left p-2 rounded-lg hover:bg-muted transition-colors">
-        <div className={cn('flex h-8 w-8 items-center justify-center rounded-full', config.bgColor, config.color)}>
+      <button onClick={() => onEditClick(event)} className="flex w-full items-start gap-3 text-left p-2 rounded-lg hover:bg-muted transition-colors">
+        <div className={cn('flex h-8 w-8 items-center justify-center rounded-full mt-1', config.bgColor, config.color)}>
           {config.icon}
         </div>
         <div className="flex-1">
           <p className="font-medium text-sm">{event.title}</p>
           <p className="text-xs text-muted-foreground">
-            {format(event.date, 'd MMM, HH:mm', { locale: es })}
+            {format(eventDate, 'HH:mm', { locale: es })}h
           </p>
+          {assignedMembers.length > 0 && (
+             <div className="flex flex-wrap gap-1 mt-1">
+                {assignedMembers.map(member => (
+                     <div key={member.id} className="flex items-center gap-1.5 p-1 text-xs rounded-md" style={{backgroundColor: `${member.avatar.color}20`}}>
+                        <Avatar className="h-4 w-4 text-white" style={{ backgroundColor: member.avatar.color }}>
+                            <AvatarFallback className="bg-transparent text-[8px]">
+                                <MemberIcon member={member} className="h-2 w-2" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <span>{member.name}</span>
+                    </div>
+                ))}
+             </div>
+          )}
         </div>
       </button>
+  );
+}
+
+function DayEventsDialog({ date, events, teamMembers, open, onOpenChange, onEditEvent }: { date: Date, events: CalendarEvent[], teamMembers: TeamMember[], open: boolean, onOpenChange: (open: boolean) => void, onEditEvent: (event: CalendarEvent) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Eventos para el {format(date, 'd MMMM, yyyy', { locale: es })}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+          {events.length > 0 ? (
+            events.map(event => (
+              <EventItem key={event.id} event={event} onEditClick={onEditEvent} teamMembers={teamMembers} />
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">No hay eventos para este día.</p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -466,6 +511,10 @@ export default function CalendarPage() {
   const [isScheduleSheetOpen, setIsScheduleSheetOpen] = useState(false);
 
   const [filteredAssigneeIds, setFilteredAssigneeIds] = useState<string[]>([]);
+  
+  const [dayDialogDate, setDayDialogDate] = useState<Date | null>(null);
+  const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
+  
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -495,6 +544,19 @@ export default function CalendarPage() {
         unsubEvents();
     }
   }, [db]);
+  
+  const handleDayClick = (day: Date) => {
+    setDayDialogDate(day);
+    setIsDayDialogOpen(true);
+  };
+  
+  const handleEditEventFromDialog = (event: CalendarEvent) => {
+    setIsDayDialogOpen(false);
+    // Allow time for dialog to close before opening sheet
+    setTimeout(() => {
+        openSheetForEdit(event);
+    }, 150);
+  }
 
   const openSheetForEdit = (event: CalendarEvent) => {
     setSelectedEvent(event);
@@ -509,10 +571,12 @@ export default function CalendarPage() {
   const handleSaveEvent = (eventData: Omit<CalendarEvent, 'id'> | CalendarEvent) => {
     if (!db) return;
     
+    const dateToSave = eventData.date instanceof Date ? Timestamp.fromDate(eventData.date) : eventData.date;
+
     if ('id' in eventData) {
         const { id, ...dataToSave } = eventData;
         const docRef = doc(db, 'events', id);
-        setDoc(docRef, dataToSave)
+        setDoc(docRef, { ...dataToSave, date: dateToSave }, { merge: true })
           .then(() => toast({ title: "Evento actualizado", description: `${eventData.title} ha sido actualizado.` }))
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -523,13 +587,13 @@ export default function CalendarPage() {
           });
     } else {
         const newDocRef = doc(collection(db, 'events'));
-        setDoc(newDocRef, eventData)
+        setDoc(newDocRef, { ...eventData, date: dateToSave })
           .then(() => toast({ title: "Evento añadido", description: `${eventData.title} ha sido añadido.` }))
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                   path: newDocRef.path,
                   operation: 'create',
-                  requestResourceData: eventData
+                  requestResourceData: { ...eventData, date: dateToSave }
               }))
           });
     }
@@ -554,19 +618,25 @@ export default function CalendarPage() {
     const batch = writeBatch(db);
     newEvents.forEach(eventData => {
         const newDocRef = doc(collection(db, 'events'));
-        batch.set(newDocRef, eventData);
+        const dateToSave = eventData.date instanceof Date ? Timestamp.fromDate(eventData.date) : eventData.date;
+        batch.set(newDocRef, { ...eventData, date: dateToSave });
     });
 
     batch.commit()
       .then(() => toast({ title: "Publicaciones programadas", description: `Se han añadido ${newEvents.length} nuevos eventos al calendario.`}))
       .catch(err => {
-          // Note: Batch writes don't give individual doc paths on failure.
-          // We can emit a more generic error for the collection.
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
+          // This will only catch client-side errors. Permission errors are now unawaited.
+          console.error("Error committing batch:", err);
+          
+          // For permission errors, we can proactively emit. 
+          // Note: This won't have the specific doc path that failed.
+          const permissionError = new FirestorePermissionError({
               path: 'events',
               operation: 'create',
-              requestResourceData: newEvents
-          }))
+              requestResourceData: newEvents.map(e => ({...e, date: e.date}))
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          toast({ title: "Error de permisos", description: permissionError.message, variant: "destructive"});
       });
   }
 
@@ -582,6 +652,14 @@ export default function CalendarPage() {
         event.assigneeIds && event.assigneeIds.some(id => filteredAssigneeIds.includes(id))
     );
   }, [events, filteredAssigneeIds]);
+  
+  const dayDialogEvents = useMemo(() => {
+    if (!dayDialogDate) return [];
+    return filteredEvents.filter(e => {
+        const eventDate = e.date instanceof Timestamp ? e.date.toDate() : e.date;
+        return isSameDay(eventDate, dayDialogDate);
+    });
+  }, [dayDialogDate, filteredEvents]);
 
   if (!today) {
     return null; // or a loading skeleton
@@ -592,10 +670,22 @@ export default function CalendarPage() {
   const startOfCurrentMonth = startOfMonth(today);
   const endOfCurrentMonth = endOfMonth(today);
 
-  const eventsToday = filteredEvents.filter((e) => isSameDay(e.date, today));
-  const eventsWeek = filteredEvents.filter((e) => e.date >= startOfCurrentWeek && e.date <= endOfCurrentWeek);
-  const eventsMonth = filteredEvents.filter((e) => e.date >= startOfCurrentMonth && e.date <= endOfCurrentMonth);
-  const futureShows = events.filter(e => e.type === 'Espectáculos' && e.date > new Date());
+  const eventsToday = filteredEvents.filter((e) => {
+    const eventDate = e.date instanceof Timestamp ? e.date.toDate() : e.date;
+    return isSameDay(eventDate, today)
+  });
+  const eventsWeek = filteredEvents.filter((e) => {
+    const eventDate = e.date instanceof Timestamp ? e.date.toDate() : e.date;
+    return eventDate >= startOfCurrentWeek && eventDate <= endOfCurrentWeek
+  });
+  const eventsMonth = filteredEvents.filter((e) => {
+    const eventDate = e.date instanceof Timestamp ? e.date.toDate() : e.date;
+    return eventDate >= startOfCurrentMonth && eventDate <= endOfCurrentMonth
+  });
+  const futureShows = events.filter(e => {
+      const eventDate = e.date instanceof Timestamp ? e.date.toDate() : e.date;
+      return e.type === 'Espectáculos' && eventDate > new Date()
+  });
 
   return (
     <>
@@ -622,21 +712,21 @@ export default function CalendarPage() {
                         </TabsList>
                         <TabsContent value="today" className="space-y-2 mt-4">
                             {eventsToday.length > 0 ? (
-                            eventsToday.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
+                            eventsToday.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} teamMembers={teamMembers} />)
                             ) : (
                             <p className="text-sm text-muted-foreground text-center py-4">No hay eventos para hoy.</p>
                             )}
                         </TabsContent>
                         <TabsContent value="week" className="space-y-2 mt-4">
                             {eventsWeek.length > 0 ? (
-                            eventsWeek.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
+                            eventsWeek.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} teamMembers={teamMembers}/>)
                             ) : (
                             <p className="text-sm text-muted-foreground text-center py-4">No hay eventos esta semana.</p>
                             )}
                         </TabsContent>
                         <TabsContent value="month" className="space-y-2 mt-4">
                             {eventsMonth.length > 0 ? (
-                            eventsMonth.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
+                            eventsMonth.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} teamMembers={teamMembers}/>)
                             ) : (
                             <p className="text-sm text-muted-foreground text-center py-4">No hay eventos este mes.</p>
                             )}
@@ -692,6 +782,7 @@ export default function CalendarPage() {
               mode="single"
               month={currentMonth}
               onMonthChange={setCurrentMonth}
+              onDayClick={handleDayClick}
               className="p-0"
               classNames={{
                 months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
@@ -702,22 +793,23 @@ export default function CalendarPage() {
                 head_cell: 'text-muted-foreground font-normal text-sm text-center py-2',
                 row: 'grid grid-cols-7 gap-1 mt-2',
                 cell: 'h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20',
-                day: 'h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-md border',
+                day: 'h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-md border cursor-pointer',
                 day_selected: 'bg-primary text-primary-foreground hover:bg-primary',
                 day_today: 'bg-accent text-accent-foreground',
                 day_outside: 'text-muted-foreground opacity-50',
               }}
               components={{
-                DayContent: (props) => {
-                  const dayEvents = filteredEvents.filter((event) =>
-                    isSameDay(event.date, props.date)
-                  );
+                DayContent: ({ date: dayDate, ...props }) => {
+                  const dayEvents = filteredEvents.filter((event) => {
+                    const eventDate = event.date instanceof Timestamp ? event.date.toDate() : event.date;
+                    return isSameDay(eventDate, dayDate);
+                  });
                   return (
                     <div className="relative h-full w-full">
-                      <time dateTime={props.date.toISOString()} className={cn("absolute top-1 left-1.5", isSameDay(props.date, today) && "font-bold text-primary")}>
-                        {props.date.getDate()}
+                      <time dateTime={dayDate.toISOString()} className={cn("absolute top-1 left-1.5", isSameDay(dayDate, today) && "font-bold text-primary")}>
+                        {dayDate.getDate()}
                       </time>
-                      <div className='space-y-1 mt-6 overflow-y-auto max-h-[80px]'>
+                      <div className='space-y-1 mt-6 overflow-y-auto max-h-[80px] no-scrollbar' onClick={(e) => e.stopPropagation()}>
                         {dayEvents.map(event => {
                           const config = eventConfig[event.type];
                           const assignedMembers = teamMembers.filter(m => event.assigneeIds?.includes(m.id));
@@ -762,8 +854,16 @@ export default function CalendarPage() {
         teamMembers={teamMembers}
         onSchedule={handleScheduleInstagram}
       />
+      {dayDialogDate && (
+        <DayEventsDialog
+          date={dayDialogDate}
+          events={dayDialogEvents}
+          teamMembers={teamMembers}
+          open={isDayDialogOpen}
+          onOpenChange={setIsDayDialogOpen}
+          onEditEvent={handleEditEventFromDialog}
+        />
+      )}
     </>
   );
 }
-
-    
