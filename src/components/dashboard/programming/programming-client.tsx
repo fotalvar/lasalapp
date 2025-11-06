@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, FilePenLine, Trash2, Check, GripVertical } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, FilePenLine, Trash2, Check, GripVertical, CalendarIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,9 @@ import { collection, onSnapshot, addDoc, setDoc, doc, deleteDoc, Timestamp } fro
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+
 
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Confirmado': 'default',
@@ -77,7 +80,7 @@ function TimelineInteraction({ event }: { event: TimelineEvent }) {
     );
 }
 
-function TimelineStep({ event, onToggle }: { event: TimelineEvent, onToggle: (checked: boolean) => void }) {
+function TimelineStep({ event, onToggle, onDateChange }: { event: TimelineEvent, onToggle: (checked: boolean) => void, onDateChange: (date: Date | undefined) => void }) {
     const isCompleted = !!event.date;
     return (
         <div className="flex items-start gap-4 pl-8 relative">
@@ -86,7 +89,7 @@ function TimelineStep({ event, onToggle }: { event: TimelineEvent, onToggle: (ch
                     {isCompleted && <Check className="h-4 w-4" />}
                 </span>
             </div>
-            <div>
+            <div className="flex-grow">
                 <Label
                     htmlFor={event.id}
                     className={cn("font-semibold", isCompleted && "text-muted-foreground line-through")}
@@ -94,14 +97,26 @@ function TimelineStep({ event, onToggle }: { event: TimelineEvent, onToggle: (ch
                     {event.name}
                 </Label>
                 {isCompleted ? (
-                    <p className="text-xs text-muted-foreground">
-                        Completado el {format(event.date!, "d MMM, yyyy", { locale: es })}
-                    </p>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="link" size="sm" className="text-xs text-muted-foreground p-0 h-auto font-normal">
+                                Completado el {format(event.date!, "d MMM, yyyy", { locale: es })}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                                mode="single"
+                                selected={event.date || undefined}
+                                onSelect={(date) => onDateChange(date || undefined)}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
                 ) : (
                     <p className="text-xs text-muted-foreground">Pendiente</p>
                 )}
             </div>
-            <Checkbox id={event.id} checked={isCompleted} onCheckedChange={onToggle} className="ml-auto" />
+            <Checkbox id={event.id} checked={isCompleted} onCheckedChange={(checked) => onToggle(!!checked)} className="ml-auto" />
         </div>
     );
 }
@@ -133,7 +148,7 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
             title,
             company,
             status,
-            timeline,
+            timeline: timeline.map(t => ({...t, date: t.date ? Timestamp.fromDate(t.date) : null })),
         };
 
         if (show?.id) {
@@ -147,9 +162,15 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
     
     const handleToggleStep = (stepId: string, checked: boolean) => {
         setTimeline(currentTimeline => currentTimeline.map(step => 
-            step.id === stepId ? { ...step, date: checked ? new Date() : null } : step
+            step.id === stepId ? { ...step, date: checked ? (step.date || new Date()) : null } : step
         ));
     };
+
+    const handleDateChange = (stepId: string, date: Date | undefined) => {
+        setTimeline(currentTimeline => currentTimeline.map(step =>
+            step.id === stepId ? { ...step, date: date || null } : step
+        ))
+    }
 
     const handleAddInteraction = () => {
         if (!newInteractionNote.trim()) return;
@@ -224,7 +245,12 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
                                 {sortedTimeline.map(event => (
                                     event.isCustom
                                         ? <TimelineInteraction key={event.id} event={event} />
-                                        : <TimelineStep key={event.id} event={event} onToggle={(checked) => handleToggleStep(event.id, checked)} />
+                                        : <TimelineStep 
+                                            key={event.id} 
+                                            event={event} 
+                                            onToggle={(checked) => handleToggleStep(event.id, checked)}
+                                            onDateChange={(date) => handleDateChange(event.id, date)}
+                                          />
                                 ))}
                             </div>
                         </div>
@@ -401,3 +427,4 @@ export default function ProgrammingClient() {
     </>
   );
 }
+
