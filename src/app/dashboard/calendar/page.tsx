@@ -12,6 +12,10 @@ import {
   Music,
   Edit,
   Trash2,
+  Instagram,
+  BookOpen,
+  Film,
+  Camera,
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -33,13 +37,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { add, endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
+import { add, endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek, subDays } from 'date-fns';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import PageHeader from '@/components/dashboard/page-header';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type EventType =
   | 'Publicaciones en redes'
@@ -58,7 +63,7 @@ type Event = {
 const initialEvents: Event[] = [
   {
     id: '1',
-    date: add(new Date(), { days: 2 }),
+    date: add(new Date(), { days: 12 }),
     title: 'Estreno de "Eco"',
     type: 'Espectáculos',
   },
@@ -85,6 +90,12 @@ const initialEvents: Event[] = [
     date: add(new Date(), { days: 1 }),
     title: 'Reunión de producción',
     type: 'Reuniones',
+  },
+   {
+    id: '6',
+    date: add(new Date(), { days: 25 }),
+    title: 'Concierto Acústico',
+    type: 'Espectáculos',
   },
 ];
 
@@ -224,6 +235,136 @@ function AddEditEventSheet({
   );
 }
 
+function ScheduleInstagramSheet({ open, onOpenChange, shows, onSchedule }: { open: boolean, onOpenChange: (open: boolean) => void, shows: Event[], onSchedule: (newEvents: Event[]) => void }) {
+    const [selectedShowId, setSelectedShowId] = useState<string | undefined>();
+    
+    const [useStory, setUseStory] = useState(false);
+    const [storyCount, setStoryCount] = useState(1);
+
+    const [usePost, setUsePost] = useState(false);
+    const [postCount, setPostCount] = useState(1);
+
+    const [useReel, setUseReel] = useState(false);
+    const [reelCount, setReelCount] = useState(1);
+
+    const selectedShow = shows.find(s => s.id === selectedShowId);
+
+    const scheduleConfig = [
+        { type: 'Story', enabled: useStory, count: storyCount, icon: BookOpen, timing: (date: Date, i: number) => subDays(date, 3 + i * 2) },
+        { type: 'Publicación', enabled: usePost, count: postCount, icon: Camera, timing: (date: Date, i: number) => subDays(date, 7 + i * 3) },
+        { type: 'Reel', enabled: useReel, count: reelCount, icon: Film, timing: (date: Date, i: number) => subDays(date, 10 + i * 5) }
+    ];
+
+    const handleSchedule = () => {
+        if (!selectedShow) return;
+
+        const newEvents: Event[] = [];
+
+        if (useStory) {
+            for (let i = 0; i < storyCount; i++) {
+                newEvents.push({
+                    id: `ig-story-${selectedShow.id}-${i}-${Date.now()}`,
+                    title: `Story para "${selectedShow.title}" (${i + 1}/${storyCount})`,
+                    date: scheduleConfig[0].timing(selectedShow.date, i),
+                    type: 'Publicaciones en redes'
+                });
+            }
+        }
+        if (usePost) {
+            for (let i = 0; i < postCount; i++) {
+                newEvents.push({
+                    id: `ig-post-${selectedShow.id}-${i}-${Date.now()}`,
+                    title: `Publicación para "${selectedShow.title}" (${i + 1}/${postCount})`,
+                    date: scheduleConfig[1].timing(selectedShow.date, i),
+                    type: 'Publicaciones en redes'
+                });
+            }
+        }
+        if (useReel) {
+            for (let i = 0; i < reelCount; i++) {
+                newEvents.push({
+                    id: `ig-reel-${selectedShow.id}-${i}-${Date.now()}`,
+                    title: `Reel para "${selectedShow.title}" (${i + 1}/${reelCount})`,
+                    date: scheduleConfig[2].timing(selectedShow.date, i),
+                    type: 'Publicaciones en redes'
+                });
+            }
+        }
+        
+        onSchedule(newEvents);
+        onOpenChange(false);
+    };
+
+    return (
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>Programar Contenido de Instagram</SheetTitle>
+                </SheetHeader>
+                 <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                        <Label>Espectáculo</Label>
+                        <Select value={selectedShowId} onValueChange={setSelectedShowId}>
+                            <SelectTrigger><SelectValue placeholder="Selecciona un espectáculo" /></SelectTrigger>
+                            <SelectContent>
+                                {shows.map(show => <SelectItem key={show.id} value={show.id}>{show.title}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-4 rounded-md border p-4">
+                        <div className="flex items-center gap-4">
+                           <Checkbox id="story" checked={useStory} onCheckedChange={(c) => setUseStory(!!c)} />
+                           <Label htmlFor="story" className="flex items-center gap-2 font-semibold"><BookOpen className="h-4 w-4" /> Story</Label>
+                            {useStory && (
+                                <Select value={String(storyCount)} onValueChange={(v) => setStoryCount(Number(v))}>
+                                    <SelectTrigger className="w-20 ml-auto"><SelectValue/></SelectTrigger>
+                                    <SelectContent>{Array.from({length: 5}, (_, i) => <SelectItem key={i} value={String(i+1)}>{i+1}</SelectItem>)}</SelectContent>
+                                </Select>
+                            )}
+                        </div>
+                        {selectedShow && useStory && Array.from({length: storyCount}).map((_, i) => (
+                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[0].timing(selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                        ))}
+                        
+                        <div className="flex items-center gap-4">
+                           <Checkbox id="post" checked={usePost} onCheckedChange={(c) => setUsePost(!!c)} />
+                           <Label htmlFor="post" className="flex items-center gap-2 font-semibold"><Camera className="h-4 w-4" /> Publicación</Label>
+                            {usePost && (
+                                <Select value={String(postCount)} onValueChange={(v) => setPostCount(Number(v))}>
+                                    <SelectTrigger className="w-20 ml-auto"><SelectValue/></SelectTrigger>
+                                    <SelectContent>{Array.from({length: 5}, (_, i) => <SelectItem key={i} value={String(i+1)}>{i+1}</SelectItem>)}</SelectContent>
+                                </Select>
+                            )}
+                        </div>
+                         {selectedShow && usePost && Array.from({length: postCount}).map((_, i) => (
+                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[1].timing(selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                        ))}
+
+                         <div className="flex items-center gap-4">
+                           <Checkbox id="reel" checked={useReel} onCheckedChange={(c) => setUseReel(!!c)} />
+                           <Label htmlFor="reel" className="flex items-center gap-2 font-semibold"><Film className="h-4 w-4" /> Reel</Label>
+                            {useReel && (
+                                <Select value={String(reelCount)} onValueChange={(v) => setReelCount(Number(v))}>
+                                    <SelectTrigger className="w-20 ml-auto"><SelectValue/></SelectTrigger>
+                                    <SelectContent>{Array.from({length: 5}, (_, i) => <SelectItem key={i} value={String(i+1)}>{i+1}</SelectItem>)}</SelectContent>
+                                </Select>
+                            )}
+                        </div>
+                        {selectedShow && useReel && Array.from({length: reelCount}).map((_, i) => (
+                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[2].timing(selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                        ))}
+                    </div>
+                 </div>
+                 <SheetFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                    <Button onClick={handleSchedule} disabled={!selectedShow}>Programar Publicaciones</Button>
+                 </SheetFooter>
+            </SheetContent>
+        </Sheet>
+    )
+}
+
 function EventItem({ event, onEditClick }: { event: Event; onEditClick: (event: Event) => void; }) {
   const config = eventConfig[event.type];
   return (
@@ -245,9 +386,11 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<Event[]>(initialEvents.sort((a,b) => a.date.getTime() - b.date.getTime()));
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [today, setToday] = useState<Date | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  
+  const [isAddEditSheetOpen, setIsAddEditSheetOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
-
+  
+  const [isScheduleSheetOpen, setIsScheduleSheetOpen] = useState(false);
 
   useEffect(() => {
     setToday(new Date());
@@ -255,14 +398,13 @@ export default function CalendarPage() {
 
   const openSheetForEdit = (event: Event) => {
     setSelectedEvent(event);
-    setIsSheetOpen(true);
+    setIsAddEditSheetOpen(true);
   }
 
   const openSheetForNew = () => {
     setSelectedEvent(undefined);
-    setIsSheetOpen(true);
+    setIsAddEditSheetOpen(true);
   }
-
 
   const handleSaveEvent = (event: Event) => {
     setEvents((prev) => {
@@ -278,6 +420,10 @@ export default function CalendarPage() {
     setEvents(prev => prev.filter(e => e.id !== id));
   }
   
+  const handleScheduleInstagram = (newEvents: Event[]) => {
+    setEvents(prev => [...prev, ...newEvents].sort((a,b) => a.date.getTime() - b.date.getTime()));
+  }
+
   if (!today) {
     return null; // or a loading skeleton
   }
@@ -290,14 +436,21 @@ export default function CalendarPage() {
   const eventsToday = events.filter((e) => isSameDay(e.date, today));
   const eventsWeek = events.filter((e) => e.date >= startOfCurrentWeek && e.date <= endOfCurrentWeek);
   const eventsMonth = events.filter((e) => e.date >= startOfCurrentMonth && e.date <= endOfCurrentMonth);
+  const futureShows = events.filter(e => e.type === 'Espectáculos' && e.date > new Date());
 
   return (
     <>
       <PageHeader title="Calendario y Programación">
-          <Button size="sm" onClick={openSheetForNew}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Añadir Evento
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsScheduleSheetOpen(true)}>
+                <Instagram className="mr-2 h-4 w-4" />
+                Programar Instagram
+            </Button>
+            <Button size="sm" onClick={openSheetForNew}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Añadir Evento
+            </Button>
+          </div>
       </PageHeader>
       <main className="p-4 md:px-6 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -384,11 +537,17 @@ export default function CalendarPage() {
         </Card>
       </main>
       <AddEditEventSheet
-        open={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
+        open={isAddEditSheetOpen}
+        onOpenChange={setIsAddEditSheetOpen}
         event={selectedEvent}
         onSave={handleSaveEvent}
         onDelete={handleDeleteEvent}
+      />
+      <ScheduleInstagramSheet 
+        open={isScheduleSheetOpen}
+        onOpenChange={setIsScheduleSheetOpen}
+        shows={futureShows}
+        onSchedule={handleScheduleInstagram}
       />
     </>
   );
