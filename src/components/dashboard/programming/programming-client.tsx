@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -47,6 +46,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardContent } from '@/components/ui/card';
 
 
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
@@ -165,34 +166,34 @@ function TimelineStep({ event, onToggle, onDateChange }: { event: TimelineEvent,
                     {isCompleted && <Check className="h-4 w-4" />}
                 </span>
             </div>
-            <div className="flex-grow">
-                <Label
-                    htmlFor={event.id}
-                    className={cn("font-semibold", isCompleted && "text-muted-foreground line-through")}
-                >
-                    {event.name}
-                </Label>
-                {isCompleted ? (
-                     <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="link" size="sm" className="text-xs text-muted-foreground p-0 h-auto font-normal">
-                                Completado el {format(event.date!, "d MMM, yyyy", { locale: es })}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={event.date || undefined}
-                                onSelect={(date) => onDateChange(date || undefined)}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                ) : (
-                    <p className="text-xs text-muted-foreground">Pendiente</p>
-                )}
+            <div className="flex-grow flex items-center gap-4">
+                <div className="flex-grow">
+                    <Label
+                        htmlFor={event.id}
+                        className={cn("font-semibold", isCompleted && "text-muted-foreground line-through")}
+                    >
+                        {event.name}
+                    </Label>
+                    {isCompleted && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="link" size="sm" className="text-xs text-muted-foreground p-0 h-auto font-normal block">
+                                    Completado el {format(event.date!, "d MMM, yyyy", { locale: es })}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={event.date || undefined}
+                                    onSelect={(date) => onDateChange(date || undefined)}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                </div>
+                 <Checkbox id={event.id} checked={isCompleted} onCheckedChange={(checked) => onToggle(!!checked)} className="ml-auto" />
             </div>
-            <Checkbox id={event.id} checked={isCompleted} onCheckedChange={(checked) => onToggle(!!checked)} className="ml-auto" />
         </div>
     );
 }
@@ -286,7 +287,7 @@ function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="sm:max-w-lg overflow-y-auto">
+            <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
                 <SheetHeader>
                     <SheetTitle>{show ? 'Editar Espectáculo' : 'Añadir Nuevo Espectáculo'}</SheetTitle>
                     <SheetDescription>
@@ -400,6 +401,7 @@ export default function ProgrammingClient() {
   const [showCompleted, setShowCompleted] = useState(false);
   const db = useFirestore();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!db) return;
@@ -480,6 +482,100 @@ export default function ProgrammingClient() {
     setIsSheetOpen(true);
   }
 
+  const renderDesktopView = () => (
+    <div className="border rounded-lg">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Título del Espectáculo</TableHead>
+              <TableHead>Compañía</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Progreso</TableHead>
+              <TableHead>Última Interacción</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {renderShowItems()}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+
+  const renderMobileView = () => (
+    <div className='space-y-3'>
+      {renderShowItems()}
+    </div>
+  );
+
+  const renderShowItems = () => {
+      return filteredShows.map((show) => {
+        const lastInteraction = show.timeline && show.timeline.length > 0 
+          ? [...show.timeline].filter(t => t.date).sort((a,b) => b.date!.getTime() - a.date!.getTime())[0] 
+          : null;
+          
+        const lastInteractionNote = lastInteraction?.isCustom ? lastInteraction.notes : lastInteraction?.name;
+        
+        const completedSteps = show.timeline ? show.timeline.filter(t => !t.isCustom && t.date).length : 0;
+        const progress = (completedSteps / FIXED_STEPS.length) * 100;
+
+        if (isMobile) {
+          return (
+            <Card key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold">{show.title}</p>
+                    <p className="text-sm text-muted-foreground">{show.company}</p>
+                  </div>
+                  <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Progress value={progress} className="w-full h-2" />
+                    <span className="text-xs text-muted-foreground font-medium">{Math.round(progress)}%</span>
+                  </div>
+                </div>
+                 {lastInteraction && (
+                  <div className="text-sm text-muted-foreground">
+                    <span>Última Interacción: </span>
+                    <span className="font-medium">{format(lastInteraction.date!, 'd MMM, yyyy', { locale: es })}</span>
+                  </div>
+                 )}
+              </CardContent>
+            </Card>
+          )
+        }
+        
+        return (
+          <TableRow key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
+            <TableCell className="font-medium">{show.title}</TableCell>
+            <TableCell>{show.company}</TableCell>
+            <TableCell>
+              <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                  <Progress value={progress} className="w-24 h-2" />
+                  <span className="text-xs text-muted-foreground font-medium">{Math.round(progress)}%</span>
+              </div>
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                {lastInteraction?.date && (
+                   <span>{format(lastInteraction.date, 'd MMM, yyyy', { locale: es })}</span>
+                )}
+                {lastInteractionNote && (
+                  <Badge variant="outline" className="font-normal truncate max-w-xs">{lastInteractionNote}</Badge>
+                )}
+              </div>
+            </TableCell>
+          </TableRow>
+        );
+      });
+  }
+
   return (
     <>
       <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
@@ -522,65 +618,9 @@ export default function ProgrammingClient() {
         <div></div>
       </AddEditShowSheet>
 
-      <div className="border rounded-lg">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título del Espectáculo</TableHead>
-                <TableHead>Compañía</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Progreso</TableHead>
-                <TableHead>Última Interacción</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredShows.map((show) => {
-                const lastInteraction = show.timeline && show.timeline.length > 0 
-                  ? [...show.timeline].filter(t => t.date).sort((a,b) => b.date!.getTime() - a.date!.getTime())[0] 
-                  : null;
-                  
-                const lastInteractionNote = lastInteraction?.isCustom ? lastInteraction.notes : lastInteraction?.name;
-
-                const truncatedNote = lastInteractionNote 
-                  ? lastInteractionNote.length > 20 
-                    ? `${lastInteractionNote.substring(0, 20)}...`
-                    : lastInteractionNote
-                  : null;
-                
-                const completedSteps = show.timeline ? show.timeline.filter(t => !t.isCustom && t.date).length : 0;
-                const progress = (completedSteps / FIXED_STEPS.length) * 100;
-                
-                return (
-                  <TableRow key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
-                    <TableCell className="font-medium">{show.title}</TableCell>
-                    <TableCell>{show.company}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                          <Progress value={progress} className="w-24 h-2" />
-                          <span className="text-xs text-muted-foreground font-medium">{Math.round(progress)}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span>
-                          {lastInteraction?.date ? format(lastInteraction.date, 'd MMM, yyyy', { locale: es }) : 'N/A'}
-                        </span>
-                        {truncatedNote && (
-                          <Badge variant="outline" className="font-normal truncate">{truncatedNote}</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+      {isMobile ? renderMobileView() : renderDesktopView()}
     </>
   );
 }
+
+    
