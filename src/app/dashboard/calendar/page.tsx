@@ -277,7 +277,7 @@ export default function CalendarPage() {
   const eventsMonth = events.filter((e) => e.date >= startOfCurrentMonth && e.date <= endOfCurrentMonth);
 
   return (
-    <div className="flex-1">
+    <>
       <PageHeader title="Calendario y Programación">
           <AddEditEventSheet onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
             <Button size="sm">
@@ -372,6 +372,6 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
       </main>
-    </div>
+    </>
   );
 }
