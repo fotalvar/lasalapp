@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import React, { ReactNode, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -13,11 +13,18 @@ import {
   ListTodo,
   Film,
   Lightbulb,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import Image from 'next/image';
+import { useUser } from '@/firebase';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Principal' },
@@ -26,25 +33,59 @@ const navItems = [
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendario' },
   { href: '/dashboard/expenses', icon: Banknote, label: 'Gastos' },
   { href: '/dashboard/meetings', icon: BookUser, label: 'Reuniones' },
-  { href: '/dashboard/responsibilities', icon: ListTodo, label: 'Responsabilidades' },
+  {
+    href: '/dashboard/responsibilities',
+    icon: ListTodo,
+    label: 'Responsabilidades',
+  },
   { href: '/dashboard/productions', icon: Film, label: 'Producciones' },
   { href: '/dashboard/ideas', icon: Lightbulb, label: 'Ideas' },
 ];
 
 const mobileNavItems = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Principal', color: 'text-blue-500' },
-    { href: '/dashboard/programming', icon: Theater, label: 'Programación', color: 'text-rose-500' },
-    { href: '/dashboard/calendar', icon: Calendar, label: 'Calendario', color: 'text-amber-500' },
-    { href: '/dashboard/expenses', icon: Banknote, label: 'Gastos', color: 'text-emerald-500' },
-    { href: '/dashboard/responsibilities', icon: ListTodo, label: 'Responsabilidades', color: 'text-pink-500' },
+  {
+    href: '/dashboard',
+    icon: LayoutDashboard,
+    label: 'Principal',
+    color: 'text-blue-500',
+  },
+  {
+    href: '/dashboard/programming',
+    icon: Theater,
+    label: 'Programación',
+    color: 'text-rose-500',
+  },
+  {
+    href: '/dashboard/calendar',
+    icon: Calendar,
+    label: 'Calendario',
+    color: 'text-amber-500',
+  },
+  {
+    href: '/dashboard/expenses',
+    icon: Banknote,
+    label: 'Gastos',
+    color: 'text-emerald-500',
+  },
+  {
+    href: '/dashboard/responsibilities',
+    icon: ListTodo,
+    label: 'Responsabilidades',
+    color: 'text-pink-500',
+  },
 ];
 
 function AppLogo() {
   return (
     <div className="relative h-[60px] w-[60px]">
-      <Image src="/logo.png" alt="laSalapp logo" fill style={{ objectFit: 'contain' }} />
+      <Image
+        src="/logo.png"
+        alt="laSalapp logo"
+        fill
+        style={{ objectFit: 'contain' }}
+      />
     </div>
-  )
+  );
 }
 
 function DesktopNav() {
@@ -94,7 +135,9 @@ function BottomNavBar() {
                       !isActive && 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <item.icon className={cn('h-6 w-6', isActive ? item.color : '')} />
+                    <item.icon
+                      className={cn('h-6 w-6', isActive ? item.color : '')}
+                    />
                     <span className="sr-only">{item.label}</span>
                   </Link>
                 </TooltipTrigger>
@@ -110,7 +153,28 @@ function BottomNavBar() {
   );
 }
 
+const ADMIN_EMAILS = ['info@atresquarts.com', 'admin@atresquarts.com'];
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isUserLoading) return; // Wait until user state is determined
+    if (!user || (user.email && !ADMIN_EMAILS.includes(user.email))) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  if (isUserLoading || !user || (user.email && !ADMIN_EMAILS.includes(user.email))) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <p className="mt-2 text-muted-foreground">Verificando acceso...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full bg-background pb-16 md:pb-0">
       <header className="hidden md:flex h-[60px] items-center justify-between gap-2 border-b bg-background sticky top-0 z-40 pr-4 lg:pr-6">

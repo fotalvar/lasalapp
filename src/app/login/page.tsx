@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Loader2, Theater } from 'lucide-react';
 
@@ -30,27 +30,34 @@ function GoogleIcon() {
   );
 }
 
+const ADMIN_EMAILS = ['info@atresquarts.com', 'admin@atresquarts.com'];
 
 export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
 
+  const handleRedirect = (user: User | null) => {
+    if (!user) return;
+    if (user.email && ADMIN_EMAILS.includes(user.email)) {
+      router.replace('/dashboard');
+    } else {
+      router.replace('/public');
+    }
+  };
+
   useEffect(() => {
     if (!isUserLoading && user) {
-      router.replace('/dashboard');
+      handleRedirect(user);
     }
   }, [user, isUserLoading, router]);
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      'hd': 'atresquarts.com' // Restrict to domain
-    });
     try {
-      await signInWithPopup(auth, provider);
-      // onAuthStateChanged will handle the redirect
+      const result = await signInWithPopup(auth, provider);
+      // Redirection is handled by the useEffect hook
     } catch (error) {
       console.error('Error during Google sign-in:', error);
     }
@@ -66,18 +73,66 @@ export default function LoginPage() {
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center bg-background p-4">
-        <div className="w-full max-w-sm text-center">
-            <div className="flex items-center justify-center gap-2 mb-6">
-                <Theater className="h-8 w-8 text-primary" />
-                <span className="font-bold text-2xl">laSalapp</span>
-            </div>
-            <p className='text-muted-foreground mb-8'>Bienvenido. Por favor, inicia sesión para continuar.</p>
-            <Button onClick={handleGoogleSignIn} className="w-full" size="lg">
-                <GoogleIcon />
-                <span>Iniciar sesión con Google</span>
-            </Button>
-            <p className='text-xs text-muted-foreground mt-4'>Solo para usuarios del dominio @atresquarts.com</p>
+      <div className="w-full max-w-sm text-center">
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <svg
+            width="60"
+            height="60"
+            viewBox="0 0 100 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M57.1755 0.999982C57.1755 0.999982 43.1595 1.00002 38.0475 1C31.5275 0.999968 25.4955 3.32798 25.4955 11.724C25.4955 20.12 31.0395 24.504 38.0475 24.504C45.0555 24.504 57.1755 20.12 57.1755 11.724C57.1755 3.32798 57.1755 0.999982 57.1755 0.999982Z"
+              fill="#F5F5F5"
+              stroke="#1C1C1C"
+              strokeWidth="2"
+            />
+            <path
+              d="M50.7197 99C29.5677 99 14.1597 81.332 14.1597 62.9C14.1597 48.068 21.9757 34.608 34.9037 29.568C38.0157 28.224 43.1597 27.432 45.8637 28.224C47.8437 28.776 50.7197 30.12 50.7197 30.12L50.7197 29.568L58.2077 28.776L59.3957 29.568C72.3237 34.608 80.1397 48.068 80.1397 62.9C80.1397 81.332 64.9197 99 50.7197 99Z"
+              fill="#F5F5F5"
+            />
+            <path
+              d="M50.7197 99C29.5677 99 14.1597 81.332 14.1597 62.9C14.1597 48.068 21.9757 34.608 34.9037 29.568C38.0157 28.224 43.1597 27.432 45.8637 28.224C47.8437 28.776 50.7197 30.12 50.7197 30.12L50.7197 29.568L58.2077 28.776L59.3957 29.568C72.3237 34.608 80.1397 48.068 80.1397 62.9C80.1397 81.332 64.9197 99 50.7197 99Z"
+              stroke="#1C1C1C"
+              strokeWidth="2"
+            />
+            <path
+              d="M47.7887 31.848C47.7887 31.848 48.6527 34.056 46.4447 34.608C44.2367 35.16 42.1487 34.056 42.1487 34.056"
+              stroke="#1C1C1C"
+              strokeWidth="2"
+            />
+            <path
+              d="M59.3957 31.848C59.3957 31.848 58.5317 34.056 60.7397 34.608C62.9477 35.16 65.0357 34.056 65.0357 34.056"
+              stroke="#1C1C1C"
+              strokeWidth="2"
+            />
+            <path
+              d="M53.8828 41.832C53.3308 43.176 52.1548 44.232 50.7188 44.232C49.2828 44.232 48.1068 43.176 47.5548 41.832"
+              stroke="#1C1C1C"
+              strokeWidth="2"
+            />
+            <path
+              d="M28.5117 76.812C28.5117 76.812 40.6397 84.888 56.8877 75.468C66.5277 69.828 72.3237 60.132 72.3237 60.132"
+              stroke="#1C1C1C"
+              strokeWidth="2"
+            />
+          </svg>
+          <span className="font-bold text-2xl">laSalapp</span>
         </div>
+        <p className="text-muted-foreground mb-8">
+          Portal de Acceso
+        </p>
+        <div className="space-y-4">
+           <Button onClick={handleGoogleSignIn} className="w-full" size="lg">
+              <GoogleIcon />
+              <span>Acceder con Google</span>
+            </Button>
+            <Button variant="secondary" className="w-full" size="lg" onClick={() => router.push('/public')}>
+              Acceso Público
+            </Button>
+        </div>
+      </div>
     </div>
   );
 }
