@@ -31,9 +31,9 @@ const navItems = [
   { href: '/dashboard/expenses', icon: Banknote, label: 'Gastos' },
   { href: '/dashboard/meetings', icon: BookUser, label: 'Reuniones' },
   {
-    href: '/dashboard/responsibilities',
+    href: '/dashboard/tasks',
     icon: ListTodo,
-    label: 'Responsabilidades',
+    label: 'Tareas',
   },
 ];
 
@@ -63,9 +63,9 @@ const mobileNavItems = [
     color: 'text-emerald-500',
   },
   {
-    href: '/dashboard/responsibilities',
+    href: '/dashboard/tasks',
     icon: ListTodo,
-    label: 'Responsabilidades',
+    label: 'Tareas',
     color: 'text-pink-500',
   },
 ];

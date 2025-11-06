@@ -1,4 +1,4 @@
-import type { TeamMember, Responsibility, Show, Expense, Todo } from './types';
+import type { TeamMember, Task, Show, Expense, Todo } from './types';
 
 export const teamMembers: TeamMember[] = [
   {
@@ -39,7 +39,7 @@ export const teamMembers: TeamMember[] = [
   },
 ];
 
-export const responsibilities: Responsibility[] = [
+export const responsibilities: Task[] = [
   {
     id: 'resp1',
     title: 'Organizar la cena de empresa de fin de año',

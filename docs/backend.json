@@ -329,36 +329,36 @@
         "minutes"
       ]
     },
-    "Responsibility": {
+    "Task": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Responsibility",
+      "title": "Task",
       "type": "object",
-      "description": "Represents a responsibility assigned to a team member.",
+      "description": "Represents a task assigned to a team member.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the responsibility."
+          "description": "Unique identifier for the task."
         },
         "description": {
           "type": "string",
-          "description": "Description of the responsibility."
+          "description": "Description of the task."
         },
         "deadline": {
           "type": "string",
-          "description": "The deadline for the responsibility.",
+          "description": "The deadline for the task.",
           "format": "date-time"
         },
         "assigneeId": {
           "type": "string",
-          "description": "Reference to TeamMember. (Relationship: Responsibility 1:1 TeamMember)"
+          "description": "Reference to TeamMember. (Relationship: Task 1:1 TeamMember)"
         },
         "isCompleted": {
           "type": "boolean",
-          "description": "Indicates whether the responsibility has been completed."
+          "description": "Indicates whether the task has been completed."
         },
         "checklist": {
           "type": "array",
-          "description": "A checklist of items to complete the responsibility.",
+          "description": "A checklist of items to complete the task.",
           "items": {
             "type": "string"
           }
@@ -560,17 +560,17 @@
         }
       },
       {
-        "path": "/responsibilities/{responsibilityId}",
+        "path": "/tasks/{taskId}",
         "definition": {
-          "entityName": "Responsibility",
+          "entityName": "Task",
           "schema": {
-            "$ref": "#/backend/entities/Responsibility"
+            "$ref": "#/backend/entities/Task"
           },
-          "description": "Stores responsibilities.",
+          "description": "Stores tasks.",
           "params": [
             {
-              "name": "responsibilityId",
-              "description": "The unique identifier of the responsibility."
+              "name": "taskId",
+              "description": "The unique identifier of the task."
             }
           ]
         }
@@ -592,6 +592,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and debuggability, adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization, copying relevant authorization data (like members maps) into subcollections to avoid `get()` calls in security rules. Structural Segregation is used to maintain homogeneous security postures within collections. Access Modeling standardizes authorization using path-based ownership and membership maps.\n\n*   `/users/{userId}/userProfile`: Stores user profiles, ensuring path-based ownership for private user data.\n*   `/roles/{roleId}`: Stores role definitions. UserProfile documents reference the Role document id.\n*   `/teamMembers/{teamMemberId}`: Stores team member information. No subcollections, so no denormalization is needed.\n*   `/companies/{companyId}`: Stores company information. No subcollections, so no denormalization is needed.\n*   `/shows/{showId}`: Stores show information. No subcollections, so no denormalization is needed.\n*   `/shows/{showId}/interactions/{interactionId}`: Stores interactions related to a show. Authorization Independence is achieved because shows are public and require no user data.\n*   `/events/{eventId}`: Stores events. Events are public.  Authorization Independence is achieved because events are public and require no user data.\n*   `/expenses/{expenseId}`: Stores expenses. Expenses are public. Authorization Independence is achieved because expenses are public and require no user data.\n*   `/meetingMinutes/{meetingMinutesId}`: Stores meeting minutes. Meeting minutes are public. Authorization Independence is achieved because meeting minutes are public and require no user data.\n*   `/responsibilities/{responsibilityId}`: Stores responsibilities. Responsibilities are public. Authorization Independence is achieved because responsibilities are public and require no user data.\n*   `/todoItems/{todoItemId}`: Stores todo items. Todo items are public. Authorization Independence is achieved because todo items are public and require no user data.\n\nThis structure supports QAPs by segregating data with different access needs into separate collections, avoiding the need to filter based on user roles within the rules.  Public data requires no filtering."
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and debuggability, adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization, copying relevant authorization data (like members maps) into subcollections to avoid `get()` calls in security rules. Structural Segregation is used to maintain homogeneous security postures within collections. Access Modeling standardizes authorization using path-based ownership and membership maps.\n\n*   `/users/{userId}/userProfile`: Stores user profiles, ensuring path-based ownership for private user data.\n*   `/roles/{roleId}`: Stores role definitions. UserProfile documents reference the Role document id.\n*   `/teamMembers/{teamMemberId}`: Stores team member information. No subcollections, so no denormalization is needed.\n*   `/companies/{companyId}`: Stores company information. No subcollections, so no denormalization is needed.\n*   `/shows/{showId}`: Stores show information. No subcollections, so no denormalization is needed.\n*   `/shows/{showId}/interactions/{interactionId}`: Stores interactions related to a show. Authorization Independence is achieved because shows are public and require no user data.\n*   `/events/{eventId}`: Stores events. Events are public.  Authorization Independence is achieved because events are public and require no user data.\n*   `/expenses/{expenseId}`: Stores expenses. Expenses are public. Authorization Independence is achieved because expenses are public and require no user data.\n*   `/meetingMinutes/{meetingMinutesId}`: Stores meeting minutes. Meeting minutes are public. Authorization Independence is achieved because meeting minutes are public and require no user data.\n*   `/tasks/{taskId}`: Stores tasks. Tasks are public. Authorization Independence is achieved because tasks are public and require no user data.\n*   `/todoItems/{todoItemId}`: Stores todo items. Todo items are public. Authorization Independence is achieved because todo items are public and require no user data.\n\nThis structure supports QAPs by segregating data with different access needs into separate collections, avoiding the need to filter based on user roles within the rules.  Public data requires no filtering."
   }
 }

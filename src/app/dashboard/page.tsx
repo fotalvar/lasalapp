@@ -18,7 +18,7 @@ const navItems = [
   { href: "/dashboard/calendar", icon: Calendar, label: "Calendario", color: "text-amber-500" },
   { href: "/dashboard/expenses", icon: Banknote, label: "Gastos", color: "text-emerald-500" },
   { href: "/dashboard/meetings", icon: BookUser, label: "Reuniones", color: "text-indigo-500" },
-  { href: "/dashboard/responsibilities", icon: ListTodo, label: "Responsabilidades", color: "text-pink-500" },
+  { href: "/dashboard/tasks", icon: ListTodo, label: "Tareas", color: "text-pink-500" },
 ];
 
 export default function DashboardPage() {

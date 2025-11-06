@@ -9,7 +9,7 @@ export type TeamMember = {
   };
 };
 
-export type Responsibility = {
+export type Task = {
   id: string;
   title: string;
   assignee: TeamMember;

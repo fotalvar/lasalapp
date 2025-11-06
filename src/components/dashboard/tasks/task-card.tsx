@@ -1,0 +1,106 @@
+"use client";
+import { Task as TaskType } from "@/lib/types";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { format, formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Trash2, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type TaskCardProps = {
+  task: TaskType;
+  onUpdate: (task: TaskType) => void;
+  onDelete: (id: string) => void;
+};
+
+export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
+  const { title, assignee, deadline, subtasks, completed } = task;
+  const userImage = PlaceHolderImages.find((img) => img.id === assignee.avatar);
+
+  const completedSubtasks = subtasks.filter((task) => task.completed).length;
+  const progress = subtasks.length > 0 ? (completedSubtasks / subtasks.length) * 100 : (completed ? 100 : 0);
+
+  const handleSubtaskChange = (taskId: string, isChecked: boolean) => {
+    const updatedSubtasks = subtasks.map(task => 
+      task.id === taskId ? { ...task, completed: isChecked } : task
+    );
+    onUpdate({ ...task, subtasks: updatedSubtasks });
+  };
+  
+  const handleToggleComplete = () => {
+    onUpdate({ ...task, completed: !completed });
+  };
+
+  return (
+    <Card className={cn("flex flex-col", completed && "bg-muted/50")}>
+      <CardHeader>
+        <CardTitle className="flex justify-between items-start">
+            <span className={cn("text-lg", completed && "line-through text-muted-foreground")}>{title}</span>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleToggleComplete}>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        <span>{completed ? 'Marcar como Incompleta' : 'Marcar como Completa'}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive" onClick={() => onDelete(task.id)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Borrar</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </CardTitle>
+        <CardDescription
+          className={cn(
+            "text-sm",
+            new Date() > deadline && !completed ? "text-destructive font-semibold" : ""
+          )}
+        >
+          Vence {formatDistanceToNow(deadline, { addSuffix: true, locale: es })} ({format(deadline, "d MMM", { locale: es })})
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <div className="space-y-2">
+          {subtasks.map((subtask) => (
+            <div key={subtask.id} className="flex items-center gap-3">
+              <Checkbox
+                id={subtask.id}
+                checked={subtask.completed}
+                onCheckedChange={(checked) => handleSubtaskChange(subtask.id, !!checked)}
+                disabled={completed}
+              />
+              <label
+                htmlFor={subtask.id}
+                className={cn("text-sm", subtask.completed && "line-through text-muted-foreground")}
+              >
+                {subtask.text}
+              </label>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter className="flex-col items-start gap-4">
+        <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2">
+                <Avatar className="h-6 w-6">
+                    <AvatarImage src={userImage?.imageUrl} alt={assignee.name} data-ai-hint={userImage?.imageHint} />
+                    <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium">{assignee.name}</span>
+            </div>
+            <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
+        </div>
+        <Progress value={progress} aria-label={`${Math.round(progress)}% completado`} />
+      </CardFooter>
+    </Card>
+  );
+}
