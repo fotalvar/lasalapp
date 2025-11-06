@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -139,8 +140,8 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
     )
 }
 
-export default function ProgrammingClient({ initialShows }: { initialShows: Show[] }) {
-  const [shows, setShows] = useState<Show[]>(initialShows);
+export default function ProgrammingClient() {
+  const [shows, setShows] = useState<Show[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<Show | undefined>(undefined);
   const db = useFirestore();
