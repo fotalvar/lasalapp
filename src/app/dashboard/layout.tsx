@@ -75,44 +75,23 @@ const mobileNavItems = [
   },
 ];
 
-function AppLogo() {
-  return (
-    <div className="relative h-full w-full">
-      <Image
-        src="/logo.png"
-        alt="laSalapp logo"
-        fill
-        style={{ objectFit: 'contain' }}
-      />
-    </div>
-  );
-}
 
 function DesktopNav() {
   const pathname = usePathname();
   return (
-    <TooltipProvider>
-      <nav className="hidden md:flex gap-2 items-center">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Tooltip key={item.href}>
-              <TooltipTrigger asChild>
-                <Link href={item.href}>
-                  <Button variant={isActive ? 'secondary' : 'ghost'} size="icon">
-                    <item.icon className="h-5 w-5" />
-                    <span className="sr-only">{item.label}</span>
-                  </Button>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{item.label}</p>
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
-      </nav>
-    </TooltipProvider>
+    <nav className="hidden md:flex gap-2 items-center">
+      {navItems.map((item) => {
+        const isActive = pathname === item.href;
+        return (
+          <Link href={item.href} key={item.href}>
+            <Button variant={isActive ? 'secondary' : 'ghost'} size="sm">
+              <item.icon className="h-5 w-5 mr-2" />
+              {item.label}
+            </Button>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -177,7 +156,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen w-full bg-background pb-16 md:pb-0">
-      <header className="hidden md:flex h-[60px] items-center justify-end gap-2 border-b bg-background sticky top-0 z-40 px-4 lg:px-6">
+      <header className="hidden md:flex h-[60px] items-center justify-center gap-2 border-b bg-background sticky top-0 z-40 px-4 lg:px-6">
         <DesktopNav />
       </header>
       <div className="flex flex-col">{children}</div>
