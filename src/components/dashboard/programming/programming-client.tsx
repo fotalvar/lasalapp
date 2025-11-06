@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Confirmado': 'default',
@@ -164,39 +165,55 @@ export default function ProgrammingClient({ initialShows }: { initialShows: Show
             </TableRow>
           </TableHeader>
           <TableBody>
-            {shows.map((show) => (
-              <TableRow key={show.id}>
-                <TableCell className="font-medium">{show.title}</TableCell>
-                <TableCell>{show.company}</TableCell>
-                <TableCell>
-                  <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
-                </TableCell>
-                <TableCell>
-                  {show.interactions.length > 0 ? format(show.interactions[show.interactions.length - 1].date, 'd MMM, yyyy') : 'N/A'}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                       <AddEditShowSheet show={show} onSave={handleSaveShow}>
-                           <button className='relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full'>
-                              <FilePenLine className="mr-2 h-4 w-4" />
-                              Editar
-                          </button>
-                       </AddEditShowSheet>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteShow(show.id)}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Borrar
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {shows.map((show) => {
+              const lastInteraction = show.interactions.length > 0 ? show.interactions[show.interactions.length - 1] : null;
+              const truncatedNote = lastInteraction?.note 
+                ? lastInteraction.note.length > 20 
+                  ? `${lastInteraction.note.substring(0, 20)}...`
+                  : lastInteraction.note
+                : null;
+              
+              return (
+                <TableRow key={show.id}>
+                  <TableCell className="font-medium">{show.title}</TableCell>
+                  <TableCell>{show.company}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span>
+                        {lastInteraction ? format(lastInteraction.date, 'd MMM, yyyy') : 'N/A'}
+                      </span>
+                      {truncatedNote && (
+                        <Badge variant="outline" className="font-normal truncate">{truncatedNote}</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                         <AddEditShowSheet show={show} onSave={handleSaveShow}>
+                             <button className='relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full'>
+                                <FilePenLine className="mr-2 h-4 w-4" />
+                                Editar
+                            </button>
+                         </AddEditShowSheet>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteShow(show.id)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Borrar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
