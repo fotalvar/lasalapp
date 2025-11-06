@@ -40,7 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { add, endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek, subDays } from 'date-fns';
+import { endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek, subDays } from 'date-fns';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,11 +48,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import PageHeader from '@/components/dashboard/page-header';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { TeamMember } from '@/lib/types';
+import type { TeamMember, CalendarEvent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { useToast } from '@/hooks/use-toast';
 
 type EventType =
   | 'Publicaciones en redes'
@@ -60,57 +61,6 @@ type EventType =
   | 'Espectáculos'
   | 'Reuniones'
   | 'Ensayos';
-
-type Event = {
-  id: string;
-  date: Date;
-  title: string;
-  type: EventType;
-  assigneeIds?: string[];
-};
-
-const initialEvents: Event[] = [
-  {
-    id: '1',
-    date: add(new Date(), { days: 12 }),
-    title: 'Estreno de "Eco"',
-    type: 'Espectáculos',
-    assigneeIds: ['1', '3'],
-  },
-  {
-    id: '2',
-    date: add(new Date(), { days: 5 }),
-    title: 'Post en Instagram para "Laberint"',
-    type: 'Publicaciones en redes',
-    assigneeIds: ['4'],
-  },
-  {
-    id: '3',
-    date: add(new Date(), { days: 8 }),
-    title: 'Venta anticipada de entradas',
-    type: 'Venta de entradas',
-  },
-  {
-    id: '4',
-    date: add(new Date(), { days: 1 }),
-    title: 'Ensayo general "Eco"',
-    type: 'Ensayos',
-    assigneeIds: ['2'],
-  },
-  {
-    id: '5',
-    date: add(new Date(), { days: 1 }),
-    title: 'Reunión de producción',
-    type: 'Reuniones',
-     assigneeIds: ['1', '2', '3', '4'],
-  },
-   {
-    id: '6',
-    date: add(new Date(), { days: 25 }),
-    title: 'Concierto Acústico',
-    type: 'Espectáculos',
-  },
-];
 
 const eventConfig: Record<
   EventType,
@@ -159,8 +109,8 @@ function AddEditEventSheet({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  event?: Event;
-  onSave: (event: Event) => void;
+  event?: CalendarEvent;
+  onSave: (event: Omit<CalendarEvent, 'id'> | CalendarEvent) => void;
   onDelete: (id: string) => void;
   teamMembers: TeamMember[];
 }) {
@@ -182,13 +132,18 @@ function AddEditEventSheet({
 
   const handleSave = () => {
     if (title && date && type) {
-      onSave({
-        id: event?.id || `evt-${Date.now()}`,
+      const eventData = {
         title,
         date,
         type,
         assigneeIds,
-      });
+      };
+
+      if (event?.id) {
+          onSave({ ...eventData, id: event.id });
+      } else {
+          onSave(eventData);
+      }
       onOpenChange(false);
     }
   };
@@ -223,7 +178,7 @@ function AddEditEventSheet({
               <PopoverTrigger asChild>
                 <Button variant={'outline'} className="justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, 'PPP', { locale: es }) : <span>Elige una fecha</span>}
+                  {date ? format(date, 'PPP HH:mm', { locale: es }) : <span>Elige una fecha</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -309,7 +264,7 @@ function AddEditEventSheet({
   );
 }
 
-function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSchedule }: { open: boolean, onOpenChange: (open: boolean) => void, shows: Event[], teamMembers: TeamMember[], onSchedule: (newEvents: Event[]) => void }) {
+function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSchedule }: { open: boolean, onOpenChange: (open: boolean) => void, shows: CalendarEvent[], teamMembers: TeamMember[], onSchedule: (newEvents: Omit<CalendarEvent, 'id'>[]) => void }) {
     const [selectedShowId, setSelectedShowId] = useState<string | undefined>();
     
     const [useStory, setUseStory] = useState(false);
@@ -341,12 +296,11 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
     const handleSchedule = () => {
         if (!selectedShow) return;
 
-        const newEvents: Event[] = [];
+        const newEvents: Omit<CalendarEvent, 'id'>[] = [];
         
         const createEventsForType = (type: string, count: number, timingFn: (date: Date, i: number) => Date, titlePrefix: string) => {
             for (let i = 0; i < count; i++) {
                 newEvents.push({
-                    id: `ig-${type.toLowerCase()}-${selectedShow.id}-${i}-${Date.now()}`,
                     title: `${titlePrefix} para "${selectedShow.title}" (${i + 1}/${count})`,
                     date: timingFn(selectedShow.date, i),
                     type: 'Publicaciones en redes',
@@ -483,7 +437,7 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
     )
 }
 
-function EventItem({ event, onEditClick }: { event: Event; onEditClick: (event: Event) => void; }) {
+function EventItem({ event, onEditClick }: { event: CalendarEvent; onEditClick: (event: CalendarEvent) => void; }) {
   const config = eventConfig[event.type];
   return (
       <button onClick={() => onEditClick(event)} className="flex w-full items-center gap-3 text-left p-2 rounded-lg hover:bg-muted transition-colors">
@@ -501,30 +455,48 @@ function EventItem({ event, onEditClick }: { event: Event; onEditClick: (event: 
 }
 
 export default function CalendarPage() {
-  const [events, setEvents] = useState<Event[]>(initialEvents.sort((a,b) => a.date.getTime() - b.date.getTime()));
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [today, setToday] = useState<Date | null>(null);
   
   const [isAddEditSheetOpen, setIsAddEditSheetOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | undefined>(undefined);
   
   const [isScheduleSheetOpen, setIsScheduleSheetOpen] = useState(false);
 
   const [filteredAssigneeIds, setFilteredAssigneeIds] = useState<string[]>([]);
   const db = useFirestore();
+  const { toast } = useToast();
 
   useEffect(() => {
     setToday(new Date());
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'teamMembers'), (snapshot) => {
+
+    const unsubMembers = onSnapshot(collection(db, 'teamMembers'), (snapshot) => {
         const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
         setTeamMembers(fetchedMembers);
     });
-    return () => unsub();
+    
+    const unsubEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
+        const fetchedEvents = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data,
+                date: (data.date as Timestamp).toDate(),
+            } as CalendarEvent;
+        }).sort((a,b) => a.date.getTime() - b.date.getTime());
+        setEvents(fetchedEvents);
+    });
+
+    return () => {
+        unsubMembers();
+        unsubEvents();
+    }
   }, [db]);
 
-  const openSheetForEdit = (event: Event) => {
+  const openSheetForEdit = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setIsAddEditSheetOpen(true);
   }
@@ -534,22 +506,51 @@ export default function CalendarPage() {
     setIsAddEditSheetOpen(true);
   }
 
-  const handleSaveEvent = (event: Event) => {
-    setEvents((prev) => {
-      const existing = prev.find((e) => e.id === event.id);
-      if (existing) {
-        return prev.map((e) => (e.id === event.id ? event : e)).sort((a,b) => a.date.getTime() - b.date.getTime());
-      }
-      return [...prev, event].sort((a,b) => a.date.getTime() - b.date.getTime());
-    });
+  const handleSaveEvent = async (eventData: Omit<CalendarEvent, 'id'> | CalendarEvent) => {
+    if (!db) return;
+    try {
+        if ('id' in eventData) {
+            const { id, ...dataToSave } = eventData;
+            await setDoc(doc(db, 'events', id), dataToSave);
+            toast({ title: "Evento actualizado", description: `${eventData.title} ha sido actualizado.` });
+        } else {
+            const newDocRef = doc(collection(db, 'events'));
+            await setDoc(newDocRef, eventData);
+            toast({ title: "Evento añadido", description: `${eventData.title} ha sido añadido.` });
+        }
+    } catch (error) {
+        console.error("Error saving event:", error);
+        toast({ title: "Error", description: "No se pudo guardar el evento.", variant: "destructive"});
+    }
   };
 
-  const handleDeleteEvent = (id: string) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
+  const handleDeleteEvent = async (id: string) => {
+    if (!db) return;
+    try {
+        await deleteDoc(doc(db, 'events', id));
+        toast({ title: "Evento eliminado" });
+    } catch (error) {
+        console.error("Error deleting event:", error);
+        toast({ title: "Error", description: "No se pudo eliminar el evento.", variant: "destructive"});
+    }
   }
   
-  const handleScheduleInstagram = (newEvents: Event[]) => {
-    setEvents(prev => [...prev, ...newEvents].sort((a,b) => a.date.getTime() - b.date.getTime()));
+  const handleScheduleInstagram = async (newEvents: Omit<CalendarEvent, 'id'>[]) => {
+    if (!db || newEvents.length === 0) return;
+    
+    const batch = writeBatch(db);
+    newEvents.forEach(eventData => {
+        const newDocRef = doc(collection(db, 'events'));
+        batch.set(newDocRef, eventData);
+    });
+
+    try {
+        await batch.commit();
+        toast({ title: "Publicaciones programadas", description: `Se han añadido ${newEvents.length} nuevos eventos al calendario.`});
+    } catch (error) {
+        console.error("Error scheduling Instagram posts:", error);
+        toast({ title: "Error", description: "No se pudieron programar las publicaciones.", variant: "destructive"});
+    }
   }
 
   const toggleFilterAssignee = (id: string) => {
@@ -747,5 +748,3 @@ export default function CalendarPage() {
     </>
   );
 }
-
-    

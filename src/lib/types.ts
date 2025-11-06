@@ -49,6 +49,15 @@ export type Show = {
   castSize?: string;
 };
 
+export type CalendarEvent = {
+  id: string;
+  title: string;
+  date: Date;
+  type: 'Publicaciones en redes' | 'Venta de entradas' | 'Espectáculos' | 'Reuniones' | 'Ensayos';
+  assigneeIds?: string[];
+};
+
+
 export type Expense = {
   id: string;
   date: Date;
