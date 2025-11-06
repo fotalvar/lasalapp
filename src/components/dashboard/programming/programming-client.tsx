@@ -222,7 +222,7 @@ export default function ProgrammingClient() {
         onOpenChange={setIsSheetOpen}
       >
         {/* This is a dummy trigger, the sheet is controlled by state */}
-        <></>
+        <div></div>
       </AddEditShowSheet>
 
       <div className="border rounded-lg">
@@ -293,3 +293,4 @@ export default function ProgrammingClient() {
     </>
   );
 }
+
