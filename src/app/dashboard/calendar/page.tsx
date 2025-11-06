@@ -49,7 +49,7 @@ import { cn } from '@/lib/utils';
 import PageHeader from '@/components/dashboard/page-header';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { TeamMember, CalendarEvent } from '@/lib/types';
-import { useFirestore } from '@/firebase';
+import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -506,36 +506,49 @@ export default function CalendarPage() {
     setIsAddEditSheetOpen(true);
   }
 
-  const handleSaveEvent = async (eventData: Omit<CalendarEvent, 'id'> | CalendarEvent) => {
+  const handleSaveEvent = (eventData: Omit<CalendarEvent, 'id'> | CalendarEvent) => {
     if (!db) return;
-    try {
-        if ('id' in eventData) {
-            const { id, ...dataToSave } = eventData;
-            await setDoc(doc(db, 'events', id), dataToSave);
-            toast({ title: "Evento actualizado", description: `${eventData.title} ha sido actualizado.` });
-        } else {
-            const newDocRef = doc(collection(db, 'events'));
-            await setDoc(newDocRef, eventData);
-            toast({ title: "Evento añadido", description: `${eventData.title} ha sido añadido.` });
-        }
-    } catch (error) {
-        console.error("Error saving event:", error);
-        toast({ title: "Error", description: "No se pudo guardar el evento.", variant: "destructive"});
+    
+    if ('id' in eventData) {
+        const { id, ...dataToSave } = eventData;
+        const docRef = doc(db, 'events', id);
+        setDoc(docRef, dataToSave)
+          .then(() => toast({ title: "Evento actualizado", description: `${eventData.title} ha sido actualizado.` }))
+          .catch(err => {
+              errorEmitter.emit('permission-error', new FirestorePermissionError({
+                  path: docRef.path,
+                  operation: 'update',
+                  requestResourceData: dataToSave
+              }))
+          });
+    } else {
+        const newDocRef = doc(collection(db, 'events'));
+        setDoc(newDocRef, eventData)
+          .then(() => toast({ title: "Evento añadido", description: `${eventData.title} ha sido añadido.` }))
+          .catch(err => {
+              errorEmitter.emit('permission-error', new FirestorePermissionError({
+                  path: newDocRef.path,
+                  operation: 'create',
+                  requestResourceData: eventData
+              }))
+          });
     }
   };
 
-  const handleDeleteEvent = async (id: string) => {
+  const handleDeleteEvent = (id: string) => {
     if (!db) return;
-    try {
-        await deleteDoc(doc(db, 'events', id));
-        toast({ title: "Evento eliminado" });
-    } catch (error) {
-        console.error("Error deleting event:", error);
-        toast({ title: "Error", description: "No se pudo eliminar el evento.", variant: "destructive"});
-    }
+    const docRef = doc(db, 'events', id);
+    deleteDoc(docRef)
+      .then(() => toast({ title: "Evento eliminado" }))
+      .catch(err => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete'
+        }))
+      });
   }
   
-  const handleScheduleInstagram = async (newEvents: Omit<CalendarEvent, 'id'>[]) => {
+  const handleScheduleInstagram = (newEvents: Omit<CalendarEvent, 'id'>[]) => {
     if (!db || newEvents.length === 0) return;
     
     const batch = writeBatch(db);
@@ -544,13 +557,17 @@ export default function CalendarPage() {
         batch.set(newDocRef, eventData);
     });
 
-    try {
-        await batch.commit();
-        toast({ title: "Publicaciones programadas", description: `Se han añadido ${newEvents.length} nuevos eventos al calendario.`});
-    } catch (error) {
-        console.error("Error scheduling Instagram posts:", error);
-        toast({ title: "Error", description: "No se pudieron programar las publicaciones.", variant: "destructive"});
-    }
+    batch.commit()
+      .then(() => toast({ title: "Publicaciones programadas", description: `Se han añadido ${newEvents.length} nuevos eventos al calendario.`}))
+      .catch(err => {
+          // Note: Batch writes don't give individual doc paths on failure.
+          // We can emit a more generic error for the collection.
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: 'events',
+              operation: 'create',
+              requestResourceData: newEvents
+          }))
+      });
   }
 
   const toggleFilterAssignee = (id: string) => {
@@ -748,3 +765,5 @@ export default function CalendarPage() {
     </>
   );
 }
+
+    
