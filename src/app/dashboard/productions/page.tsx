@@ -16,10 +16,7 @@ const productions = [
 export default function ProductionsPage() {
   return (
     <div className="flex-1">
-      <PageHeader
-        title="Producciones Propias"
-        description="Espacios privados para tus producciones, con acceso de solo lectura para colaboradores externos."
-      />
+      <PageHeader title="Producciones Propias" />
       <main className="p-4 md:p-6">
         <div className="flex justify-end mb-4">
             <Button>

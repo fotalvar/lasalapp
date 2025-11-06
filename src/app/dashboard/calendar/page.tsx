@@ -278,10 +278,7 @@ export default function CalendarPage() {
 
   return (
     <div className="flex-1">
-      <PageHeader
-        title="Calendario y Programación"
-        description="Gestiona horarios de eventos, funciones confirmadas y actividades de marketing."
-      >
+      <PageHeader title="Calendario y Programación">
         <div className="p-6 pt-0">
           <AddEditEventSheet onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
             <Button size="sm">

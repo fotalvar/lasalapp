@@ -5,10 +5,7 @@ import { expenses } from "@/lib/data";
 export default function ExpensesPage() {
   return (
     <div className="flex-1">
-      <PageHeader
-        title="Seguimiento de Gastos"
-        description="Registra y monitorea todos los gastos, desde costos estructurales hasta materiales diarios."
-      />
+      <PageHeader title="Seguimiento de Gastos" />
       <main className="p-4 md:p-6">
         <ExpensesClient initialExpenses={expenses} />
       </main>
