@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, FilePenLine, Trash2, Check, GripVertical, CalendarIcon } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, FilePenLine, Trash2, Check, GripVertical, CalendarIcon, Edit } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -63,7 +63,23 @@ function createInitialTimeline(): TimelineEvent[] {
 }
 
 
-function TimelineInteraction({ event }: { event: TimelineEvent }) {
+function TimelineInteraction({ 
+    event, 
+    onUpdate, 
+    onDelete 
+}: { 
+    event: TimelineEvent; 
+    onUpdate: (event: TimelineEvent) => void;
+    onDelete: (id: string) => void;
+}) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedNotes, setEditedNotes] = useState(event.notes || '');
+
+    const handleSave = () => {
+        onUpdate({ ...event, notes: editedNotes });
+        setIsEditing(false);
+    };
+    
     return (
         <div className="flex items-start gap-4 pl-8 relative">
              <div className="absolute left-0 top-1.5 flex flex-col items-center">
@@ -71,12 +87,58 @@ function TimelineInteraction({ event }: { event: TimelineEvent }) {
                     <GripVertical className="h-4 w-4" />
                 </span>
             </div>
-            <div>
-                <p className="font-semibold">{event.notes}</p>
-                <p className="text-xs text-muted-foreground">
-                    {event.date ? format(event.date, "d MMM, yyyy 'a las' HH:mm", { locale: es }) : 'Fecha no disponible'}
-                </p>
+            <div className="flex-grow">
+                 {isEditing ? (
+                    <div className="flex flex-col gap-2">
+                        <Textarea 
+                            value={editedNotes} 
+                            onChange={(e) => setEditedNotes(e.target.value)}
+                            rows={2}
+                        />
+                        <div className="flex gap-2">
+                            <Button size="sm" onClick={handleSave}>Guardar</Button>
+                            <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>Cancelar</Button>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="font-semibold text-sm">{event.notes}</p>
+                )}
+
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="link" size="sm" className="text-xs text-muted-foreground p-0 h-auto font-normal">
+                            {event.date ? format(event.date, "d MMM, yyyy 'a las' HH:mm", { locale: es }) : 'Elegir fecha'}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={event.date || undefined}
+                            onSelect={(date) => onUpdate({ ...event, date: date || null })}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
             </div>
+            {!isEditing && (
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className='h-7 w-7'>
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => onDelete(event.id)}>
+                             <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
         </div>
     );
 }
@@ -167,11 +229,15 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
         ));
     };
 
-    const handleDateChange = (stepId: string, date: Date | undefined) => {
-        setTimeline(currentTimeline => currentTimeline.map(step =>
-            step.id === stepId ? { ...step, date: date || null } : step
-        ))
-    }
+    const handleTimelineUpdate = (updatedEvent: TimelineEvent) => {
+        setTimeline(currentTimeline => currentTimeline.map(event =>
+            event.id === updatedEvent.id ? updatedEvent : event
+        ));
+    };
+
+    const handleTimelineDelete = (id: string) => {
+        setTimeline(currentTimeline => currentTimeline.filter(event => event.id !== id));
+    };
 
     const handleAddInteraction = () => {
         if (!newInteractionNote.trim()) return;
@@ -245,12 +311,17 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
                                 <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-border" />
                                 {sortedTimeline.map(event => (
                                     event.isCustom
-                                        ? <TimelineInteraction key={event.id} event={event} />
+                                        ? <TimelineInteraction 
+                                            key={event.id} 
+                                            event={event} 
+                                            onUpdate={handleTimelineUpdate}
+                                            onDelete={handleTimelineDelete}
+                                          />
                                         : <TimelineStep 
                                             key={event.id} 
                                             event={event} 
                                             onToggle={(checked) => handleToggleStep(event.id, checked)}
-                                            onDateChange={(date) => handleDateChange(event.id, date)}
+                                            onDateChange={(date) => handleTimelineUpdate({ ...event, date: date || null })}
                                           />
                                 ))}
                             </div>
@@ -438,5 +509,6 @@ export default function ProgrammingClient() {
     </>
   );
 }
+
 
 
