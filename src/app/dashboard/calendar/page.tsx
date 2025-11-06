@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Calendar as CalendarIcon,
   Megaphone,
@@ -17,6 +17,8 @@ import {
   Film,
   Camera,
   BookCopy,
+  ChevronDown,
+  User,
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -26,7 +28,6 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import PageHeader from '@/components/dashboard/page-header';
 import { Checkbox } from '@/components/ui/checkbox';
+import type { TeamMember } from '@/lib/types';
+import { useFirestore } from '@/firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 
 type EventType =
   | 'Publicaciones en redes'
@@ -59,6 +65,7 @@ type Event = {
   date: Date;
   title: string;
   type: EventType;
+  assigneeIds?: string[];
 };
 
 const initialEvents: Event[] = [
@@ -67,12 +74,14 @@ const initialEvents: Event[] = [
     date: add(new Date(), { days: 12 }),
     title: 'Estreno de "Eco"',
     type: 'Espectáculos',
+    assigneeIds: ['1', '3'],
   },
   {
     id: '2',
     date: add(new Date(), { days: 5 }),
     title: 'Post en Instagram para "Laberint"',
     type: 'Publicaciones en redes',
+    assigneeIds: ['4'],
   },
   {
     id: '3',
@@ -85,12 +94,14 @@ const initialEvents: Event[] = [
     date: add(new Date(), { days: 1 }),
     title: 'Ensayo general "Eco"',
     type: 'Ensayos',
+    assigneeIds: ['2'],
   },
   {
     id: '5',
     date: add(new Date(), { days: 1 }),
     title: 'Reunión de producción',
     type: 'Reuniones',
+     assigneeIds: ['1', '2', '3', '4'],
   },
    {
     id: '6',
@@ -131,28 +142,39 @@ const eventConfig: Record<
   },
 };
 
+function MemberIcon({ member, className }: { member: TeamMember, className?: string }) {
+    const IconComponent = (LucideIcons as any)[member.avatar.icon] as React.ElementType;
+    if (!IconComponent) return <LucideIcons.User className={cn("h-5 w-5", className)} />;
+    return <IconComponent className={cn("h-5 w-5", className)} />;
+}
+
 function AddEditEventSheet({
   open,
   onOpenChange,
   event,
   onSave,
   onDelete,
+  teamMembers
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   event?: Event;
   onSave: (event: Event) => void;
   onDelete: (id: string) => void;
+  teamMembers: TeamMember[];
 }) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState<Date | undefined>();
   const [type, setType] = useState<EventType | undefined>();
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
+  const [isAssigneePopoverOpen, setIsAssigneePopoverOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
       setTitle(event?.title || '');
       setDate(event?.date);
       setType(event?.type);
+      setAssigneeIds(event?.assigneeIds || []);
     }
   }, [open, event]);
 
@@ -164,6 +186,7 @@ function AddEditEventSheet({
         title,
         date,
         type,
+        assigneeIds,
       });
       onOpenChange(false);
     }
@@ -175,6 +198,12 @@ function AddEditEventSheet({
       onOpenChange(false);
     }
   }
+
+  const toggleAssignee = (id: string) => {
+    setAssigneeIds(prev => prev.includes(id) ? prev.filter(memberId => memberId !== id) : [...prev, id]);
+  }
+  
+  const selectedMembers = useMemo(() => teamMembers.filter(m => assigneeIds.includes(m.id)), [assigneeIds, teamMembers]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -215,6 +244,47 @@ function AddEditEventSheet({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+           <div className="grid gap-2">
+            <Label>Responsables</Label>
+             <Popover open={isAssigneePopoverOpen} onOpenChange={setIsAssigneePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={isAssigneePopoverOpen} className="w-full justify-between h-auto">
+                    <div className='flex flex-wrap gap-1'>
+                        {selectedMembers.length > 0 ? selectedMembers.map(member => (
+                            <div key={member.id} className="flex items-center gap-2 p-1 rounded-md" style={{backgroundColor: `${member.avatar.color}30`}}>
+                                <Avatar className="h-5 w-5 text-white" style={{ backgroundColor: member.avatar.color }}>
+                                    <AvatarFallback className="bg-transparent text-xs">
+                                        <MemberIcon member={member} className="h-3 w-3" />
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span className='text-xs'>{member.name}</span>
+                            </div>
+                        )) : "Seleccionar responsables..."}
+                    </div>
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <Command>
+                    <CommandInput placeholder="Buscar miembro..." />
+                    <CommandEmpty>No se encontró ningún miembro del equipo.</CommandEmpty>
+                    <CommandGroup>
+                        {teamMembers.map(member => (
+                            <CommandItem key={member.id} onSelect={() => toggleAssignee(member.id)} className="flex items-center gap-2">
+                                <Checkbox checked={assigneeIds.includes(member.id)} />
+                                 <Avatar className="h-6 w-6 text-white" style={{ backgroundColor: member.avatar.color }}>
+                                    <AvatarFallback className="bg-transparent text-sm">
+                                        <MemberIcon member={member} className="h-4 w-4" />
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span>{member.name}</span>
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         <SheetFooter>
@@ -385,6 +455,7 @@ function EventItem({ event, onEditClick }: { event: Event; onEditClick: (event: 
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<Event[]>(initialEvents.sort((a,b) => a.date.getTime() - b.date.getTime()));
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [today, setToday] = useState<Date | null>(null);
   
@@ -392,10 +463,17 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
   
   const [isScheduleSheetOpen, setIsScheduleSheetOpen] = useState(false);
+  const db = useFirestore();
 
   useEffect(() => {
     setToday(new Date());
-  }, []);
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, 'teamMembers'), (snapshot) => {
+        const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
+        setTeamMembers(fetchedMembers);
+    });
+    return () => unsub();
+  }, [db]);
 
   const openSheetForEdit = (event: Event) => {
     setSelectedEvent(event);
@@ -532,10 +610,22 @@ export default function CalendarPage() {
                       <div className='space-y-1 mt-6 overflow-y-auto max-h-[80px]'>
                         {dayEvents.map(event => {
                           const config = eventConfig[event.type];
+                          const assignedMembers = teamMembers.filter(m => event.assigneeIds?.includes(m.id));
                           return (
-                            <div key={event.id} role="button" onClick={() => openSheetForEdit(event)} className={cn('w-full text-left text-xs p-1 rounded-sm flex items-center overflow-hidden cursor-pointer', config.bgColor, config.color)}>
-                              <div className="flex-shrink-0">{config.icon}</div>
+                            <div key={event.id} role="button" onClick={() => openSheetForEdit(event)} className={cn('w-full text-left text-xs p-1 rounded-sm flex items-start overflow-hidden cursor-pointer relative', config.bgColor, config.color)}>
+                              <div className="flex-shrink-0 mt-0.5">{config.icon}</div>
                               <span className='ml-1 truncate flex-grow'>{event.title}</span>
+                              {assignedMembers.length > 0 && (
+                                <div className="absolute bottom-0.5 right-0.5 flex -space-x-1">
+                                    {assignedMembers.slice(0, 2).map(member => (
+                                        <Avatar key={member.id} className="h-4 w-4 text-white border-background" style={{ backgroundColor: member.avatar.color }}>
+                                            <AvatarFallback className="bg-transparent text-[8px] font-bold">
+                                                <MemberIcon member={member} className="h-2 w-2" />
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    ))}
+                                </div>
+                              )}
                             </div>
                           )
                         })}
@@ -553,6 +643,7 @@ export default function CalendarPage() {
         event={selectedEvent}
         onSave={handleSaveEvent}
         onDelete={handleDeleteEvent}
+        teamMembers={teamMembers}
       />
       <ScheduleInstagramSheet 
         open={isScheduleSheetOpen}
@@ -563,5 +654,3 @@ export default function CalendarPage() {
     </>
   );
 }
-
-    
