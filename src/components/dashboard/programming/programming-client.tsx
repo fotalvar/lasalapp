@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import type { Show, TimelineEvent } from '@/lib/types';
+import type { Show, TimelineEvent, Company } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -21,7 +21,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, ChevronDown } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, ChevronDown, Users, Mail, Phone, Instagram, Link as LinkIcon, Info } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -46,17 +46,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 
 
-const statusOptions: Show['status'][] = ['Idea', 'En conversaciones', 'Confirmado', 'Archivado'];
+const statusOptions: Show['status'][] = ['Idea', 'En conversaciones', 'Confirmado', 'Formulario externo', 'Archivado'];
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Confirmado': 'default',
     'En conversaciones': 'secondary',
     'Idea': 'outline',
+    'Formulario externo': 'outline',
     'Archivado': 'destructive',
 }
 
@@ -70,7 +77,7 @@ const FIXED_STEPS = [
     'Espectáculo confirmado',
 ];
 
-function createInitialTimeline(): TimelineEvent[] {
+export function createInitialTimeline(): TimelineEvent[] {
     return FIXED_STEPS.map(name => ({
         id: `step-${name.replace(/\s+/g, '-')}`,
         name,
@@ -202,9 +209,9 @@ function TimelineStep({ event, onToggle, onDateChange }: { event: TimelineEvent,
 }
 
 
-function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange }: { show?: Show, onSave: (show: Omit<Show, 'id'> | Show) => void, onDelete: (id: string) => void, children: React.ReactNode, open: boolean, onOpenChange: (open: boolean) => void }) {
+function AddEditShowSheet({ show, companies, onSave, onDelete, children, open, onOpenChange }: { show?: Show, companies: Company[], onSave: (show: Omit<Show, 'id' | 'company'> | (Show & {company?: Company})) => void, onDelete: (id: string) => void, children: React.ReactNode, open: boolean, onOpenChange: (open: boolean) => void }) {
     const [title, setTitle] = useState('');
-    const [company, setCompany] = useState('');
+    const [companyId, setCompanyId] = useState<string | undefined>();
     const [status, setStatus] = useState<Show['status'] | undefined>();
     const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
     const [newInteractionNote, setNewInteractionNote] = useState('');
@@ -212,7 +219,7 @@ function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange
     useEffect(() => {
         if (open) {
             setTitle(show?.title || '');
-            setCompany(show?.company || '');
+            setCompanyId(show?.companyId || undefined);
             setStatus(show?.status);
             const initialTimeline = show?.timeline && show.timeline.length > 0 ? show.timeline : createInitialTimeline();
             const timelineWithDates = initialTimeline.map(t => ({...t, date: t.date instanceof Timestamp ? t.date.toDate() : t.date}));
@@ -222,11 +229,11 @@ function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange
     }, [open, show]);
 
     const handleSave = () => {
-        if (!title || !company || !status) return;
+        if (!title || !companyId || !status) return;
         
         const showData = {
             title,
-            company,
+            companyId,
             status,
             timeline: timeline.map(t => ({...t, date: t.date ? Timestamp.fromDate(t.date) : null })),
         };
@@ -304,7 +311,16 @@ function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="company">Compañía</Label>
-                        <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} />
+                        <Select value={companyId} onValueChange={setCompanyId}>
+                            <SelectTrigger id="company">
+                                <SelectValue placeholder="Selecciona una compañía" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {companies.map(c => (
+                                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="status">Estado</Label>
@@ -395,7 +411,7 @@ function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange
     )
 }
 
-function StatusBadge({ show, onStatusChange }: { show: Show; onStatusChange: (status: Show['status']) => void; }) {
+function StatusBadge({ show, onStatusChange }: { show: Show & { company?: Company }; onStatusChange: (status: Show['status']) => void; }) {
   return (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -422,10 +438,53 @@ function StatusBadge({ show, onStatusChange }: { show: Show; onStatusChange: (st
   );
 }
 
+function CompanyDetailsDialog({ company }: { company: Company }) {
+    return (
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{company.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span>{company.contactName}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a href={`mailto:${company.contactEmail}`} className="text-primary hover:underline">{company.contactEmail}</a>
+                </div>
+                {company.contactPhone && (
+                     <div className="flex items-center gap-4">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span>{company.contactPhone}</span>
+                    </div>
+                )}
+                {company.instagram && (
+                     <div className="flex items-center gap-4">
+                        <Instagram className="h-4 w-4 text-muted-foreground" />
+                        <a href={`https://instagram.com/${company.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{company.instagram}</a>
+                    </div>
+                )}
+                {company.website && (
+                     <div className="flex items-center gap-4">
+                        <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                        <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{company.website}</a>
+                    </div>
+                )}
+                 <div className="flex items-center gap-4">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <span>{company.type}</span>
+                </div>
+            </div>
+        </DialogContent>
+    )
+}
+
 export default function ProgrammingClient() {
-  const [shows, setShows] = useState<Show[]>([]);
+  const [shows, setShows] = useState<(Show & { company?: Company })[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [selectedShow, setSelectedShow] = useState<Show | undefined>(undefined);
+  const [selectedShow, setSelectedShow] = useState<Show & { company?: Company } | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<Show['status'] | 'all'>('all');
   const [showCompleted, setShowCompleted] = useState(false);
   const db = useFirestore();
@@ -434,23 +493,37 @@ export default function ProgrammingClient() {
 
   useEffect(() => {
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'shows'), (snapshot) => {
+    const unsubCompanies = onSnapshot(collection(db, 'companies'), (snapshot) => {
+        const fetchedCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
+        setCompanies(fetchedCompanies);
+    }, (error) => {
+        console.error("Error fetching companies:", error);
+        toast({ title: "Error", description: "No se pudieron cargar las compañías.", variant: "destructive" });
+    });
+    return () => unsubCompanies();
+  }, [db, toast]);
+
+  useEffect(() => {
+    if (!db || companies.length === 0) return;
+    const unsubShows = onSnapshot(collection(db, 'shows'), (snapshot) => {
         const fetchedShows = snapshot.docs.map(doc => {
             const data = doc.data();
             const timelineWithDates = (data.timeline || []).map((i: any) => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : (i.date ? new Date(i.date) : null)}));
+            const company = companies.find(c => c.id === data.companyId);
             return { 
                 id: doc.id, 
                 ...data,
+                company,
                 timeline: timelineWithDates
-            } as Show;
+            } as Show & { company?: Company };
         });
         setShows(fetchedShows);
     }, (error) => {
         console.error("Error fetching shows:", error);
         toast({ title: "Error", description: "No se pudieron cargar los espectáculos.", variant: "destructive" });
     });
-    return () => unsub();
-  }, [db, toast]);
+    return () => unsubShows();
+  }, [db, toast, companies]);
 
   const filteredShows = useMemo(() => {
     return shows.filter(show => {
@@ -476,7 +549,7 @@ export default function ProgrammingClient() {
     try {
         if ('id' in showData) {
             // Update existing show
-            const { id, ...dataToSave } = showData;
+            const { id, company, ...dataToSave } = showData as (Show & { company?: Company });
             await setDoc(doc(db, 'shows', id), dataToSave);
             toast({ title: "Espectáculo actualizado", description: `${showData.title} ha sido actualizado.` });
         } else {
@@ -506,7 +579,7 @@ export default function ProgrammingClient() {
     }
   }
 
-  const handleRowClick = (show: Show) => {
+  const handleRowClick = (show: Show & { company?: Company }) => {
     setSelectedShow(show);
     setIsSheetOpen(true);
   }
@@ -561,7 +634,14 @@ export default function ProgrammingClient() {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-semibold cursor-pointer" onClick={() => handleRowClick(show)}>{show.title}</p>
-                    <p className="text-sm text-muted-foreground">{show.company}</p>
+                     {show.company && (
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <p className="text-sm text-muted-foreground cursor-pointer hover:underline">{show.company.name}</p>
+                            </DialogTrigger>
+                            <CompanyDetailsDialog company={show.company} />
+                        </Dialog>
+                    )}
                   </div>
                   <StatusBadge show={show} onStatusChange={(newStatus) => handleStatusChange(show, newStatus)} />
                 </div>
@@ -585,9 +665,18 @@ export default function ProgrammingClient() {
         return (
           <TableRow key={show.id}>
             <TableCell className="font-medium">
-              <span className="cursor-pointer" onClick={() => handleRowClick(show)}>{show.title}</span>
+              <span className="cursor-pointer hover:underline" onClick={() => handleRowClick(show)}>{show.title}</span>
             </TableCell>
-            <TableCell>{show.company}</TableCell>
+            <TableCell>
+                 {show.company && (
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <span className="cursor-pointer hover:underline">{show.company.name}</span>
+                        </DialogTrigger>
+                        <CompanyDetailsDialog company={show.company} />
+                    </Dialog>
+                )}
+            </TableCell>
             <TableCell>
               <StatusBadge show={show} onStatusChange={(newStatus) => handleStatusChange(show, newStatus)} />
             </TableCell>
@@ -613,7 +702,7 @@ export default function ProgrammingClient() {
   }
 
   return (
-    <>
+    <Dialog>
       <div className="flex flex-col mb-4 gap-4">
         <div className="flex justify-end">
             <Button onClick={handleAddNew} className="w-full sm:w-auto">
@@ -647,6 +736,7 @@ export default function ProgrammingClient() {
       
       <AddEditShowSheet 
         show={selectedShow} 
+        companies={companies}
         onSave={handleSaveShow}
         onDelete={handleDeleteShow}
         open={isSheetOpen}
@@ -656,6 +746,6 @@ export default function ProgrammingClient() {
       </AddEditShowSheet>
 
       {isMobile ? renderMobileView() : renderDesktopView()}
-    </>
+    </Dialog>
   );
 }

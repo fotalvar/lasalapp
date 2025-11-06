@@ -115,28 +115,39 @@
         },
         "companyId": {
           "type": "string",
-          "description": "Reference to Company. (Relationship: Show 1:1 Company)"
+          "description": "Reference to Company. (Relationship: Show N:1 Company)"
         },
-        "contactPerson": {
-          "type": "string",
-          "description": "Name of the contact person for the show."
+        "description": {
+            "type": "string",
+            "description": "Synopsis or description of the show."
         },
-        "contactEmail": {
-          "type": "string",
-          "description": "Email address of the contact person.",
-          "format": "email"
+        "duration": {
+            "type": "string",
+            "description": "Duration of the show."
         },
-        "notes": {
-          "type": "string",
-          "description": "Any relevant notes or information about the show."
+        "price": {
+            "type": "string",
+            "description": "Price proposal for the show."
+        },
+        "castSize": {
+            "type": "string",
+            "description": "Number of actors/technicians."
+        },
+        "status": {
+            "type": "string"
+        },
+        "timeline": {
+            "type": "array",
+            "items": {
+                "$ref": "#/entities/TimelineEvent"
+            }
         }
       },
       "required": [
         "id",
         "title",
         "companyId",
-        "contactPerson",
-        "contactEmail"
+        "status"
       ]
     },
     "Company": {
@@ -165,13 +176,23 @@
         "contactPhone": {
           "type": "string",
           "description": "Phone number for the company contact."
+        },
+        "instagram": {
+            "type": "string"
+        },
+        "website": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
         }
       },
       "required": [
         "id",
         "name",
         "contactName",
-        "contactEmail"
+        "contactEmail",
+        "type"
       ]
     },
     "Interaction": {

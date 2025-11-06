@@ -26,12 +26,27 @@ export type TimelineEvent = {
   notes?: string;
 };
 
+export type Company = {
+    id: string;
+    name: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone?: string;
+    instagram?: string;
+    website?: string;
+    type: string;
+}
+
 export type Show = {
   id: string;
   title: string;
-  company: string;
-  status: 'Idea' | 'En conversaciones' | 'Confirmado' | 'Archivado';
+  companyId: string;
+  status: 'Idea' | 'En conversaciones' | 'Confirmado' | 'Archivado' | 'Formulario externo';
   timeline: TimelineEvent[];
+  description?: string;
+  duration?: string;
+  price?: string;
+  castSize?: string;
 };
 
 export type Expense = {

@@ -52,13 +52,15 @@ service cloud.firestore {
     }
 
     /**
-     * @description Allows public read and write access to the shows collection for development.
+     * @description Allows public write access to the shows collection for the external form, and full access for authenticated users.
      * @path /shows/{showId}
-     * @allow (get, list, create, update, delete) - Any user can manage shows.
-     * @principle Allows full access for development purposes.
+     * @allow (create) - Any user (including anonymous) can create a new show.
+     * @allow (read, update, delete) - Only authenticated users can manage shows.
+     * @principle Allows public creation for submissions and restricted management.
      */
     match /shows/{showId} {
-        allow read, write: if true;
+        allow create: if true;
+        allow read, update, delete: if request.auth != null;
     }
 
     /**
@@ -74,15 +76,15 @@ service cloud.firestore {
     }
 
     /**
-     * @description Allows public read access to companies and restricts writes.
+     * @description Allows public write access to the companies collection for the external form, and full access for authenticated users.
      * @path /companies/{companyId}
-     * @allow (get, list) - Any user can read companies data.
-     * @deny (create, update, delete) - No one can create, update, or delete companies.
-     * @principle Allows public read access and restricts writes to no one.
+     * @allow (create) - Any user (including anonymous) can create a new company.
+     * @allow (read, update, delete) - Only authenticated users can manage companies.
+     * @principle Allows public creation for submissions and restricted management.
      */
     match /companies/{companyId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
+        allow create: if true;
+        allow read, update, delete: if request.auth != null;
     }
 
     /**
@@ -158,4 +160,3 @@ service cloud.firestore {
     }
   }
 }
-    
