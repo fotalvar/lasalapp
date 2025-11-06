@@ -585,7 +585,7 @@ export default function ProgrammingClient() {
                 Añadir Espectáculo
             </Button>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+        <div className="flex flex-row items-center gap-4 w-full">
             <Select value={statusFilter} onValueChange={(value: Show['status'] | 'all') => setStatusFilter(value)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Filtrar por estado" />
@@ -598,7 +598,7 @@ export default function ProgrammingClient() {
                     <SelectItem value="Archivado">Archivado</SelectItem>
                 </SelectContent>
             </Select>
-            <div className="flex items-center space-x-2 self-start sm:self-center">
+            <div className="flex items-center space-x-2">
                 <Checkbox id="show-completed" checked={showCompleted} onCheckedChange={(checked) => setShowCompleted(!!checked)} />
                 <label
                     htmlFor="show-completed"
@@ -624,5 +624,7 @@ export default function ProgrammingClient() {
     </>
   );
 }
+
+    
 
     
