@@ -18,12 +18,20 @@ export type Responsibility = {
   subtasks: { id: string; text: string; completed: boolean }[];
 };
 
+export type TimelineEvent = {
+  id: string;
+  name: string;
+  date: Date | null;
+  isCustom: boolean;
+  notes?: string;
+};
+
 export type Show = {
   id: string;
   title: string;
   company: string;
   status: 'Idea' | 'En conversaciones' | 'Confirmado' | 'Archivado';
-  interactions: { date: Date; note: string }[];
+  timeline: TimelineEvent[];
 };
 
 export type Expense = {

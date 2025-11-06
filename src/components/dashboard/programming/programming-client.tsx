@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import type { Show } from '@/lib/types';
+import { useState, useEffect, useMemo } from 'react';
+import type { Show, TimelineEvent } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -19,17 +19,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, FilePenLine, Trash2 } from 'lucide-react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from '@/components/ui/sheet';
+import { MoreHorizontal, PlusCircle, FilePenLine, Trash2, Check, GripVertical } from 'lucide-react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
 import { collection, onSnapshot, addDoc, setDoc, doc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Confirmado': 'default',
@@ -38,39 +41,99 @@ const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | '
     'Archivado': 'destructive',
 }
 
+const FIXED_STEPS = [
+    'Contacto con la Compañía',
+    'Reunión con la Compañía',
+    'Condiciones negociadas',
+    'Fechas elegidas',
+    'Espectáculo confirmado',
+];
+
+function createInitialTimeline(): TimelineEvent[] {
+    return FIXED_STEPS.map(name => ({
+        id: `step-${name.replace(/\s+/g, '-')}`,
+        name,
+        date: null,
+        isCustom: false,
+    }));
+}
+
+
+function TimelineInteraction({ event }: { event: TimelineEvent }) {
+    return (
+        <div className="flex items-start gap-4 pl-8 relative">
+             <div className="absolute left-0 top-1.5 flex flex-col items-center">
+                <span className="h-5 w-5 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
+                    <GripVertical className="h-4 w-4" />
+                </span>
+            </div>
+            <div>
+                <p className="font-semibold">{event.notes}</p>
+                <p className="text-xs text-muted-foreground">
+                    {event.date ? format(event.date, "d MMM, yyyy 'a las' HH:mm", { locale: es }) : 'Fecha no disponible'}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+function TimelineStep({ event, onToggle }: { event: TimelineEvent, onToggle: (checked: boolean) => void }) {
+    const isCompleted = !!event.date;
+    return (
+        <div className="flex items-start gap-4 pl-8 relative">
+            <div className="absolute left-0 top-1.5 flex flex-col items-center">
+                <span className={cn("h-5 w-5 rounded-full flex items-center justify-center", isCompleted ? "bg-primary text-primary-foreground" : "bg-muted border")}>
+                    {isCompleted && <Check className="h-4 w-4" />}
+                </span>
+            </div>
+            <div>
+                <Label
+                    htmlFor={event.id}
+                    className={cn("font-semibold", isCompleted && "text-muted-foreground line-through")}
+                >
+                    {event.name}
+                </Label>
+                {isCompleted ? (
+                    <p className="text-xs text-muted-foreground">
+                        Completado el {format(event.date!, "d MMM, yyyy", { locale: es })}
+                    </p>
+                ) : (
+                    <p className="text-xs text-muted-foreground">Pendiente</p>
+                )}
+            </div>
+            <Checkbox id={event.id} checked={isCompleted} onCheckedChange={onToggle} className="ml-auto" />
+        </div>
+    );
+}
+
+
 function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show?: Show, onSave: (show: Omit<Show, 'id'> | Show) => void, children: React.ReactNode, open: boolean, onOpenChange: (open: boolean) => void }) {
     const [title, setTitle] = useState('');
     const [company, setCompany] = useState('');
     const [status, setStatus] = useState<Show['status'] | undefined>();
-    const [interactions, setInteractions] = useState(show?.interactions || []);
-    const [newInteraction, setNewInteraction] = useState('');
+    const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+    const [newInteractionNote, setNewInteractionNote] = useState('');
     
     useEffect(() => {
         if (open) {
             setTitle(show?.title || '');
             setCompany(show?.company || '');
             setStatus(show?.status);
-            // Convert Firebase Timestamps to JS Dates for display
-            setInteractions(show?.interactions.map(i => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : i.date})) || []);
-            setNewInteraction('');
+            const initialTimeline = show?.timeline && show.timeline.length > 0 ? show.timeline : createInitialTimeline();
+            const timelineWithDates = initialTimeline.map(t => ({...t, date: t.date instanceof Timestamp ? t.date.toDate() : t.date}));
+            setTimeline(timelineWithDates);
+            setNewInteractionNote('');
         }
     }, [open, show]);
 
     const handleSave = () => {
         if (!title || !company || !status) return;
         
-        const newInteractionEntry = newInteraction.trim();
-        let updatedInteractions = [...interactions];
-
-        if (newInteractionEntry) {
-            updatedInteractions.push({ date: new Date(), note: newInteractionEntry });
-        }
-        
         const showData = {
             title,
             company,
             status,
-            interactions: updatedInteractions
+            timeline,
         };
 
         if (show?.id) {
@@ -81,6 +144,36 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
 
         onOpenChange(false);
     }
+    
+    const handleToggleStep = (stepId: string, checked: boolean) => {
+        setTimeline(currentTimeline => currentTimeline.map(step => 
+            step.id === stepId ? { ...step, date: checked ? new Date() : null } : step
+        ));
+    };
+
+    const handleAddInteraction = () => {
+        if (!newInteractionNote.trim()) return;
+        const newInteraction: TimelineEvent = {
+            id: `custom-${Date.now()}`,
+            name: 'Interacción Personalizada',
+            notes: newInteractionNote.trim(),
+            date: new Date(),
+            isCustom: true,
+        };
+        setTimeline(currentTimeline => [...currentTimeline, newInteraction]);
+        setNewInteractionNote('');
+    };
+    
+    const sortedTimeline = useMemo(() => {
+        return [...timeline].sort((a, b) => {
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+            return a.date.getTime() - b.date.getTime();
+        });
+    }, [timeline]);
+
+    const completedSteps = useMemo(() => timeline.filter(t => !t.isCustom && t.date).length, [timeline]);
+    const progress = (completedSteps / FIXED_STEPS.length) * 100;
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -115,20 +208,34 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
                             </SelectContent>
                         </Select>
                     </div>
+
                     <div className="grid gap-2">
-                        <Label>Historial de Interacciones</Label>
-                        <div className="space-y-2 max-h-40 overflow-y-auto rounded-md border p-2">
-                            {interactions.length > 0 ? interactions.sort((a,b) => b.date.getTime() - a.date.getTime()).map((interaction, index) => (
-                                <div key={index} className="text-sm">
-                                    <span className="font-semibold">{format(interaction.date, 'd MMM, yyyy')}: </span>
-                                    <span>{interaction.note}</span>
+                        <Label>Progreso de la Programación</Label>
+                        <div className="space-y-4 rounded-md border p-4">
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                     <Label className="text-sm">Pasos completados</Label>
+                                     <span className="text-sm font-bold">{completedSteps} de {FIXED_STEPS.length}</span>
                                 </div>
-                            )) : <p className="text-xs text-muted-foreground p-2">Aún no hay interacciones.</p>}
+                                <Progress value={progress} />
+                            </div>
+                            <div className="space-y-4 relative">
+                                <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-border" />
+                                {sortedTimeline.map(event => (
+                                    event.isCustom
+                                        ? <TimelineInteraction key={event.id} event={event} />
+                                        : <TimelineStep key={event.id} event={event} onToggle={(checked) => handleToggleStep(event.id, checked)} />
+                                ))}
+                            </div>
                         </div>
                     </div>
+                    
                     <div className="grid gap-2">
-                        <Label htmlFor="interaction">Añadir Nueva Interacción</Label>
-                        <Textarea id="interaction" value={newInteraction} onChange={e => setNewInteraction(e.target.value)} placeholder="Registra una nueva interacción..."/>
+                        <Label htmlFor="interaction">Añadir Interacción Personalizada</Label>
+                        <div className="flex gap-2">
+                            <Input id="interaction" value={newInteractionNote} onChange={e => setNewInteractionNote(e.target.value)} placeholder="Ej: Llamada de seguimiento..."/>
+                            <Button variant="outline" onClick={handleAddInteraction}>Añadir</Button>
+                        </div>
                     </div>
                 </div>
                 <SheetFooter>
@@ -152,11 +259,11 @@ export default function ProgrammingClient() {
     const unsub = onSnapshot(collection(db, 'shows'), (snapshot) => {
         const fetchedShows = snapshot.docs.map(doc => {
             const data = doc.data();
+            const timelineWithDates = (data.timeline || []).map((i: any) => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : (i.date ? new Date(i.date) : null)}));
             return { 
                 id: doc.id, 
                 ...data,
-                // Ensure interactions have JS Date objects
-                interactions: data.interactions?.map((i: any) => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : new Date(i.date)})) || []
+                timeline: timelineWithDates
             } as Show;
         });
         setShows(fetchedShows);
@@ -221,7 +328,6 @@ export default function ProgrammingClient() {
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
       >
-        {/* This is a dummy trigger, the sheet is controlled by state */}
         <div></div>
       </AddEditShowSheet>
 
@@ -238,14 +344,16 @@ export default function ProgrammingClient() {
           </TableHeader>
           <TableBody>
             {shows.map((show) => {
-              const lastInteraction = show.interactions.length > 0 
-                ? [...show.interactions].sort((a,b) => b.date.getTime() - a.date.getTime())[0] 
+              const lastInteraction = show.timeline && show.timeline.length > 0 
+                ? [...show.timeline].filter(t => t.date).sort((a,b) => b.date!.getTime() - a.date!.getTime())[0] 
                 : null;
                 
-              const truncatedNote = lastInteraction?.note 
-                ? lastInteraction.note.length > 20 
-                  ? `${lastInteraction.note.substring(0, 20)}...`
-                  : lastInteraction.note
+              const lastInteractionNote = lastInteraction?.isCustom ? lastInteraction.notes : lastInteraction?.name;
+
+              const truncatedNote = lastInteractionNote 
+                ? lastInteractionNote.length > 20 
+                  ? `${lastInteractionNote.substring(0, 20)}...`
+                  : lastInteractionNote
                 : null;
               
               return (
@@ -258,7 +366,7 @@ export default function ProgrammingClient() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <span>
-                        {lastInteraction ? format(lastInteraction.date, 'd MMM, yyyy') : 'N/A'}
+                        {lastInteraction?.date ? format(lastInteraction.date, 'd MMM, yyyy', { locale: es }) : 'N/A'}
                       </span>
                       {truncatedNote && (
                         <Badge variant="outline" className="font-normal truncate">{truncatedNote}</Badge>
@@ -273,7 +381,7 @@ export default function ProgrammingClient() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                         <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleRowClick(show); }}>
                             <FilePenLine className="mr-2 h-4 w-4" />
                             Editar
                         </DropdownMenuItem>
@@ -293,4 +401,3 @@ export default function ProgrammingClient() {
     </>
   );
 }
-
