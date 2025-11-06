@@ -77,7 +77,7 @@ const mobileNavItems = [
 
 function AppLogo() {
   return (
-    <div className="relative h-[60px] w-[60px]">
+    <div className="relative h-full w-full">
       <Image
         src="/logo.png"
         alt="laSalapp logo"
@@ -177,11 +177,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen w-full bg-background pb-16 md:pb-0">
-      <header className="hidden md:flex h-[60px] items-center justify-between gap-2 border-b bg-background sticky top-0 z-40 pr-4 lg:pr-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <AppLogo />
-          <span className="font-bold text-lg">laSalapp</span>
-        </Link>
+      <header className="hidden md:flex h-[60px] items-center justify-end gap-2 border-b bg-background sticky top-0 z-40 px-4 lg:px-6">
         <DesktopNav />
       </header>
       <div className="flex flex-col">{children}</div>
