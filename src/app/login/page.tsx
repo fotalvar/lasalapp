@@ -126,7 +126,7 @@ export default function LoginPage() {
         <div className="space-y-4">
            <Button onClick={handleGoogleSignIn} className="w-full" size="lg">
               <GoogleIcon />
-              <span>Acceder con Google</span>
+              <span>Acceso de Administrador</span>
             </Button>
             <Button variant="secondary" className="w-full" size="lg" onClick={() => router.push('/public')}>
               Acceso Público
