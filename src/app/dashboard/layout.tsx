@@ -11,8 +11,6 @@ import {
   Banknote,
   BookUser,
   ListTodo,
-  Film,
-  Lightbulb,
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,7 +21,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import Image from 'next/image';
 import { useUser } from '@/firebase';
 
 const navItems = [
@@ -38,8 +35,6 @@ const navItems = [
     icon: ListTodo,
     label: 'Responsabilidades',
   },
-  { href: '/dashboard/productions', icon: Film, label: 'Producciones' },
-  { href: '/dashboard/ideas', icon: Lightbulb, label: 'Ideas' },
 ];
 
 const mobileNavItems = [

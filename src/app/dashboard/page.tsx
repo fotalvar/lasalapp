@@ -1,15 +1,12 @@
 'use client'
 
 import {
-  LayoutDashboard,
   Users,
   Theater,
   Calendar,
   Banknote,
   BookUser,
   ListTodo,
-  Film,
-  Lightbulb,
 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,8 +19,6 @@ const navItems = [
   { href: "/dashboard/expenses", icon: Banknote, label: "Gastos", color: "text-emerald-500" },
   { href: "/dashboard/meetings", icon: BookUser, label: "Reuniones", color: "text-indigo-500" },
   { href: "/dashboard/responsibilities", icon: ListTodo, label: "Responsabilidades", color: "text-pink-500" },
-  { href: "/dashboard/productions", icon: Film, label: "Producciones", color: "text-teal-500" },
-  { href: "/dashboard/ideas", icon: Lightbulb, label: "Ideas", color: "text-orange-500" },
 ];
 
 export default function DashboardPage() {

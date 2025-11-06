@@ -4,7 +4,7 @@
  *
  * Data Structure:
  * - User profiles are stored under `/users/{userId}/userProfile`, ensuring only the user can access their profile.
- * - All other collections (roles, teamMembers, companies, shows, interactions, events, expenses, meetingMinutes, responsibilities, todoItems, productionPages, ideas) are stored at the top level.
+ * - All other collections (roles, teamMembers, companies, shows, interactions, events, expenses, meetingMinutes, responsibilities, todoItems) are stored at the top level.
  *
  * Key Security Decisions:
  * - User profiles are private and only accessible to the owning user.
@@ -153,30 +153,6 @@ service cloud.firestore {
      * @principle Allows public read access and restricts writes to no one.
      */
     match /todoItems/{todoItemId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
-    }
-
-    /**
-     * @description Allows public read access to productionPages and restricts writes.
-     * @path /productionPages/{productionPageId}
-     * @allow (get, list) - Any user can read productionPages data.
-     * @deny (create, update, delete) - No one can create, update, or delete productionPages.
-     * @principle Allows public read access and restricts writes to no one.
-     */
-    match /productionPages/{productionPageId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
-    }
-
-    /**
-     * @description Allows public read access to ideas and restricts writes.
-     * @path /ideas/{ideaId}
-     * @allow (get, list) - Any user can read ideas data.
-     * @deny (create, update, delete) - No one can create, update, or delete ideas.
-     * @principle Allows public read access and restricts writes to no one.
-     */
-    match /ideas/{ideaId} {
         allow get, list: if true;
         allow create, update, delete: if false;
     }
