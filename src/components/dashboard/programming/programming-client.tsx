@@ -12,18 +12,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Badge, badgeVariants } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, CalendarIcon, ChevronDown } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, ChevronDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -433,7 +430,6 @@ export default function ProgrammingClient() {
   const db = useFirestore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { badgeVariants } = require('@/components/ui/badge');
 
   useEffect(() => {
     if (!db) return;
@@ -559,11 +555,11 @@ export default function ProgrammingClient() {
 
         if (isMobile) {
           return (
-            <Card key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
+            <Card key={show.id}>
               <CardContent className="p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-semibold">{show.title}</p>
+                    <p className="font-semibold cursor-pointer" onClick={() => handleRowClick(show)}>{show.title}</p>
                     <p className="text-sm text-muted-foreground">{show.company}</p>
                   </div>
                   <StatusBadge show={show} onStatusChange={(newStatus) => handleStatusChange(show, newStatus)} />
@@ -586,8 +582,10 @@ export default function ProgrammingClient() {
         }
         
         return (
-          <TableRow key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
-            <TableCell className="font-medium">{show.title}</TableCell>
+          <TableRow key={show.id}>
+            <TableCell className="font-medium cursor-pointer" onClick={() => handleRowClick(show)}>
+              {show.title}
+            </TableCell>
             <TableCell>{show.company}</TableCell>
             <TableCell>
               <StatusBadge show={show} onStatusChange={(newStatus) => handleStatusChange(show, newStatus)} />
@@ -660,9 +658,3 @@ export default function ProgrammingClient() {
     </>
   );
 }
-
-    
-
-    
-
-    
