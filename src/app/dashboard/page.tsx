@@ -8,6 +8,7 @@ import {
   BookUser,
   ListTodo,
   LogOut,
+  Building,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +24,12 @@ const navItems = [
     icon: Users,
     label: 'Equipo',
     color: 'text-sky-500',
+  },
+  {
+    href: '/dashboard/companies',
+    icon: Building,
+    label: 'Compañías',
+    color: 'text-purple-500',
   },
   {
     href: '/dashboard/programming',
