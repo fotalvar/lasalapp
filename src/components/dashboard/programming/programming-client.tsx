@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Show } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +26,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useFirestore } from '@/firebase';
+import { collection, onSnapshot, addDoc, setDoc, doc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Confirmado': 'default',
@@ -34,40 +37,52 @@ const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | '
     'Archivado': 'destructive',
 }
 
-function AddEditShowSheet({ show, onSave, children }: { show?: Show, onSave: (show: Show) => void, children: React.ReactNode }) {
-    const [open, setOpen] = useState(false);
-    const [title, setTitle] = useState(show?.title || '');
-    const [company, setCompany] = useState(show?.company || '');
-    const [status, setStatus] = useState<Show['status'] | undefined>(show?.status);
+function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show?: Show, onSave: (show: Omit<Show, 'id'> | Show) => void, children: React.ReactNode, open: boolean, onOpenChange: (open: boolean) => void }) {
+    const [title, setTitle] = useState('');
+    const [company, setCompany] = useState('');
+    const [status, setStatus] = useState<Show['status'] | undefined>();
     const [interactions, setInteractions] = useState(show?.interactions || []);
     const [newInteraction, setNewInteraction] = useState('');
+    
+    useEffect(() => {
+        if (open) {
+            setTitle(show?.title || '');
+            setCompany(show?.company || '');
+            setStatus(show?.status);
+            // Convert Firebase Timestamps to JS Dates for display
+            setInteractions(show?.interactions.map(i => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : i.date})) || []);
+            setNewInteraction('');
+        }
+    }, [open, show]);
 
     const handleSave = () => {
         if (!title || !company || !status) return;
-        const updatedInteractions = newInteraction
-            ? [...interactions, { date: new Date(), note: newInteraction }]
-            : interactions;
+        
+        const newInteractionEntry = newInteraction.trim();
+        let updatedInteractions = [...interactions];
 
-        const newShow: Show = {
-            id: show?.id || `show-${Date.now()}`,
+        if (newInteractionEntry) {
+            updatedInteractions.push({ date: new Date(), note: newInteractionEntry });
+        }
+        
+        const showData = {
             title,
             company,
             status,
             interactions: updatedInteractions
         };
-        onSave(newShow);
-        setOpen(false);
-        if (!show) {
-            setTitle('');
-            setCompany('');
-            setStatus(undefined);
-            setInteractions([]);
+
+        if (show?.id) {
+            onSave({ id: show.id, ...showData });
+        } else {
+            onSave(showData);
         }
-        setNewInteraction('');
+
+        onOpenChange(false);
     }
 
     return (
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="sm:max-w-lg overflow-y-auto">
                 <SheetHeader>
@@ -102,7 +117,7 @@ function AddEditShowSheet({ show, onSave, children }: { show?: Show, onSave: (sh
                     <div className="grid gap-2">
                         <Label>Historial de Interacciones</Label>
                         <div className="space-y-2 max-h-40 overflow-y-auto rounded-md border p-2">
-                            {interactions.length > 0 ? interactions.map((interaction, index) => (
+                            {interactions.length > 0 ? interactions.sort((a,b) => b.date.getTime() - a.date.getTime()).map((interaction, index) => (
                                 <div key={index} className="text-sm">
                                     <span className="font-semibold">{format(interaction.date, 'd MMM, yyyy')}: </span>
                                     <span>{interaction.note}</span>
@@ -116,9 +131,7 @@ function AddEditShowSheet({ show, onSave, children }: { show?: Show, onSave: (sh
                     </div>
                 </div>
                 <SheetFooter>
-                    <SheetClose asChild>
-                        <Button variant="outline">Cancelar</Button>
-                    </SheetClose>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
                     <Button onClick={handleSave}>Guardar</Button>
                 </SheetFooter>
             </SheetContent>
@@ -127,32 +140,90 @@ function AddEditShowSheet({ show, onSave, children }: { show?: Show, onSave: (sh
 }
 
 export default function ProgrammingClient({ initialShows }: { initialShows: Show[] }) {
-  const [shows, setShows] = useState(initialShows);
+  const [shows, setShows] = useState<Show[]>(initialShows);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedShow, setSelectedShow] = useState<Show | undefined>(undefined);
+  const db = useFirestore();
+  const { toast } = useToast();
 
-  const handleSaveShow = (show: Show) => {
-    setShows(prev => {
-        const existing = prev.find(s => s.id === show.id);
-        if (existing) {
-            return prev.map(s => s.id === show.id ? show : s);
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, 'shows'), (snapshot) => {
+        const fetchedShows = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data,
+                // Ensure interactions have JS Date objects
+                interactions: data.interactions?.map((i: any) => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : new Date(i.date)})) || []
+            } as Show;
+        });
+        setShows(fetchedShows);
+    });
+    return () => unsub();
+  }, [db]);
+
+
+  const handleSaveShow = async (showData: Omit<Show, 'id'> | Show) => {
+    if (!db) return;
+    try {
+        if ('id' in showData) {
+            // Update existing show
+            const { id, ...dataToSave } = showData;
+            await setDoc(doc(db, 'shows', id), dataToSave);
+            toast({ title: "Espectáculo actualizado", description: `${showData.title} ha sido actualizado.` });
+        } else {
+            // Add new show
+            await addDoc(collection(db, 'shows'), showData);
+            toast({ title: "Espectáculo añadido", description: `${showData.title} ha sido añadido.` });
         }
-        return [show, ...prev];
-    })
+    } catch (error) {
+        console.error("Error saving show: ", error);
+        toast({ title: "Error", description: "No se pudo guardar el espectáculo.", variant: "destructive" });
+    }
   }
 
-  const handleDeleteShow = (id: string) => {
-    setShows(prev => prev.filter(s => s.id !== id));
+  const handleDeleteShow = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Prevent row click from triggering
+    if (!db) return;
+     try {
+        await deleteDoc(doc(db, 'shows', id));
+        toast({ title: "Espectáculo eliminado", description: "El espectáculo ha sido eliminado." });
+    } catch (error) {
+        console.error("Error deleting show: ", error);
+        toast({ title: "Error", description: "No se pudo eliminar el espectáculo.", variant: "destructive" });
+    }
+  }
+
+  const handleRowClick = (show: Show) => {
+    setSelectedShow(show);
+    setIsSheetOpen(true);
+  }
+
+  const handleAddNew = () => {
+    setSelectedShow(undefined);
+    setIsSheetOpen(true);
   }
 
   return (
     <>
       <div className="flex justify-end mb-4">
-        <AddEditShowSheet onSave={handleSaveShow}>
-          <Button>
+        <Button onClick={handleAddNew}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Añadir Espectáculo
-          </Button>
-        </AddEditShowSheet>
+        </Button>
       </div>
+      
+      <AddEditShowSheet 
+        show={selectedShow} 
+        onSave={handleSaveShow}
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+      >
+        {/* This is a dummy trigger, the sheet is controlled by state */}
+        <></>
+      </AddEditShowSheet>
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -166,7 +237,10 @@ export default function ProgrammingClient({ initialShows }: { initialShows: Show
           </TableHeader>
           <TableBody>
             {shows.map((show) => {
-              const lastInteraction = show.interactions.length > 0 ? show.interactions[show.interactions.length - 1] : null;
+              const lastInteraction = show.interactions.length > 0 
+                ? [...show.interactions].sort((a,b) => b.date.getTime() - a.date.getTime())[0] 
+                : null;
+                
               const truncatedNote = lastInteraction?.note 
                 ? lastInteraction.note.length > 20 
                   ? `${lastInteraction.note.substring(0, 20)}...`
@@ -174,7 +248,7 @@ export default function ProgrammingClient({ initialShows }: { initialShows: Show
                 : null;
               
               return (
-                <TableRow key={show.id}>
+                <TableRow key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
                   <TableCell className="font-medium">{show.title}</TableCell>
                   <TableCell>{show.company}</TableCell>
                   <TableCell>
@@ -193,18 +267,16 @@ export default function ProgrammingClient({ initialShows }: { initialShows: Show
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                         <AddEditShowSheet show={show} onSave={handleSaveShow}>
-                             <button className='relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full'>
-                                <FilePenLine className="mr-2 h-4 w-4" />
-                                Editar
-                            </button>
-                         </AddEditShowSheet>
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteShow(show.id)}>
+                         <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <FilePenLine className="mr-2 h-4 w-4" />
+                            Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={(e) => handleDeleteShow(e, show.id)}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           Borrar
                         </DropdownMenuItem>
