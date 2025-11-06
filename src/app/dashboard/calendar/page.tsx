@@ -18,8 +18,8 @@ import {
   Camera,
   BookCopy,
   ChevronDown,
-  User,
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import {
