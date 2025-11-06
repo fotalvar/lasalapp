@@ -16,6 +16,7 @@ import { Badge, badgeVariants } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -583,8 +584,8 @@ export default function ProgrammingClient() {
         
         return (
           <TableRow key={show.id}>
-            <TableCell className="font-medium cursor-pointer" onClick={() => handleRowClick(show)}>
-              {show.title}
+            <TableCell className="font-medium">
+              <span className="cursor-pointer" onClick={() => handleRowClick(show)}>{show.title}</span>
             </TableCell>
             <TableCell>{show.company}</TableCell>
             <TableCell>
