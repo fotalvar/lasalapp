@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -129,10 +130,12 @@ export default function LoginPage() {
               <span>Acceso de Administrador</span>
             </Button>
             <Button variant="secondary" className="w-full" size="lg" onClick={() => router.push('/public')}>
-              Acceso Público
+              Acceso Externo
             </Button>
         </div>
       </div>
     </div>
   );
 }
+
+    
