@@ -48,6 +48,8 @@ const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | '
 const FIXED_STEPS = [
     'Contacto con la Compañía',
     'Reunión con la Compañía',
+    'Descripción',
+    'Imágenes',
     'Condiciones negociadas',
     'Fechas elegidas',
     'Espectáculo confirmado',
@@ -509,6 +511,7 @@ export default function ProgrammingClient() {
     </>
   );
 }
+
 
 
 
