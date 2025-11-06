@@ -25,7 +25,6 @@ import { useUser } from '@/firebase';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Principal' },
-  { href: '/dashboard/team', icon: Users, label: 'Equipo' },
   { href: '/dashboard/programming', icon: Theater, label: 'Programación' },
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendario' },
   { href: '/dashboard/expenses', icon: Banknote, label: 'Gastos' },
