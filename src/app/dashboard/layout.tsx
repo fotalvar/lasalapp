@@ -31,6 +31,15 @@ const navItems = [
   { href: '/dashboard/ideas', icon: Lightbulb, label: 'Ideas' },
 ];
 
+const mobileNavItems = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Principal', color: 'text-blue-500' },
+    { href: '/dashboard/programming', icon: Theater, label: 'Programación', color: 'text-rose-500' },
+    { href: '/dashboard/calendar', icon: Calendar, label: 'Calendario', color: 'text-amber-500' },
+    { href: '/dashboard/expenses', icon: Banknote, label: 'Gastos', color: 'text-emerald-500' },
+    { href: '/dashboard/responsibilities', icon: ListTodo, label: 'Responsabilidades', color: 'text-pink-500' },
+];
+
+
 function DesktopNav() {
   const pathname = usePathname();
   return (
@@ -63,28 +72,34 @@ function BottomNavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
-      <div className="flex h-16 items-center justify-around">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              href={item.href}
-              key={item.href}
-              className={cn(
-                'flex flex-col items-center justify-center gap-1 text-xs transition-colors',
-                isActive
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <TooltipProvider>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+        <div className="flex h-16 items-center justify-around">
+          {mobileNavItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'flex h-full w-full flex-col items-center justify-center gap-1 text-xs transition-colors',
+                      !isActive && 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    <item.icon className={cn('h-6 w-6', isActive ? item.color : '')} />
+                    <span className="sr-only">{item.label}</span>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{item.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </nav>
+    </TooltipProvider>
   );
 }
 
