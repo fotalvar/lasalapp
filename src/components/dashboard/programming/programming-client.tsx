@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, FilePenLine, Trash2, Check, GripVertical, CalendarIcon, Edit } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, CalendarIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,17 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
@@ -187,7 +198,7 @@ function TimelineStep({ event, onToggle, onDateChange }: { event: TimelineEvent,
 }
 
 
-function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show?: Show, onSave: (show: Omit<Show, 'id'> | Show) => void, children: React.ReactNode, open: boolean, onOpenChange: (open: boolean) => void }) {
+function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange }: { show?: Show, onSave: (show: Omit<Show, 'id'> | Show) => void, onDelete: (id: string) => void, children: React.ReactNode, open: boolean, onOpenChange: (open: boolean) => void }) {
     const [title, setTitle] = useState('');
     const [company, setCompany] = useState('');
     const [status, setStatus] = useState<Show['status'] | undefined>();
@@ -225,6 +236,13 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
         onOpenChange(false);
     }
     
+    const handleDelete = () => {
+        if (show) {
+            onDelete(show.id);
+            onOpenChange(false);
+        }
+    }
+
     const handleToggleStep = (stepId: string, checked: boolean) => {
         setTimeline(currentTimeline => currentTimeline.map(step => 
             step.id === stepId ? { ...step, date: checked ? (step.date || new Date()) : null } : step
@@ -339,8 +357,35 @@ function AddEditShowSheet({ show, onSave, children, open, onOpenChange }: { show
                     </div>
                 </div>
                 <SheetFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                    <Button onClick={handleSave}>Guardar</Button>
+                    <div className='flex justify-between w-full'>
+                        {show ? (
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" className="mr-auto">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Eliminar
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Esta acción no se puede deshacer. Esto eliminará permanentemente el espectáculo
+                                        y todos sus datos asociados.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        ): <div></div>}
+                        <div className='space-x-2'>
+                           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                           <Button onClick={handleSave}>Guardar</Button>
+                        </div>
+                    </div>
                 </SheetFooter>
             </SheetContent>
         </Sheet>
@@ -367,9 +412,12 @@ export default function ProgrammingClient() {
             } as Show;
         });
         setShows(fetchedShows);
+    }, (error) => {
+        console.error("Error fetching shows:", error);
+        toast({ title: "Error", description: "No se pudieron cargar los espectáculos.", variant: "destructive" });
     });
     return () => unsub();
-  }, [db]);
+  }, [db, toast]);
 
 
   const handleSaveShow = async (showData: Omit<Show, 'id'> | Show) => {
@@ -391,8 +439,7 @@ export default function ProgrammingClient() {
     }
   }
 
-  const handleDeleteShow = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // Prevent row click from triggering
+  const handleDeleteShow = async (id: string) => {
     if (!db) return;
      try {
         await deleteDoc(doc(db, 'shows', id));
@@ -425,6 +472,7 @@ export default function ProgrammingClient() {
       <AddEditShowSheet 
         show={selectedShow} 
         onSave={handleSaveShow}
+        onDelete={handleDeleteShow}
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
       >
@@ -440,7 +488,6 @@ export default function ProgrammingClient() {
               <TableHead>Estado</TableHead>
               <TableHead>Progreso</TableHead>
               <TableHead>Última Interacción</TableHead>
-              <TableHead><span className="sr-only">Acciones</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -483,25 +530,6 @@ export default function ProgrammingClient() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleRowClick(show); }}>
-                            <FilePenLine className="mr-2 h-4 w-4" />
-                            Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={(e) => handleDeleteShow(e, show.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Borrar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
                 </TableRow>
               );
             })}
@@ -511,7 +539,3 @@ export default function ProgrammingClient() {
     </>
   );
 }
-
-
-
-
