@@ -396,6 +396,8 @@ export default function ProgrammingClient() {
   const [shows, setShows] = useState<Show[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<Show | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<Show['status'] | 'all'>('all');
+  const [showCompleted, setShowCompleted] = useState(false);
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -418,6 +420,24 @@ export default function ProgrammingClient() {
     });
     return () => unsub();
   }, [db, toast]);
+
+  const filteredShows = useMemo(() => {
+    return shows.filter(show => {
+      const completedSteps = show.timeline?.filter(t => !t.isCustom && t.date).length || 0;
+      const progress = (completedSteps / FIXED_STEPS.length) * 100;
+      
+      const isCompleted = progress === 100;
+      if (!showCompleted && isCompleted) {
+        return false;
+      }
+
+      if (statusFilter !== 'all' && show.status !== statusFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [shows, statusFilter, showCompleted]);
 
 
   const handleSaveShow = async (showData: Omit<Show, 'id'> | Show) => {
@@ -462,7 +482,30 @@ export default function ProgrammingClient() {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-4">
+            <Select value={statusFilter} onValueChange={(value: Show['status'] | 'all') => setStatusFilter(value)}>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filtrar por estado" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    <SelectItem value="Idea">Idea</SelectItem>
+                    <SelectItem value="En conversaciones">En conversaciones</SelectItem>
+                    <SelectItem value="Confirmado">Confirmado</SelectItem>
+                    <SelectItem value="Archivado">Archivado</SelectItem>
+                </SelectContent>
+            </Select>
+            <div className="flex items-center space-x-2">
+                <Checkbox id="show-completed" checked={showCompleted} onCheckedChange={(checked) => setShowCompleted(!!checked)} />
+                <label
+                    htmlFor="show-completed"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                    Mostrar completados
+                </label>
+            </div>
+        </div>
         <Button onClick={handleAddNew}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Añadir Espectáculo
@@ -491,7 +534,7 @@ export default function ProgrammingClient() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {shows.map((show) => {
+            {filteredShows.map((show) => {
               const lastInteraction = show.timeline && show.timeline.length > 0 
                 ? [...show.timeline].filter(t => t.date).sort((a,b) => b.date!.getTime() - a.date!.getTime())[0] 
                 : null;
