@@ -64,5 +64,3 @@ export type Todo = {
   completed: boolean;
   dueDate?: Date;
 };
-
-    
