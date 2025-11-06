@@ -12,6 +12,8 @@ import {
   BookUser,
   ListTodo,
   Loader2,
+  User,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,6 +24,23 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useUser } from '@/firebase';
+import {
+  TeamUserProvider,
+  useTeamUser,
+} from '@/context/team-user-context';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import * as LucideIcons from 'lucide-react';
+import { signOut } from 'firebase/auth';
+import type { TeamMember } from '@/lib/types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/firebase';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Principal' },
@@ -68,6 +87,59 @@ const mobileNavItems = [
     color: 'text-pink-500',
   },
 ];
+
+function MemberIcon({ member, className }: { member: TeamMember, className?: string }) {
+    const IconComponent = (LucideIcons as any)[member.avatar.icon] as React.ElementType;
+    if (!IconComponent) return <LucideIcons.User className={cn("h-5 w-5", className)} />;
+    return <IconComponent className={cn("h-5 w-5", className)} />;
+}
+
+function UserMenu() {
+  const { user } = useUser();
+  const { selectedTeamUser } = useTeamUser();
+  const router = useRouter();
+  const auth = useAuth();
+  
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  if (!selectedTeamUser) return null;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="flex items-center gap-2">
+          <Avatar className="h-8 w-8 text-white" style={{ backgroundColor: selectedTeamUser.avatar.color }}>
+              <AvatarFallback className="bg-transparent">
+                  <MemberIcon member={selectedTeamUser} className="h-4 w-4" />
+              </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm font-medium text-left">{selectedTeamUser.name}</p>
+            <p className='text-xs text-muted-foreground text-left'>Viendo como</p>
+          </div>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className='w-56'>
+        <DropdownMenuLabel>
+            <p>Sesión iniciada como</p>
+            <p className='font-normal text-muted-foreground'>{user?.email}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => router.push('/dashboard/select-user')}>
+          <Users className="mr-2 h-4 w-4" />
+          <span>Cambiar de usuario</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut} className='text-destructive'>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Cerrar Sesión</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 
 function DesktopNav() {
@@ -128,18 +200,29 @@ function BottomNavBar() {
 
 const ADMIN_EMAILS = ['info@atresquarts.com', 'admin@atresquarts.com'];
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+function DashboardLayoutContent({ children }: { children: ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
+  const { selectedTeamUser, isLoading: isTeamUserLoading } = useTeamUser();
 
   useEffect(() => {
-    if (isUserLoading) return; // Wait until user state is determined
+    if (isUserLoading) return; // Wait until Firebase user state is determined
     if (!user || (user.email && !ADMIN_EMAILS.includes(user.email))) {
       router.replace('/login');
     }
   }, [user, isUserLoading, router]);
 
-  if (isUserLoading || !user || (user.email && !ADMIN_EMAILS.includes(user.email))) {
+   useEffect(() => {
+    // Don't run this check on the selection page itself
+    if (pathname === '/dashboard/select-user' || isUserLoading || isTeamUserLoading) return;
+
+    if (!selectedTeamUser) {
+      router.replace('/dashboard/select-user');
+    }
+  }, [selectedTeamUser, isTeamUserLoading, isUserLoading, router, pathname]);
+
+  if (isUserLoading || !user || (user.email && !ADMIN_EMAILS.includes(user.email)) || (!isTeamUserLoading && !selectedTeamUser && pathname !== '/dashboard/select-user')) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -147,14 +230,29 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </div>
     );
   }
+  
+  if (pathname === '/dashboard/select-user') {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen w-full bg-background pb-16 md:pb-0">
-      <header className="hidden md:flex h-[60px] items-center justify-center gap-2 border-b bg-background sticky top-0 z-40 px-4 lg:px-6">
+      <header className="flex h-[60px] items-center justify-between border-b bg-background sticky top-0 z-40 px-4 lg:px-6">
         <DesktopNav />
+        <div className="md:ml-auto">
+          <UserMenu />
+        </div>
       </header>
       <div className="flex flex-col">{children}</div>
       <BottomNavBar />
     </div>
   );
+}
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+    return (
+        <TeamUserProvider>
+            <DashboardLayoutContent>{children}</DashboardLayoutContent>
+        </TeamUserProvider>
+    )
 }

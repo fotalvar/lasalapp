@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { useTeamUser } from '@/context/team-user-context';
 
 const navItems = [
   {
@@ -66,6 +67,7 @@ const navItems = [
 export default function DashboardPage() {
   const auth = useAuth();
   const router = useRouter();
+  const { selectedTeamUser } = useTeamUser();
 
   const handleSignOut = async () => {
     try {
@@ -79,7 +81,8 @@ export default function DashboardPage() {
   return (
     <div className="flex-1">
       <main className="p-4 md:p-6">
-        <h1 className="text-2xl font-bold mb-6">Panel Principal</h1>
+        <h1 className="text-2xl font-bold mb-2">Bienvenido, {selectedTeamUser?.name.split(' ')[0]}</h1>
+        <p className="text-muted-foreground mb-6">¿Qué quieres gestionar hoy?</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {navItems.map((item) => (
             <Link href={item.href} key={item.href}>
@@ -93,12 +96,6 @@ export default function DashboardPage() {
               </Card>
             </Link>
           ))}
-        </div>
-        <div className="mt-8 flex justify-center">
-          <Button variant="outline" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Cerrar Sesión
-          </Button>
         </div>
       </main>
     </div>

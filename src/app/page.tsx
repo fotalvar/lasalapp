@@ -4,26 +4,32 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
+import { useTeamUser } from '@/context/team-user-context';
 
 const ADMIN_EMAILS = ['info@atresquarts.com', 'admin@atresquarts.com'];
 
 export default function Home() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
+  const { selectedTeamUser, isLoading: isTeamUserLoading } = useTeamUser();
 
   useEffect(() => {
-    if (isUserLoading) return; // Wait for user status to be confirmed
+    if (isUserLoading || isTeamUserLoading) return;
 
     if (user) {
       if (user.email && ADMIN_EMAILS.includes(user.email)) {
-        router.replace('/dashboard');
+        if (selectedTeamUser) {
+          router.replace('/dashboard');
+        } else {
+          router.replace('/dashboard/select-user');
+        }
       } else {
         router.replace('/public');
       }
     } else {
       router.replace('/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, selectedTeamUser, isTeamUserLoading, router]);
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center bg-background">

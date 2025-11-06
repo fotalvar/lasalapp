@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
-import { Loader2, Theater } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 function GoogleIcon() {
   return (
@@ -41,7 +41,7 @@ export default function LoginPage() {
   const handleRedirect = (user: User | null) => {
     if (!user) return;
     if (user.email && ADMIN_EMAILS.includes(user.email)) {
-      router.replace('/dashboard');
+      router.replace('/dashboard/select-user');
     } else {
       router.replace('/public');
     }
@@ -94,5 +94,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

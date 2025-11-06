@@ -60,6 +60,7 @@ import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, Timestamp }
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
+import { useTeamUser } from '@/context/team-user-context';
 
 type EventType =
   | 'Publicaciones en redes'
@@ -517,6 +518,14 @@ export default function CalendarPage() {
   
   const db = useFirestore();
   const { toast } = useToast();
+  const { selectedTeamUser } = useTeamUser();
+
+  useEffect(() => {
+    // Set the default filter to the currently selected team user
+    if (selectedTeamUser) {
+      setFilteredAssigneeIds([selectedTeamUser.id]);
+    }
+  }, [selectedTeamUser]);
 
   useEffect(() => {
     setToday(new Date());
@@ -530,20 +539,24 @@ export default function CalendarPage() {
     const unsubEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
         const fetchedEvents = snapshot.docs.map(doc => {
             const data = doc.data();
+            const date = data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date);
             return { 
                 id: doc.id, 
                 ...data,
-                date: (data.date as Timestamp).toDate(),
+                date,
             } as CalendarEvent;
         }).sort((a,b) => a.date.getTime() - b.date.getTime());
         setEvents(fetchedEvents);
+    }, (error) => {
+        console.error("Error fetching events:", error);
+        toast({ title: "Error al cargar eventos", description: error.message, variant: "destructive" });
     });
 
     return () => {
         unsubMembers();
         unsubEvents();
     }
-  }, [db]);
+  }, [db, toast]);
   
   const handleDayClick = (day: Date) => {
     setDayDialogDate(day);
@@ -572,12 +585,12 @@ export default function CalendarPage() {
     if (!db) return;
     
     const dateToSave = eventData.date instanceof Date ? Timestamp.fromDate(eventData.date) : eventData.date;
+    const dataWithTimestamp = { ...eventData, date: dateToSave };
 
     if ('id' in eventData) {
-        const { id, ...dataToSave } = eventData;
+        const { id, ...dataToSave } = dataWithTimestamp;
         const docRef = doc(db, 'events', id);
-        setDoc(docRef, { ...dataToSave, date: dateToSave }, { merge: true })
-          .then(() => toast({ title: "Evento actualizado", description: `${eventData.title} ha sido actualizado.` }))
+        setDoc(docRef, dataToSave, { merge: true })
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                   path: docRef.path,
@@ -587,13 +600,12 @@ export default function CalendarPage() {
           });
     } else {
         const newDocRef = doc(collection(db, 'events'));
-        setDoc(newDocRef, { ...eventData, date: dateToSave })
-          .then(() => toast({ title: "Evento añadido", description: `${eventData.title} ha sido añadido.` }))
+        setDoc(newDocRef, dataWithTimestamp)
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                   path: newDocRef.path,
                   operation: 'create',
-                  requestResourceData: { ...eventData, date: dateToSave }
+                  requestResourceData: dataWithTimestamp
               }))
           });
     }
@@ -603,7 +615,6 @@ export default function CalendarPage() {
     if (!db) return;
     const docRef = doc(db, 'events', id);
     deleteDoc(docRef)
-      .then(() => toast({ title: "Evento eliminado" }))
       .catch(err => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docRef.path,
@@ -628,15 +639,13 @@ export default function CalendarPage() {
           // This will only catch client-side errors. Permission errors are now unawaited.
           console.error("Error committing batch:", err);
           
-          // For permission errors, we can proactively emit. 
-          // Note: This won't have the specific doc path that failed.
+          const sampleEventForError = newEvents[0];
           const permissionError = new FirestorePermissionError({
-              path: 'events',
+              path: 'events/<auto-id>',
               operation: 'create',
-              requestResourceData: newEvents.map(e => ({...e, date: e.date}))
+              requestResourceData: { ...sampleEventForError, date: (sampleEventForError.date as Date).toISOString() }
           });
           errorEmitter.emit('permission-error', permissionError);
-          toast({ title: "Error de permisos", description: permissionError.message, variant: "destructive"});
       });
   }
 
@@ -799,14 +808,14 @@ export default function CalendarPage() {
                 day_outside: 'text-muted-foreground opacity-50',
               }}
               components={{
-                DayContent: ({ date: dayDate, ...props }) => {
+                DayContent: ({ date: dayDate }) => {
                   const dayEvents = filteredEvents.filter((event) => {
                     const eventDate = event.date instanceof Timestamp ? event.date.toDate() : event.date;
                     return isSameDay(eventDate, dayDate);
                   });
                   return (
                     <div className="relative h-full w-full">
-                      <time dateTime={dayDate.toISOString()} className={cn("absolute top-1 left-1.5", isSameDay(dayDate, today) && "font-bold text-primary")}>
+                      <time dateTime={dayDate.toISOString()} className={cn("absolute top-1 left-1.5", today && isSameDay(dayDate, today) && "font-bold text-primary")}>
                         {dayDate.getDate()}
                       </time>
                       <div className='space-y-1 mt-6 overflow-y-auto max-h-[80px] no-scrollbar' onClick={(e) => e.stopPropagation()}>
