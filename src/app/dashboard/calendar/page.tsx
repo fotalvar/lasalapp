@@ -16,6 +16,7 @@ import {
   BookOpen,
   Film,
   Camera,
+  BookCopy,
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -442,6 +443,51 @@ export default function CalendarPage() {
     <>
       <PageHeader title="Calendario y Programación">
           <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <BookCopy className="mr-2 h-4 w-4" />
+                  Agenda
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 md:w-96">
+                 <Card className="border-0 shadow-none">
+                    <CardHeader>
+                        <CardTitle>Agenda</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Tabs defaultValue="today">
+                        <TabsList className='grid w-full grid-cols-3'>
+                            <TabsTrigger value="today">Hoy</TabsTrigger>
+                            <TabsTrigger value="week">Semana</TabsTrigger>
+                            <TabsTrigger value="month">Mes</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="today" className="space-y-2 mt-4">
+                            {eventsToday.length > 0 ? (
+                            eventsToday.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
+                            ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No hay eventos para hoy.</p>
+                            )}
+                        </TabsContent>
+                        <TabsContent value="week" className="space-y-2 mt-4">
+                            {eventsWeek.length > 0 ? (
+                            eventsWeek.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
+                            ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No hay eventos esta semana.</p>
+                            )}
+                        </TabsContent>
+                        <TabsContent value="month" className="space-y-2 mt-4">
+                            {eventsMonth.length > 0 ? (
+                            eventsMonth.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
+                            ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No hay eventos este mes.</p>
+                            )}
+                        </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                    </Card>
+              </PopoverContent>
+            </Popover>
             <Button variant="outline" size="sm" onClick={() => setIsScheduleSheetOpen(true)}>
                 <Instagram className="mr-2 h-4 w-4" />
                 Programar Instagram
@@ -452,8 +498,8 @@ export default function CalendarPage() {
             </Button>
           </div>
       </PageHeader>
-      <main className="p-4 md:px-6 grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <main className="p-4 md:px-6">
+        <div>
             <Calendar
               mode="single"
               month={currentMonth}
@@ -500,41 +546,6 @@ export default function CalendarPage() {
               }}
             />
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Agenda</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="today">
-              <TabsList className='grid w-full grid-cols-3'>
-                <TabsTrigger value="today">Hoy</TabsTrigger>
-                <TabsTrigger value="week">Semana</TabsTrigger>
-                <TabsTrigger value="month">Mes</TabsTrigger>
-              </TabsList>
-              <TabsContent value="today" className="space-y-2 mt-4">
-                {eventsToday.length > 0 ? (
-                  eventsToday.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No hay eventos para hoy.</p>
-                )}
-              </TabsContent>
-              <TabsContent value="week" className="space-y-2 mt-4">
-                {eventsWeek.length > 0 ? (
-                  eventsWeek.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No hay eventos esta semana.</p>
-                )}
-              </TabsContent>
-              <TabsContent value="month" className="space-y-2 mt-4">
-                 {eventsMonth.length > 0 ? (
-                  eventsMonth.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No hay eventos este mes.</p>
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
       </main>
       <AddEditEventSheet
         open={isAddEditSheetOpen}
@@ -552,3 +563,5 @@ export default function CalendarPage() {
     </>
   );
 }
+
+    
