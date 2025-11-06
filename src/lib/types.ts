@@ -41,7 +41,7 @@ export type Show = {
   id: string;
   title: string;
   companyId: string;
-  status: 'Idea' | 'En conversaciones' | 'Confirmado' | 'Archivado' | 'Formulario externo';
+  status: 'Idea' | 'En conversaciones' | 'Confirmado' | 'Archivado' | 'Proposta Pendent';
   timeline: TimelineEvent[];
   description?: string;
   duration?: string;
@@ -64,3 +64,5 @@ export type Todo = {
   completed: boolean;
   dueDate?: Date;
 };
+
+    

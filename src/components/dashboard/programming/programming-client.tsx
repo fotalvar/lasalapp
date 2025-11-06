@@ -58,12 +58,12 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 
 
-const statusOptions: Show['status'][] = ['Idea', 'En conversaciones', 'Confirmado', 'Formulario externo', 'Archivado'];
-const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
+const statusOptions: Show['status'][] = ['Idea', 'En conversaciones', 'Confirmado', 'Proposta Pendent', 'Archivado'];
+const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' | 'warning' } = {
     'Confirmado': 'default',
     'En conversaciones': 'secondary',
+    'Proposta Pendent': 'warning',
     'Idea': 'outline',
-    'Formulario externo': 'outline',
     'Archivado': 'destructive',
 }
 
@@ -749,3 +749,5 @@ export default function ProgrammingClient() {
     </Dialog>
   );
 }
+
+    
