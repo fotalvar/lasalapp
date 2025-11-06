@@ -14,7 +14,7 @@ export default function PageHeader({ title, description, className, children }: 
       <div className="p-6 pb-0">
         <h1 className="text-2xl font-bold tracking-tight font-headline">{title}</h1>
         {description && (
-          <p className="mt-1 text-muted-foreground">{description}</p>
+          <p className="mt-1 text-muted-foreground hidden md:block">{description}</p>
         )}
       </div>
       {children}

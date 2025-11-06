@@ -578,8 +578,14 @@ export default function ProgrammingClient() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+      <div className="flex flex-col mb-4 gap-4">
+        <div className="flex justify-end">
+            <Button onClick={handleAddNew} className="w-full sm:w-auto">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Añadir Espectáculo
+            </Button>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
             <Select value={statusFilter} onValueChange={(value: Show['status'] | 'all') => setStatusFilter(value)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Filtrar por estado" />
@@ -592,7 +598,7 @@ export default function ProgrammingClient() {
                     <SelectItem value="Archivado">Archivado</SelectItem>
                 </SelectContent>
             </Select>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 self-start sm:self-center">
                 <Checkbox id="show-completed" checked={showCompleted} onCheckedChange={(checked) => setShowCompleted(!!checked)} />
                 <label
                     htmlFor="show-completed"
@@ -602,10 +608,6 @@ export default function ProgrammingClient() {
                 </label>
             </div>
         </div>
-        <Button onClick={handleAddNew} className="w-full sm:w-auto">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Añadir Espectáculo
-        </Button>
       </div>
       
       <AddEditShowSheet 
