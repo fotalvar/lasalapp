@@ -18,8 +18,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, CalendarIcon } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, CalendarIcon, ChevronDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -50,6 +54,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 
 
+const statusOptions: Show['status'][] = ['Idea', 'En conversaciones', 'Confirmado', 'Archivado'];
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Confirmado': 'default',
     'En conversaciones': 'secondary',
@@ -310,10 +315,9 @@ function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange
                                 <SelectValue placeholder="Selecciona un estado" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Idea">Idea</SelectItem>
-                                <SelectItem value="En conversaciones">En conversaciones</SelectItem>
-                                <SelectItem value="Confirmado">Confirmado</SelectItem>
-                                <SelectItem value="Archivado">Archivado</SelectItem>
+                                {statusOptions.map(option => (
+                                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -393,6 +397,33 @@ function AddEditShowSheet({ show, onSave, onDelete, children, open, onOpenChange
     )
 }
 
+function StatusBadge({ show, onStatusChange }: { show: Show; onStatusChange: (status: Show['status']) => void; }) {
+  return (
+    <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <button
+                onClick={(e) => e.stopPropagation()}
+                className={cn(
+                    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                    badgeVariants({ variant: statusColors[show.status] || 'outline' }),
+                    "hover:opacity-80"
+                )}
+            >
+                {show.status}
+                <ChevronDown className="ml-1 h-3 w-3" />
+            </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuRadioGroup value={show.status} onValueChange={(value) => onStatusChange(value as Show['status'])}>
+                {statusOptions.map(option => (
+                    <DropdownMenuRadioItem key={option} value={option}>{option}</DropdownMenuRadioItem>
+                ))}
+            </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function ProgrammingClient() {
   const [shows, setShows] = useState<Show[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -402,6 +433,7 @@ export default function ProgrammingClient() {
   const db = useFirestore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { badgeVariants } = require('@/components/ui/badge');
 
   useEffect(() => {
     if (!db) return;
@@ -459,6 +491,11 @@ export default function ProgrammingClient() {
         console.error("Error saving show: ", error);
         toast({ title: "Error", description: "No se pudo guardar el espectáculo.", variant: "destructive" });
     }
+  }
+
+  const handleStatusChange = (show: Show, newStatus: Show['status']) => {
+    const updatedShow = { ...show, status: newStatus };
+    handleSaveShow(updatedShow);
   }
 
   const handleDeleteShow = async (id: string) => {
@@ -529,7 +566,7 @@ export default function ProgrammingClient() {
                     <p className="font-semibold">{show.title}</p>
                     <p className="text-sm text-muted-foreground">{show.company}</p>
                   </div>
-                  <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
+                  <StatusBadge show={show} onStatusChange={(newStatus) => handleStatusChange(show, newStatus)} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -553,7 +590,7 @@ export default function ProgrammingClient() {
             <TableCell className="font-medium">{show.title}</TableCell>
             <TableCell>{show.company}</TableCell>
             <TableCell>
-              <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
+              <StatusBadge show={show} onStatusChange={(newStatus) => handleStatusChange(show, newStatus)} />
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
@@ -592,10 +629,9 @@ export default function ProgrammingClient() {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">Todos los estados</SelectItem>
-                    <SelectItem value="Idea">Idea</SelectItem>
-                    <SelectItem value="En conversaciones">En conversaciones</SelectItem>
-                    <SelectItem value="Confirmado">Confirmado</SelectItem>
-                    <SelectItem value="Archivado">Archivado</SelectItem>
+                    {statusOptions.map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
             <div className="flex items-center space-x-2">
@@ -624,6 +660,8 @@ export default function ProgrammingClient() {
     </>
   );
 }
+
+    
 
     
 
