@@ -120,20 +120,30 @@ const eventConfig: Record<
 };
 
 function AddEditEventSheet({
+  open,
+  onOpenChange,
   event,
   onSave,
   onDelete,
-  children,
 }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   event?: Event;
   onSave: (event: Event) => void;
-  onDelete?: (id: string) => void;
-  children: React.ReactNode;
+  onDelete: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState(event?.title || '');
-  const [date, setDate] = useState<Date | undefined>(event?.date);
-  const [type, setType] = useState<EventType | undefined>(event?.type);
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState<Date | undefined>();
+  const [type, setType] = useState<EventType | undefined>();
+
+  useEffect(() => {
+    if (open) {
+      setTitle(event?.title || '');
+      setDate(event?.date);
+      setType(event?.type);
+    }
+  }, [open, event]);
+
 
   const handleSave = () => {
     if (title && date && type) {
@@ -143,25 +153,19 @@ function AddEditEventSheet({
         date,
         type,
       });
-      setOpen(false);
-      if (!event) {
-        setTitle('');
-        setDate(undefined);
-        setType(undefined);
-      }
+      onOpenChange(false);
     }
   };
   
   const handleDelete = () => {
-    if(event && onDelete) {
+    if(event) {
       onDelete(event.id);
-      setOpen(false);
+      onOpenChange(false);
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>{children}</SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
         <SheetHeader>
           <SheetTitle>{event ? 'Editar Evento' : 'Añadir Nuevo Evento'}</SheetTitle>
@@ -203,14 +207,14 @@ function AddEditEventSheet({
         </div>
         <SheetFooter>
           <div className='flex justify-between w-full'>
-            {event && onDelete ? (
+            {event ? (
               <Button variant="destructive" onClick={handleDelete} className='mr-auto'>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Eliminar
               </Button>
             ) : <div></div>}
             <div className='space-x-2'>
-               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
                <Button onClick={handleSave}>Guardar Evento</Button>
             </div>
           </div>
@@ -220,11 +224,10 @@ function AddEditEventSheet({
   );
 }
 
-function EventItem({ event, onEdit, onDelete }: { event: Event; onEdit: (event: Event) => void; onDelete: (id: string) => void; }) {
+function EventItem({ event, onEditClick }: { event: Event; onEditClick: (event: Event) => void; }) {
   const config = eventConfig[event.type];
   return (
-    <AddEditEventSheet event={event} onSave={onEdit} onDelete={onDelete}>
-      <button className="flex w-full items-center gap-3 text-left p-2 rounded-lg hover:bg-muted transition-colors">
+      <button onClick={() => onEditClick(event)} className="flex w-full items-center gap-3 text-left p-2 rounded-lg hover:bg-muted transition-colors">
         <div className={cn('flex h-8 w-8 items-center justify-center rounded-full', config.bgColor, config.color)}>
           {config.icon}
         </div>
@@ -235,7 +238,6 @@ function EventItem({ event, onEdit, onDelete }: { event: Event; onEdit: (event: 
           </p>
         </div>
       </button>
-    </AddEditEventSheet>
   );
 }
 
@@ -243,10 +245,23 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<Event[]>(initialEvents.sort((a,b) => a.date.getTime() - b.date.getTime()));
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [today, setToday] = useState<Date | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
+
 
   useEffect(() => {
     setToday(new Date());
   }, []);
+
+  const openSheetForEdit = (event: Event) => {
+    setSelectedEvent(event);
+    setIsSheetOpen(true);
+  }
+
+  const openSheetForNew = () => {
+    setSelectedEvent(undefined);
+    setIsSheetOpen(true);
+  }
 
 
   const handleSaveEvent = (event: Event) => {
@@ -279,12 +294,10 @@ export default function CalendarPage() {
   return (
     <>
       <PageHeader title="Calendario y Programación">
-          <AddEditEventSheet onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
-            <Button size="sm">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Añadir Evento
-            </Button>
-          </AddEditEventSheet>
+          <Button size="sm" onClick={openSheetForNew}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Añadir Evento
+          </Button>
       </PageHeader>
       <main className="p-4 md:px-6 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -321,12 +334,10 @@ export default function CalendarPage() {
                         {dayEvents.map(event => {
                           const config = eventConfig[event.type];
                           return (
-                            <AddEditEventSheet key={event.id} event={event} onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
-                               <div role="button" className={cn('w-full text-left text-xs p-1 rounded-sm flex items-center overflow-hidden cursor-pointer', config.bgColor, config.color)}>
-                                <div className="flex-shrink-0">{config.icon}</div>
-                                <span className='ml-1 truncate flex-grow'>{event.title}</span>
-                              </div>
-                            </AddEditEventSheet>
+                            <div key={event.id} role="button" onClick={() => openSheetForEdit(event)} className={cn('w-full text-left text-xs p-1 rounded-sm flex items-center overflow-hidden cursor-pointer', config.bgColor, config.color)}>
+                              <div className="flex-shrink-0">{config.icon}</div>
+                              <span className='ml-1 truncate flex-grow'>{event.title}</span>
+                            </div>
                           )
                         })}
                       </div>
@@ -349,21 +360,21 @@ export default function CalendarPage() {
               </TabsList>
               <TabsContent value="today" className="space-y-2 mt-4">
                 {eventsToday.length > 0 ? (
-                  eventsToday.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} onDelete={handleDeleteEvent} />)
+                  eventsToday.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">No hay eventos para hoy.</p>
                 )}
               </TabsContent>
               <TabsContent value="week" className="space-y-2 mt-4">
                 {eventsWeek.length > 0 ? (
-                  eventsWeek.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} onDelete={handleDeleteEvent} />)
+                  eventsWeek.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">No hay eventos esta semana.</p>
                 )}
               </TabsContent>
               <TabsContent value="month" className="space-y-2 mt-4">
                  {eventsMonth.length > 0 ? (
-                  eventsMonth.map((event) => <EventItem key={event.id} event={event} onEdit={handleSaveEvent} onDelete={handleDeleteEvent} />)
+                  eventsMonth.map((event) => <EventItem key={event.id} event={event} onEditClick={openSheetForEdit} />)
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">No hay eventos este mes.</p>
                 )}
@@ -372,6 +383,13 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
       </main>
+      <AddEditEventSheet
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        event={selectedEvent}
+        onSave={handleSaveEvent}
+        onDelete={handleDeleteEvent}
+      />
     </>
   );
 }
