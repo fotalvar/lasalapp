@@ -41,7 +41,9 @@ const mobileNavItems = [
 
 function AppLogo() {
   return (
-    <Image src="/logo.png" alt="laSalapp logo" width={60} height={60} />
+    <div className="relative h-[60px] w-[60px]">
+      <Image src="/logo.png" alt="laSalapp logo" fill style={{ objectFit: 'contain' }} />
+    </div>
   )
 }
 
@@ -111,7 +113,7 @@ function BottomNavBar() {
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen w-full bg-background pb-16 md:pb-0">
-      <header className="flex h-[60px] items-center justify-between gap-4 border-b bg-background sticky top-0 z-40 pr-4 lg:pr-6">
+      <header className="flex h-[60px] items-center justify-between gap-2 border-b bg-background sticky top-0 z-40 pr-4 lg:pr-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <AppLogo />
           <span className="font-bold text-lg">laSalapp</span>
