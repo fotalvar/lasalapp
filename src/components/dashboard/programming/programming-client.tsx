@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Show, TimelineEvent, Company } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -217,15 +217,30 @@ function AddEditShowSheet({ show, companies, onSave, onDelete, children, open, o
     const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
     const [newInteractionNote, setNewInteractionNote] = useState('');
     
+    const [initialState, setInitialState] = useState<string>('');
+    const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+
+    const hasUnsavedChanges = useMemo(() => {
+        const currentState = JSON.stringify({ title, companyId, status, timeline });
+        return currentState !== initialState;
+    }, [title, companyId, status, timeline, initialState]);
+
+
     useEffect(() => {
         if (open) {
-            setTitle(show?.title || '');
-            setCompanyId(show?.companyId || undefined);
-            setStatus(show?.status);
-            const initialTimeline = show?.timeline && show.timeline.length > 0 ? show.timeline : createInitialTimeline();
-            const timelineWithDates = initialTimeline.map(t => ({...t, date: t.date instanceof Timestamp ? t.date.toDate() : t.date}));
-            setTimeline(timelineWithDates);
+            const currentShowState = {
+                title: show?.title || '',
+                companyId: show?.companyId || undefined,
+                status: show?.status,
+                timeline: show?.timeline && show.timeline.length > 0 ? show.timeline.map(t => ({...t, date: t.date instanceof Timestamp ? t.date.toDate() : t.date})) : createInitialTimeline(),
+            }
+            setTitle(currentShowState.title);
+            setCompanyId(currentShowState.companyId);
+            setStatus(currentShowState.status);
+            setTimeline(currentShowState.timeline);
             setNewInteractionNote('');
+
+            setInitialState(JSON.stringify(currentShowState));
         }
     }, [open, show]);
 
@@ -254,6 +269,19 @@ function AddEditShowSheet({ show, companies, onSave, onDelete, children, open, o
             onOpenChange(false);
         }
     }
+
+    const handleCloseAttempt = useCallback((isOpen: boolean) => {
+        if (!isOpen && hasUnsavedChanges) {
+            setShowUnsavedDialog(true);
+        } else {
+            onOpenChange(isOpen);
+        }
+    }, [hasUnsavedChanges, onOpenChange]);
+
+    const handleDiscardChanges = () => {
+        setShowUnsavedDialog(false);
+        onOpenChange(false);
+    };
 
     const handleToggleStep = (stepId: string, checked: boolean) => {
         setTimeline(currentTimeline => currentTimeline.map(step => 
@@ -296,119 +324,135 @@ function AddEditShowSheet({ show, companies, onSave, onDelete, children, open, o
     const progress = (completedSteps / FIXED_STEPS.length) * 100;
 
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-                <SheetHeader>
-                    <SheetTitle>{show ? 'Editar Espectáculo' : 'Añadir Nuevo Espectáculo'}</SheetTitle>
-                    <SheetDescription>
-                        {show ? 'Actualiza los detalles de este espectáculo.' : 'Añade un nuevo espectáculo a tu seguimiento de programación.'}
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="title">Título del Espectáculo</Label>
-                        <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="company">Compañía</Label>
-                        <Select value={companyId} onValueChange={setCompanyId}>
-                            <SelectTrigger id="company">
-                                <SelectValue placeholder="Selecciona una compañía" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {companies.map(c => (
-                                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="status">Estado</Label>
-                        <Select value={status} onValueChange={(value: Show['status']) => setStatus(value)}>
-                            <SelectTrigger id="status">
-                                <SelectValue placeholder="Selecciona un estado" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statusOptions.map(option => (
-                                    <SelectItem key={option} value={option}>{option}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+        <>
+            <Sheet open={open} onOpenChange={handleCloseAttempt}>
+                <SheetTrigger asChild>{children}</SheetTrigger>
+                <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                    <SheetHeader>
+                        <SheetTitle>{show ? 'Editar Espectáculo' : 'Añadir Nuevo Espectáculo'}</SheetTitle>
+                        <SheetDescription>
+                            {show ? 'Actualiza los detalles de este espectáculo.' : 'Añade un nuevo espectáculo a tu seguimiento de programación.'}
+                        </SheetDescription>
+                    </SheetHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="title">Título del Espectáculo</Label>
+                            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="company">Compañía</Label>
+                            <Select value={companyId} onValueChange={setCompanyId}>
+                                <SelectTrigger id="company">
+                                    <SelectValue placeholder="Selecciona una compañía" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {companies.map(c => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="status">Estado</Label>
+                            <Select value={status} onValueChange={(value: Show['status']) => setStatus(value)}>
+                                <SelectTrigger id="status">
+                                    <SelectValue placeholder="Selecciona un estado" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {statusOptions.map(option => (
+                                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    <div className="grid gap-2">
-                        <Label>Progreso de la Programación</Label>
-                        <div className="space-y-4 rounded-md border p-4">
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                     <Label className="text-sm">Pasos completados</Label>
-                                     <span className="text-sm font-bold">{completedSteps} de {FIXED_STEPS.length}</span>
+                        <div className="grid gap-2">
+                            <Label>Progreso de la Programación</Label>
+                            <div className="space-y-4 rounded-md border p-4">
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <Label className="text-sm">Pasos completados</Label>
+                                        <span className="text-sm font-bold">{completedSteps} de {FIXED_STEPS.length}</span>
+                                    </div>
+                                    <Progress value={progress} />
                                 </div>
-                                <Progress value={progress} />
+                                <div className="space-y-4 relative">
+                                    <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-border" />
+                                    {sortedTimeline.map(event => (
+                                        event.isCustom
+                                            ? <TimelineInteraction 
+                                                key={event.id} 
+                                                event={event} 
+                                                onUpdate={handleTimelineUpdate}
+                                                onDelete={handleTimelineDelete}
+                                            />
+                                            : <TimelineStep 
+                                                key={event.id} 
+                                                event={event} 
+                                                onToggle={(checked) => handleToggleStep(event.id, checked)}
+                                                onDateChange={(date) => handleTimelineUpdate({ ...event, date: date || null })}
+                                            />
+                                    ))}
+                                </div>
                             </div>
-                            <div className="space-y-4 relative">
-                                <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-border" />
-                                {sortedTimeline.map(event => (
-                                    event.isCustom
-                                        ? <TimelineInteraction 
-                                            key={event.id} 
-                                            event={event} 
-                                            onUpdate={handleTimelineUpdate}
-                                            onDelete={handleTimelineDelete}
-                                          />
-                                        : <TimelineStep 
-                                            key={event.id} 
-                                            event={event} 
-                                            onToggle={(checked) => handleToggleStep(event.id, checked)}
-                                            onDateChange={(date) => handleTimelineUpdate({ ...event, date: date || null })}
-                                          />
-                                ))}
+                        </div>
+                        
+                        <div className="grid gap-2">
+                            <Label htmlFor="interaction">Añadir Interacción Personalizada</Label>
+                            <div className="flex gap-2">
+                                <Input id="interaction" value={newInteractionNote} onChange={e => setNewInteractionNote(e.target.value)} placeholder="Ej: Llamada de seguimiento..."/>
+                                <Button variant="outline" onClick={handleAddInteraction}>Añadir</Button>
                             </div>
                         </div>
                     </div>
-                    
-                    <div className="grid gap-2">
-                        <Label htmlFor="interaction">Añadir Interacción Personalizada</Label>
-                        <div className="flex gap-2">
-                            <Input id="interaction" value={newInteractionNote} onChange={e => setNewInteractionNote(e.target.value)} placeholder="Ej: Llamada de seguimiento..."/>
-                            <Button variant="outline" onClick={handleAddInteraction}>Añadir</Button>
+                    <SheetFooter>
+                        <div className='flex justify-between w-full'>
+                            {show ? (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" className="mr-auto">
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Eliminar
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                        <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Esta acción no se puede deshacer. Esto eliminará permanentemente el espectáculo
+                                            y todos sus datos asociados.
+                                        </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            ): <div></div>}
+                            <div className='space-x-2'>
+                            <Button variant="outline" onClick={() => handleCloseAttempt(false)}>Cancelar</Button>
+                            <Button onClick={handleSave}>Guardar</Button>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <SheetFooter>
-                    <div className='flex justify-between w-full'>
-                        {show ? (
-                             <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" className="mr-auto">
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Eliminar
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                    <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Esta acción no se puede deshacer. Esto eliminará permanentemente el espectáculo
-                                        y todos sus datos asociados.
-                                    </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        ): <div></div>}
-                        <div className='space-x-2'>
-                           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                           <Button onClick={handleSave}>Guardar</Button>
-                        </div>
-                    </div>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
+                    </SheetFooter>
+                </SheetContent>
+            </Sheet>
+            <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+                 <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Cambios sin guardar</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Tienes cambios sin guardar. ¿Estás seguro de que quieres descartarlos y cerrar el panel?
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setShowUnsavedDialog(false)}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDiscardChanges}>Descartar Cambios</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     )
 }
 
@@ -753,3 +797,6 @@ export default function ProgrammingClient() {
 
     
 
+
+
+    
