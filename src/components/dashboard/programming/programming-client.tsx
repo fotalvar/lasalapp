@@ -482,10 +482,10 @@ export default function ProgrammingClient() {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={(value: Show['status'] | 'all') => setStatusFilter(value)}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Filtrar por estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -506,7 +506,7 @@ export default function ProgrammingClient() {
                 </label>
             </div>
         </div>
-        <Button onClick={handleAddNew}>
+        <Button onClick={handleAddNew} className="w-full sm:w-auto">
             <PlusCircle className="mr-2 h-4 w-4" />
             Añadir Espectáculo
         </Button>
@@ -523,61 +523,63 @@ export default function ProgrammingClient() {
       </AddEditShowSheet>
 
       <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Título del Espectáculo</TableHead>
-              <TableHead>Compañía</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Progreso</TableHead>
-              <TableHead>Última Interacción</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredShows.map((show) => {
-              const lastInteraction = show.timeline && show.timeline.length > 0 
-                ? [...show.timeline].filter(t => t.date).sort((a,b) => b.date!.getTime() - a.date!.getTime())[0] 
-                : null;
-                
-              const lastInteractionNote = lastInteraction?.isCustom ? lastInteraction.notes : lastInteraction?.name;
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Título del Espectáculo</TableHead>
+                <TableHead>Compañía</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Progreso</TableHead>
+                <TableHead>Última Interacción</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredShows.map((show) => {
+                const lastInteraction = show.timeline && show.timeline.length > 0 
+                  ? [...show.timeline].filter(t => t.date).sort((a,b) => b.date!.getTime() - a.date!.getTime())[0] 
+                  : null;
+                  
+                const lastInteractionNote = lastInteraction?.isCustom ? lastInteraction.notes : lastInteraction?.name;
 
-              const truncatedNote = lastInteractionNote 
-                ? lastInteractionNote.length > 20 
-                  ? `${lastInteractionNote.substring(0, 20)}...`
-                  : lastInteractionNote
-                : null;
-              
-              const completedSteps = show.timeline ? show.timeline.filter(t => !t.isCustom && t.date).length : 0;
-              const progress = (completedSteps / FIXED_STEPS.length) * 100;
-              
-              return (
-                <TableRow key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
-                  <TableCell className="font-medium">{show.title}</TableCell>
-                  <TableCell>{show.company}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                        <Progress value={progress} className="w-24 h-2" />
-                        <span className="text-xs text-muted-foreground font-medium">{Math.round(progress)}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span>
-                        {lastInteraction?.date ? format(lastInteraction.date, 'd MMM, yyyy', { locale: es }) : 'N/A'}
-                      </span>
-                      {truncatedNote && (
-                        <Badge variant="outline" className="font-normal truncate">{truncatedNote}</Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                const truncatedNote = lastInteractionNote 
+                  ? lastInteractionNote.length > 20 
+                    ? `${lastInteractionNote.substring(0, 20)}...`
+                    : lastInteractionNote
+                  : null;
+                
+                const completedSteps = show.timeline ? show.timeline.filter(t => !t.isCustom && t.date).length : 0;
+                const progress = (completedSteps / FIXED_STEPS.length) * 100;
+                
+                return (
+                  <TableRow key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
+                    <TableCell className="font-medium">{show.title}</TableCell>
+                    <TableCell>{show.company}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                          <Progress value={progress} className="w-24 h-2" />
+                          <span className="text-xs text-muted-foreground font-medium">{Math.round(progress)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span>
+                          {lastInteraction?.date ? format(lastInteraction.date, 'd MMM, yyyy', { locale: es }) : 'N/A'}
+                        </span>
+                        {truncatedNote && (
+                          <Badge variant="outline" className="font-normal truncate">{truncatedNote}</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </>
   );
