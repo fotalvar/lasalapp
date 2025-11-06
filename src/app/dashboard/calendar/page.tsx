@@ -18,6 +18,7 @@ import {
   Camera,
   BookCopy,
   ChevronDown,
+  Filter,
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -51,7 +52,7 @@ import type { TeamMember } from '@/lib/types';
 import { useFirestore } from '@/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 
 type EventType =
   | 'Publicaciones en redes'
@@ -268,20 +269,22 @@ function AddEditEventSheet({
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                 <Command>
                     <CommandInput placeholder="Buscar miembro..." />
-                    <CommandEmpty>No se encontró ningún miembro del equipo.</CommandEmpty>
-                    <CommandGroup>
-                        {teamMembers.map(member => (
-                            <CommandItem key={member.id} onSelect={() => toggleAssignee(member.id)} className="flex items-center gap-2">
-                                <Checkbox checked={assigneeIds.includes(member.id)} />
-                                 <Avatar className="h-6 w-6 text-white" style={{ backgroundColor: member.avatar.color }}>
-                                    <AvatarFallback className="bg-transparent text-sm">
-                                        <MemberIcon member={member} className="h-4 w-4" />
-                                    </AvatarFallback>
-                                </Avatar>
-                                <span>{member.name}</span>
-                            </CommandItem>
-                        ))}
-                    </CommandGroup>
+                    <CommandList>
+                        <CommandEmpty>No se encontró ningún miembro del equipo.</CommandEmpty>
+                        <CommandGroup>
+                            {teamMembers.map(member => (
+                                <CommandItem key={member.id} onSelect={() => toggleAssignee(member.id)} className="flex items-center gap-2">
+                                    <Checkbox checked={assigneeIds.includes(member.id)} />
+                                    <Avatar className="h-6 w-6 text-white" style={{ backgroundColor: member.avatar.color }}>
+                                        <AvatarFallback className="bg-transparent text-sm">
+                                            <MemberIcon member={member} className="h-4 w-4" />
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <span>{member.name}</span>
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
                 </Command>
               </PopoverContent>
             </Popover>
@@ -406,20 +409,22 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                             <Command>
                                 <CommandInput placeholder="Buscar miembro..." />
-                                <CommandEmpty>No se encontró ningún miembro del equipo.</CommandEmpty>
-                                <CommandGroup>
-                                    {teamMembers.map(member => (
-                                        <CommandItem key={member.id} onSelect={() => toggleAssignee(member.id)} className="flex items-center gap-2">
-                                            <Checkbox checked={assigneeIds.includes(member.id)} />
-                                            <Avatar className="h-6 w-6 text-white" style={{ backgroundColor: member.avatar.color }}>
-                                                <AvatarFallback className="bg-transparent text-sm">
-                                                    <MemberIcon member={member} className="h-4 w-4" />
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <span>{member.name}</span>
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
+                                <CommandList>
+                                    <CommandEmpty>No se encontró ningún miembro del equipo.</CommandEmpty>
+                                    <CommandGroup>
+                                        {teamMembers.map(member => (
+                                            <CommandItem key={member.id} onSelect={() => toggleAssignee(member.id)} className="flex items-center gap-2">
+                                                <Checkbox checked={assigneeIds.includes(member.id)} />
+                                                <Avatar className="h-6 w-6 text-white" style={{ backgroundColor: member.avatar.color }}>
+                                                    <AvatarFallback className="bg-transparent text-sm">
+                                                        <MemberIcon member={member} className="h-4 w-4" />
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <span>{member.name}</span>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
                             </Command>
                         </PopoverContent>
                         </Popover>
@@ -505,6 +510,8 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
   
   const [isScheduleSheetOpen, setIsScheduleSheetOpen] = useState(false);
+
+  const [filteredAssigneeIds, setFilteredAssigneeIds] = useState<string[]>([]);
   const db = useFirestore();
 
   useEffect(() => {
@@ -545,6 +552,19 @@ export default function CalendarPage() {
     setEvents(prev => [...prev, ...newEvents].sort((a,b) => a.date.getTime() - b.date.getTime()));
   }
 
+  const toggleFilterAssignee = (id: string) => {
+    setFilteredAssigneeIds(prev => prev.includes(id) ? prev.filter(memberId => memberId !== id) : [...prev, id]);
+  }
+
+  const filteredEvents = useMemo(() => {
+    if (filteredAssigneeIds.length === 0) {
+        return events;
+    }
+    return events.filter(event => 
+        event.assigneeIds && event.assigneeIds.some(id => filteredAssigneeIds.includes(id))
+    );
+  }, [events, filteredAssigneeIds]);
+
   if (!today) {
     return null; // or a loading skeleton
   }
@@ -554,9 +574,9 @@ export default function CalendarPage() {
   const startOfCurrentMonth = startOfMonth(today);
   const endOfCurrentMonth = endOfMonth(today);
 
-  const eventsToday = events.filter((e) => isSameDay(e.date, today));
-  const eventsWeek = events.filter((e) => e.date >= startOfCurrentWeek && e.date <= endOfCurrentWeek);
-  const eventsMonth = events.filter((e) => e.date >= startOfCurrentMonth && e.date <= endOfCurrentMonth);
+  const eventsToday = filteredEvents.filter((e) => isSameDay(e.date, today));
+  const eventsWeek = filteredEvents.filter((e) => e.date >= startOfCurrentWeek && e.date <= endOfCurrentWeek);
+  const eventsMonth = filteredEvents.filter((e) => e.date >= startOfCurrentMonth && e.date <= endOfCurrentMonth);
   const futureShows = events.filter(e => e.type === 'Espectáculos' && e.date > new Date());
 
   return (
@@ -608,6 +628,36 @@ export default function CalendarPage() {
                     </Card>
               </PopoverContent>
             </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn(filteredAssigneeIds.length > 0 && "bg-secondary")}>
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filtrar por Responsable
+                  {filteredAssigneeIds.length > 0 && <span className="ml-2 h-5 w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">{filteredAssigneeIds.length}</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar miembro..." />
+                    <CommandList>
+                        <CommandEmpty>No se encontró ningún miembro.</CommandEmpty>
+                        <CommandGroup>
+                            {teamMembers.map(member => (
+                                <CommandItem key={member.id} onSelect={() => toggleFilterAssignee(member.id)} className="flex items-center gap-2">
+                                    <Checkbox checked={filteredAssigneeIds.includes(member.id)} />
+                                    <Avatar className="h-6 w-6 text-white" style={{ backgroundColor: member.avatar.color }}>
+                                        <AvatarFallback className="bg-transparent text-sm">
+                                            <MemberIcon member={member} className="h-4 w-4" />
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <span>{member.name}</span>
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <Button variant="outline" size="sm" onClick={() => setIsScheduleSheetOpen(true)}>
                 <Instagram className="mr-2 h-4 w-4" />
                 Programar Instagram
@@ -641,7 +691,7 @@ export default function CalendarPage() {
               }}
               components={{
                 DayContent: (props) => {
-                  const dayEvents = events.filter((event) =>
+                  const dayEvents = filteredEvents.filter((event) =>
                     isSameDay(event.date, props.date)
                   );
                   return (
@@ -697,3 +747,5 @@ export default function CalendarPage() {
     </>
   );
 }
+
+    
