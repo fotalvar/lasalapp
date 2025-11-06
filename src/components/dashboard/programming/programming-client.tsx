@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -364,6 +365,7 @@ export default function ProgrammingClient() {
               <TableHead>Título del Espectáculo</TableHead>
               <TableHead>Compañía</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>Progreso</TableHead>
               <TableHead>Última Interacción</TableHead>
               <TableHead><span className="sr-only">Acciones</span></TableHead>
             </TableRow>
@@ -382,12 +384,21 @@ export default function ProgrammingClient() {
                   : lastInteractionNote
                 : null;
               
+              const completedSteps = show.timeline ? show.timeline.filter(t => !t.isCustom && t.date).length : 0;
+              const progress = (completedSteps / FIXED_STEPS.length) * 100;
+              
               return (
                 <TableRow key={show.id} onClick={() => handleRowClick(show)} className="cursor-pointer">
                   <TableCell className="font-medium">{show.title}</TableCell>
                   <TableCell>{show.company}</TableCell>
                   <TableCell>
                     <Badge variant={statusColors[show.status] || 'outline'}>{show.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                        <Progress value={progress} className="w-24 h-2" />
+                        <span className="text-xs text-muted-foreground font-medium">{Math.round(progress)}%</span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -427,4 +438,5 @@ export default function ProgrammingClient() {
     </>
   );
 }
+
 
