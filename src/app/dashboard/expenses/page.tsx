@@ -6,7 +6,7 @@ export default function ExpensesPage() {
   return (
     <div className="flex-1">
       <PageHeader title="Seguimiento de Gastos" />
-      <main className="p-4 md:p-6">
+      <main className="p-4 md:px-6">
         <ExpensesClient initialExpenses={expenses} />
       </main>
     </div>

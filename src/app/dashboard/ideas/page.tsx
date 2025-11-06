@@ -5,7 +5,7 @@ export default function IdeasPage() {
   return (
     <div className="flex-1">
       <PageHeader title="Lluvia de Ideas" />
-      <main className="p-4 md:p-6">
+      <main className="p-4 md:px-6">
         <IdeaClient />
       </main>
     </div>

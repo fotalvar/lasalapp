@@ -279,16 +279,14 @@ export default function CalendarPage() {
   return (
     <div className="flex-1">
       <PageHeader title="Calendario y Programación">
-        <div className="p-6 pt-0">
           <AddEditEventSheet onSave={handleSaveEvent} onDelete={handleDeleteEvent}>
             <Button size="sm">
               <PlusCircle className="mr-2 h-4 w-4" />
               Añadir Evento
             </Button>
           </AddEditEventSheet>
-        </div>
       </PageHeader>
-      <main className="p-4 md:p-6 grid gap-6 lg:grid-cols-3">
+      <main className="p-4 md:px-6 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
             <Calendar
               mode="single"

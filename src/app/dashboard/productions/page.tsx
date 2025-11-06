@@ -16,14 +16,15 @@ const productions = [
 export default function ProductionsPage() {
   return (
     <div className="flex-1">
-      <PageHeader title="Producciones Propias" />
-      <main className="p-4 md:p-6">
-        <div className="flex justify-end mb-4">
+      <PageHeader title="Producciones Propias">
+        <div className="flex justify-end mt-4">
             <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nueva Producción
             </Button>
         </div>
+      </PageHeader>
+      <main className="p-4 md:px-6">
         <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {productions.map(prod => {
                 const posterImage = PlaceHolderImages.find(img => img.id === prod.posterImageId);

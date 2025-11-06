@@ -9,11 +9,11 @@ type PageHeaderProps = {
 
 export default function PageHeader({ title, className, children }: PageHeaderProps) {
   return (
-    <div className={cn("border-b bg-card/50", className)}>
-      <div className="p-6 pb-0">
+    <div className={cn("bg-card/50 pb-6", className)}>
+      <div className="px-6">
         <h1 className="text-2xl font-bold tracking-tight font-headline">{title}</h1>
       </div>
-      {children}
+      {children && <div className="px-6">{children}</div>}
     </div>
   );
 }
