@@ -7,6 +7,8 @@ export type TeamMember = {
     icon: string;
     color: string;
   };
+  currentTasks?: string[];
+  upcomingDeadlines?: string[];
 };
 
 export type Task = {
