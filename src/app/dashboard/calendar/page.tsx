@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -47,7 +46,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek, subDays, setHours, setMinutes, parse } from 'date-fns';
+import { endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek, subDays, setHours, setMinutes, parse, differenceInDays, addDays } from 'date-fns';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -304,11 +303,49 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
 
     const selectedShow = shows.find(s => s.id === selectedShowId);
 
-    const scheduleConfig = [
-        { type: 'Story', enabled: useStory, count: storyCount, icon: BookOpen, timing: (date: Date, i: number) => subDays(date, 3 + i * 2) },
-        { type: 'Publicación', enabled: usePost, count: postCount, icon: Camera, timing: (date: Date, i: number) => subDays(date, 7 + i * 3) },
-        { type: 'Reel', enabled: useReel, count: reelCount, icon: Film, timing: (date: Date, i: number) => subDays(date, 10 + i * 5) }
-    ];
+    const generatedDates = useMemo(() => {
+        if (!selectedShow) return [];
+        const showDate = selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date;
+        const today = new Date();
+        const daysBetween = differenceInDays(showDate, today);
+
+        if (daysBetween <= 0) return [];
+        
+        const schedule = [];
+        let totalPosts = 0;
+
+        if (useReel) totalPosts += reelCount;
+        if (usePost) totalPosts += postCount;
+        if (useStory) totalPosts += storyCount;
+        if (totalPosts === 0) return [];
+
+        const interval = daysBetween / (totalPosts + 1);
+
+        let postCounter = 1;
+
+        if (useReel) {
+            for (let i = 0; i < reelCount; i++) {
+                const date = addDays(today, Math.round(postCounter * interval));
+                schedule.push({ type: 'Reel', date, text: `Publicación ${i+1}: ${format(date, "d MMM, yyyy", {locale: es})}` });
+                postCounter++;
+            }
+        }
+        if (usePost) {
+            for (let i = 0; i < postCount; i++) {
+                const date = addDays(today, Math.round(postCounter * interval));
+                schedule.push({ type: 'Publicación', date, text: `Publicación ${i+1}: ${format(date, "d MMM, yyyy", {locale: es})}` });
+                postCounter++;
+            }
+        }
+        if (useStory) {
+            for (let i = 0; i < storyCount; i++) {
+                const date = addDays(today, Math.round(postCounter * interval));
+                schedule.push({ type: 'Story', date, text: `Publicación ${i+1}: ${format(date, "d MMM, yyyy", {locale: es})}` });
+                postCounter++;
+            }
+        }
+        return schedule;
+    }, [selectedShow, useStory, storyCount, usePost, postCount, useReel, reelCount]);
     
     const toggleAssignee = (id: string) => {
         setAssigneeIds(prev => prev.includes(id) ? prev.filter(memberId => memberId !== id) : [...prev, id]);
@@ -317,31 +354,14 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
     const selectedMembers = useMemo(() => teamMembers.filter(m => assigneeIds.includes(m.id)), [assigneeIds, teamMembers]);
 
     const handleSchedule = () => {
-        if (!selectedShow) return;
+        if (!selectedShow || generatedDates.length === 0) return;
 
-        const newEvents: Omit<CalendarEvent, 'id'>[] = [];
-        const showDate = selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date;
-        
-        const createEventsForType = (type: string, count: number, timingFn: (date: Date, i: number) => Date, titlePrefix: string) => {
-            for (let i = 0; i < count; i++) {
-                newEvents.push({
-                    title: `${titlePrefix} para "${selectedShow.title}" (${i + 1}/${count})`,
-                    date: timingFn(showDate, i),
-                    type: 'Publicaciones en redes',
-                    assigneeIds: assigneeIds,
-                });
-            }
-        }
-
-        if (useStory) {
-            createEventsForType('story', storyCount, scheduleConfig[0].timing, 'Story');
-        }
-        if (usePost) {
-            createEventsForType('post', postCount, scheduleConfig[1].timing, 'Publicación');
-        }
-        if (useReel) {
-            createEventsForType('reel', reelCount, scheduleConfig[2].timing, 'Reel');
-        }
+        const newEvents = generatedDates.map((item, index) => ({
+            title: `${item.type} para "${selectedShow.title}" (${index + 1}/${generatedDates.length})`,
+            date: item.date,
+            type: 'Publicaciones en redes' as EventType,
+            assigneeIds: assigneeIds,
+        }));
         
         onSchedule(newEvents);
         onOpenChange(false);
@@ -419,8 +439,8 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
                                 </Select>
                             )}
                         </div>
-                        {selectedShow && useStory && Array.from({length: storyCount}).map((_, i) => (
-                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[0].timing(selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                        {generatedDates.filter(d => d.type === 'Story').map((d, i) => (
+                             <p key={i} className="text-xs text-muted-foreground pl-8">{d.text}</p>
                         ))}
                         
                         <div className="flex items-center gap-4">
@@ -433,8 +453,8 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
                                 </Select>
                             )}
                         </div>
-                         {selectedShow && usePost && Array.from({length: postCount}).map((_, i) => (
-                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[1].timing(selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                         {generatedDates.filter(d => d.type === 'Publicación').map((d, i) => (
+                             <p key={i} className="text-xs text-muted-foreground pl-8">{d.text}</p>
                         ))}
 
                          <div className="flex items-center gap-4">
@@ -447,14 +467,14 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
                                 </Select>
                             )}
                         </div>
-                        {selectedShow && useReel && Array.from({length: reelCount}).map((_, i) => (
-                             <p key={i} className="text-xs text-muted-foreground pl-8">Publicación {i+1}: {format(scheduleConfig[2].timing(selectedShow.date instanceof Timestamp ? selectedShow.date.toDate() : selectedShow.date, i), "d MMM, yyyy", {locale: es})}</p>
+                        {generatedDates.filter(d => d.type === 'Reel').map((d, i) => (
+                             <p key={i} className="text-xs text-muted-foreground pl-8">{d.text}</p>
                         ))}
                     </div>
                  </div>
                  <SheetFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                    <Button onClick={handleSchedule} disabled={!selectedShow}>Programar Publicaciones</Button>
+                    <Button onClick={handleSchedule} disabled={!selectedShow || generatedDates.length === 0}>Programar Publicaciones</Button>
                  </SheetFooter>
             </SheetContent>
         </Sheet>
@@ -613,33 +633,24 @@ function CalendarPageContent() {
   const handleSaveEvent = (eventData: Omit<CalendarEvent, 'id'> | CalendarEvent) => {
     if (!db) return;
     
-    const { id, ...dataToSave } = 'id' in eventData ? eventData : { id: null, ...eventData };
-    const dateToSave = dataToSave.date instanceof Date ? Timestamp.fromDate(dataToSave.date) : dataToSave.date;
-    const dataWithTimestamp = { ...dataToSave, date: dateToSave };
+    const isNew = !('id' in eventData);
+    const docRef = isNew ? doc(collection(db, 'events')) : doc(db, 'events', eventData.id);
+    const { id, ...dataToSave } = eventData as CalendarEvent;
 
-    if (id) {
-        const docRef = doc(db, 'events', id);
-        setDoc(docRef, dataWithTimestamp, { merge: true })
-          .then(() => toast({ title: "Evento actualizado", description: `${dataWithTimestamp.title} ha sido actualizado.` }))
-          .catch(err => {
-              errorEmitter.emit('permission-error', new FirestorePermissionError({
-                  path: docRef.path,
-                  operation: 'update',
-                  requestResourceData: dataWithTimestamp
-              }))
-          });
-    } else {
-        const newDocRef = doc(collection(db, 'events'));
-        setDoc(newDocRef, dataWithTimestamp)
-          .then(() => toast({ title: "Evento añadido", description: `${dataWithTimestamp.title} ha sido añadido.` }))
-          .catch(err => {
-              errorEmitter.emit('permission-error', new FirestorePermissionError({
-                  path: newDocRef.path,
-                  operation: 'create',
-                  requestResourceData: dataWithTimestamp
-              }))
-          });
-    }
+    const dataWithTimestamp = {
+      ...dataToSave,
+      date: Timestamp.fromDate(dataToSave.date),
+    };
+    
+    setDoc(docRef, dataWithTimestamp, { merge: !isNew })
+      .then(() => toast({ title: isNew ? "Evento añadido" : "Evento actualizado", description: `${dataToSave.title} ha sido ${isNew ? 'añadido' : 'actualizado'}.` }))
+      .catch(err => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: docRef.path,
+              operation: isNew ? 'create' : 'update',
+              requestResourceData: dataWithTimestamp
+          }))
+      });
   };
 
   const handleDeleteEvent = (id: string) => {
