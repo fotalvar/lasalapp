@@ -14,6 +14,7 @@ import {
   Loader2,
   User,
   LogOut,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,7 @@ const navItems = [
     icon: ListTodo,
     label: 'Tareas',
   },
+  { href: '/dashboard/admin', icon: Shield, label: 'Admin' },
 ];
 
 const mobileNavItems = [
@@ -231,7 +233,7 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
     );
   }
   
-  if (pathname === '/dashboard/select-user') {
+  if (pathname === '/dashboard/select-user' || pathname === '/dashboard/admin') {
     return <>{children}</>;
   }
 
