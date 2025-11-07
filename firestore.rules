@@ -134,11 +134,7 @@ service cloud.firestore {
      * @principle Enforces admin-only writes and public reads.
      */
     match /programming/{programmingId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isAdmin();
-      allow update: if isAdmin() && resource != null;
-      allow delete: if isAdmin() && resource != null;
+      allow read, write: if isSignedIn();
     }
     
     match /shows/{showId} {
@@ -192,11 +188,7 @@ service cloud.firestore {
      * @principle Enforces admin-only writes and public reads.
      */
     match /meeting_minutes/{meetingMinutesId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isAdmin();
-      allow update: if isAdmin() && resource != null;
-      allow delete: if isAdmin() && resource != null;
+      allow read, write: if isSignedIn();
     }
 
     /**
@@ -230,11 +222,7 @@ service cloud.firestore {
      * @principle Enforces admin-only writes and public reads.
      */
     match /todo_items/{todoItemId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isAdmin();
-      allow update: if isAdmin() && resource != null;
-      allow delete: if isAdmin() && resource != null;
+      allow read, write: if isSignedIn();
     }
 
     /**
@@ -268,11 +256,7 @@ service cloud.firestore {
      * @principle Enforces admin-only writes and public reads.
      */
     match /ideas/{ideaId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isAdmin();
-      allow update: if isAdmin() && resource != null;
-      allow delete: if isAdmin() && resource != null;
+      allow read, write: if isSignedIn();
     }
 
     /**
