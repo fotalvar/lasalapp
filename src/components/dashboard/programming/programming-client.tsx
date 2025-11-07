@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useFirestore, errorEmitter, FirestorePermissionError, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, onSnapshot, addDoc, setDoc, doc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -528,7 +528,6 @@ function CompanyDetailsDialog({ company }: { company: Company }) {
 
 export default function ProgrammingClient() {
   const [shows, setShows] = useState<(Show & { company?: Company })[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<Show & { company?: Company } | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<Show['status'] | 'all'>('all');
@@ -538,52 +537,25 @@ export default function ProgrammingClient() {
   const isMobile = useIsMobile();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!db) return;
-    const companiesCollection = collection(db, 'companies');
-    const unsubCompanies = onSnapshot(companiesCollection, (snapshot) => {
-        const fetchedCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
-        setCompanies(fetchedCompanies);
-    }, (error) => {
-        console.error("Error fetching companies:", error);
-        const contextualError = new FirestorePermissionError({
-          path: companiesCollection.path,
-          operation: 'list',
-        });
-        errorEmitter.emit('permission-error', contextualError);
-    });
-    return () => unsubCompanies();
-  }, [db, toast]);
+  const companiesQuery = useMemoFirebase(() => db ? collection(db, 'companies') : null, [db]);
+  const { data: companies } = useCollection<Company>(companiesQuery);
+
+  const showsQuery = useMemoFirebase(() => db ? collection(db, 'shows') : null, [db]);
+  const { data: fetchedShows } = useCollection<Show>(showsQuery);
 
   useEffect(() => {
-    if (!db || companies.length === 0) return;
-    const showsCollection = collection(db, 'shows');
-    const unsubShows = onSnapshot(showsCollection, (snapshot) => {
-        const fetchedShows = snapshot.docs.map(doc => {
-            const data = doc.data();
-            const timelineWithDates = (data.timeline || []).map((i: any) => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : (i.date ? new Date(i.date) : null)}));
-            const company = companies.find(c => c.id === data.companyId);
-            return { 
-                id: doc.id, 
-                ...data,
-                company,
-                timeline: timelineWithDates
-            } as Show & { company?: Company };
-        });
-        setShows(fetchedShows);
-    }, (error) => {
-        console.error("Error fetching shows:", error);
-        const contextualError = new FirestorePermissionError({
-          path: showsCollection.path,
-          operation: 'list',
-        });
-        errorEmitter.emit('permission-error', contextualError);
-    });
-    return () => unsubShows();
-  }, [db, toast, companies]);
+    if (fetchedShows && companies) {
+      const populatedShows = fetchedShows.map(show => {
+        const company = companies.find(c => c.id === show.companyId);
+        const timelineWithDates = (show.timeline || []).map((i: any) => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : (i.date ? new Date(i.date) : null)}));
+        return { ...show, company, timeline: timelineWithDates };
+      });
+      setShows(populatedShows);
+    }
+  }, [fetchedShows, companies]);
 
   const filteredShows = useMemo(() => {
-    return shows.filter(show => {
+    return (shows || []).filter(show => {
       if (!showArchived && show.status === 'Archivado') {
         return false;
       }
@@ -819,7 +791,7 @@ export default function ProgrammingClient() {
       
       <AddEditShowSheet 
         show={selectedShow} 
-        companies={companies}
+        companies={(companies || [])}
         onSave={handleSaveShow}
         onDelete={handleDeleteShow}
         open={isSheetOpen}

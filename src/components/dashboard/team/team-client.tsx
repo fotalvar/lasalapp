@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { TeamMember } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,8 +28,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
-import { collection, onSnapshot, addDoc, setDoc, deleteDoc, doc } from 'firebase/firestore';
-import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { collection, addDoc, setDoc, deleteDoc, doc } from 'firebase/firestore';
+import { useFirestore, errorEmitter, FirestorePermissionError, useCollection, useMemoFirebase } from '@/firebase';
 
 const roleColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Administrador': 'default',
@@ -195,26 +195,15 @@ function AddEditMemberSheet({ member, onSave, children }: { member?: TeamMember,
 }
 
 export default function TeamClient() {
-  const [members, setMembers] = useState<TeamMember[]>([]);
   const { toast } = useToast();
   const db = useFirestore();
 
-  useEffect(() => {
-    if (!db) return;
-    const teamMembersCollection = collection(db, 'teamMembers');
-    const unsub = onSnapshot(teamMembersCollection, (snapshot) => {
-        const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
-        setMembers(fetchedMembers);
-    }, (error) => {
-        const contextualError = new FirestorePermissionError({
-            path: teamMembersCollection.path,
-            operation: 'list',
-        });
-        errorEmitter.emit('permission-error', contextualError);
-    });
-    return () => unsub();
+  const membersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'teamMembers');
   }, [db]);
 
+  const { data: members } = useCollection<TeamMember>(membersQuery);
 
   const handleSaveMember = (memberData: Omit<TeamMember, 'id'> | TeamMember) => {
     if (!db) return;
@@ -277,7 +266,7 @@ export default function TeamClient() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {members.map((member) => {
+            {(members || []).map((member) => {
               return (
                 <TableRow key={member.id}>
                   <TableCell>

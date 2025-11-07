@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Company } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,8 +23,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { collection, onSnapshot, addDoc, setDoc, deleteDoc, doc } from 'firebase/firestore';
-import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { collection, addDoc, setDoc, deleteDoc, doc } from 'firebase/firestore';
+import { useFirestore, errorEmitter, FirestorePermissionError, useCollection, useMemoFirebase } from '@/firebase';
 
 function AddEditCompanySheet({ company, onSave, children }: { company?: Company, onSave: (company: Omit<Company, 'id'> | Company) => void, children: React.ReactNode }) {
     const [open, setOpen] = useState(false);
@@ -137,25 +137,15 @@ function AddEditCompanySheet({ company, onSave, children }: { company?: Company,
 }
 
 export default function CompaniesClient() {
-  const [companies, setCompanies] = useState<Company[]>([]);
   const { toast } = useToast();
   const db = useFirestore();
 
-  useEffect(() => {
-    if (!db) return;
-    const companiesCollection = collection(db, 'companies');
-    const unsub = onSnapshot(companiesCollection, (snapshot) => {
-        const fetchedCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
-        setCompanies(fetchedCompanies);
-    }, (error) => {
-        const contextualError = new FirestorePermissionError({
-          path: companiesCollection.path,
-          operation: 'list',
-        });
-        errorEmitter.emit('permission-error', contextualError);
-    });
-    return () => unsub();
+  const companiesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'companies');
   }, [db]);
+
+  const { data: companies } = useCollection<Company>(companiesQuery);
 
 
   const handleSaveCompany = async (companyData: Omit<Company, 'id'> | Company) => {
@@ -220,7 +210,7 @@ export default function CompaniesClient() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {companies.map((company) => {
+            {(companies || []).map((company) => {
               return (
                 <TableRow key={company.id}>
                   <TableCell>

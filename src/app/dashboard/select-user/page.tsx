@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useEffect, useState, useMemo } from 'react';
+import { collection } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { TeamMember } from '@/lib/types';
 import { useTeamUser } from '@/context/team-user-context';
 import { useRouter } from 'next/navigation';
@@ -19,32 +19,16 @@ function MemberIcon({ member, className }: { member: TeamMember, className?: str
 }
 
 export default function SelectUserPage() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const db = useFirestore();
   const { setSelectedTeamUser } = useTeamUser();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!db) return;
-    setIsLoading(true);
-    const teamMembersCollection = collection(db, 'teamMembers');
-    const unsub = onSnapshot(teamMembersCollection, (snapshot) => {
-        const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
-        setTeamMembers(fetchedMembers);
-        setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching team members: ", error);
-        const contextualError = new FirestorePermissionError({
-          path: teamMembersCollection.path,
-          operation: 'list',
-        });
-        errorEmitter.emit('permission-error', contextualError);
-        setIsLoading(false);
-    });
-
-    return () => unsub();
+  const teamMembersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'teamMembers');
   }, [db]);
+
+  const { data: teamMembers, isLoading } = useCollection<TeamMember>(teamMembersQuery);
 
   const handleSelectUser = (member: TeamMember) => {
     setSelectedTeamUser(member);
@@ -65,7 +49,7 @@ export default function SelectUserPage() {
             </div>
         ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {teamMembers.map(member => (
+                {(teamMembers || []).map(member => (
                     <Card 
                         key={member.id} 
                         onClick={() => handleSelectUser(member)}
