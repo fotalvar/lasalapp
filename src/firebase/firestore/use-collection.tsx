@@ -107,8 +107,14 @@ export function useCollection<T = any>(
 
     return () => unsubscribe();
   }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
-  if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
+  
+  if(memoizedTargetRefOrQuery && !(memoizedTargetRefOrQuery as any).__memo) {
+    const path = memoizedTargetRefOrQuery.type === 'collection'
+      ? (memoizedTargetRefOrQuery as CollectionReference).path
+      : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+    
+    console.warn(`useCollection was passed an unmemoized query for path: ${path}. This will cause infinite loops. Please wrap the query with useMemoFirebase.`);
   }
+
   return { data, isLoading, error };
 }
