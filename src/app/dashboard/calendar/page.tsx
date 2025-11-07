@@ -344,7 +344,7 @@ function ScheduleInstagramSheet({ open, onOpenChange, shows, teamMembers, onSche
                 postCounter++;
             }
         }
-        return schedule;
+        return schedule.sort((a, b) => a.date.getTime() - b.date.getTime());
     }, [selectedShow, useStory, storyCount, usePost, postCount, useReel, reelCount]);
     
     const toggleAssignee = (id: string) => {

@@ -29,7 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
 import { collection, onSnapshot, addDoc, setDoc, deleteDoc, doc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 
 const roleColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
     'Administrador': 'default',
@@ -209,34 +209,45 @@ export default function TeamClient() {
   }, [db]);
 
 
-  const handleSaveMember = async (memberData: Omit<TeamMember, 'id'> | TeamMember) => {
+  const handleSaveMember = (memberData: Omit<TeamMember, 'id'> | TeamMember) => {
     if (!db) return;
-    try {
-      if ('id' in memberData) {
-        // Update existing member
+    const isNew = !('id' in memberData);
+    if (isNew) {
+        addDoc(collection(db, 'teamMembers'), memberData)
+            .then(() => toast({ title: "Miembro añadido", description: `${memberData.name} ha sido añadido al equipo.` }))
+            .catch(err => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: 'teamMembers',
+                    operation: 'create',
+                    requestResourceData: memberData,
+                }));
+            });
+    } else {
         const { id, ...dataToSave } = memberData;
-        await setDoc(doc(db, 'teamMembers', id), dataToSave);
-        toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` });
-      } else {
-        // Add new member
-        await addDoc(collection(db, 'teamMembers'), memberData);
-        toast({ title: "Miembro añadido", description: `${memberData.name} ha sido añadido al equipo.` });
-      }
-    } catch (error) {
-      console.error("Error saving member: ", error);
-      toast({ title: "Error", description: "No se pudo guardar el miembro.", variant: "destructive" });
+        const docRef = doc(db, 'teamMembers', id);
+        setDoc(docRef, dataToSave)
+            .then(() => toast({ title: "Miembro actualizado", description: `${memberData.name} ha sido actualizado.` }))
+            .catch(err => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: docRef.path,
+                    operation: 'update',
+                    requestResourceData: dataToSave
+                }));
+            });
     }
   };
   
-  const handleDeleteMember = async (id: string) => {
+  const handleDeleteMember = (id: string) => {
     if (!db) return;
-     try {
-        await deleteDoc(doc(db, 'teamMembers', id));
-        toast({ title: "Miembro eliminado", description: "El miembro del equipo ha sido eliminado." });
-    } catch (error) {
-        console.error("Error deleting member: ", error);
-        toast({ title: "Error", description: "No se pudo eliminar el miembro.", variant: "destructive" });
-    }
+    const docRef = doc(db, 'teamMembers', id);
+    deleteDoc(docRef)
+        .then(() => toast({ title: "Miembro eliminado", description: "El miembro del equipo ha sido eliminado." }))
+        .catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete'
+            }));
+        });
   }
 
   return (

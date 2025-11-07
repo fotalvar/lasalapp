@@ -107,11 +107,19 @@ service cloud.firestore {
      * @principle Enforces document ownership for reads and admin access for writes.
      */
     match /team_members/{teamMemberId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isAdmin();
       allow update: if isAdmin() && resource != null;
       allow delete: if isAdmin() && resource != null;
+    }
+    
+    match /companies/{companyId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    match /tasks/{taskId} {
+      allow read, write: if isSignedIn();
     }
 
     /**
@@ -132,6 +140,10 @@ service cloud.firestore {
       allow update: if isAdmin() && resource != null;
       allow delete: if isAdmin() && resource != null;
     }
+    
+    match /shows/{showId} {
+        allow read, write: if isSignedIn();
+    }
 
     /**
      * @description Event schedule information. Accessible to authorized personnel.
@@ -146,11 +158,7 @@ service cloud.firestore {
      * @principle Enforces admin-only writes and public reads.
      */
     match /events/{eventId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin() && resource != null;
-      allow delete: if isAdmin() && resource != null;
+      allow read, write: if isSignedIn();
     }
 
     /**

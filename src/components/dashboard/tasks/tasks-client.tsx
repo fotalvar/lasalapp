@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { collection, addDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
 
 function AddTaskSheet({
@@ -192,44 +192,46 @@ export default function TasksClient() {
   }, [fetchedTasks, teamMembers]);
 
 
-  const handleAddTask = async (newTaskData: Omit<TaskType, 'id' | 'assignee' | 'subtasks'> & { assigneeId: string }) => {
+  const handleAddTask = (newTaskData: Omit<TaskType, 'id' | 'assignee' | 'subtasks'> & { assigneeId: string }) => {
     if (!db) return;
-    try {
-        await addDoc(collection(db, 'tasks'), {
-            ...newTaskData,
-            subtasks: []
+    const dataToSave = { ...newTaskData, subtasks: [] };
+    addDoc(collection(db, 'tasks'), dataToSave)
+        .then(() => toast({ title: "Tarea añadida", description: `${newTaskData.title} ha sido añadida.` }))
+        .catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: 'tasks',
+                operation: 'create',
+                requestResourceData: dataToSave,
+            }));
         });
-        toast({ title: "Tarea añadida", description: `${newTaskData.title} ha sido añadida.` });
-    } catch (e) {
-        toast({ title: "Error", description: "No se pudo añadir la tarea.", variant: "destructive" });
-        console.error(e);
-    }
   }
 
-  const handleUpdate = async (updatedTask: TaskType) => {
+  const handleUpdate = (updatedTask: TaskType) => {
     if (!db) return;
     const { id, assignee, ...taskData } = updatedTask;
     const taskRef = doc(db, 'tasks', id);
-    try {
-        await setDoc(taskRef, {
-            ...taskData,
-            assigneeId: assignee.id
-        }, { merge: true });
-    } catch (e) {
-        toast({ title: "Error", description: "No se pudo actualizar la tarea.", variant: "destructive" });
-        console.error(e);
-    }
+    const dataToSave = { ...taskData, assigneeId: assignee.id };
+    setDoc(taskRef, dataToSave, { merge: true })
+        .catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: taskRef.path,
+                operation: 'update',
+                requestResourceData: dataToSave
+            }));
+        });
   };
   
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!db) return;
-    try {
-        await deleteDoc(doc(db, 'tasks', id));
-        toast({ title: "Tarea eliminada" });
-    } catch (e) {
-        toast({ title: "Error", description: "No se pudo eliminar la tarea.", variant: "destructive" });
-        console.error(e);
-    }
+    const taskRef = doc(db, 'tasks', id);
+    deleteDoc(taskRef)
+        .then(() => toast({ title: "Tarea eliminada" }))
+        .catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: taskRef.path,
+                operation: 'delete'
+            }));
+        });
   }
 
   return (

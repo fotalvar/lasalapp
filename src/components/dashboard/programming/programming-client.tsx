@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useFirestore } from '@/firebase';
+import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, onSnapshot, addDoc, setDoc, doc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -587,22 +587,31 @@ export default function ProgrammingClient() {
   }, [shows, statusFilter, showArchived]);
 
 
-  const handleSaveShow = async (showData: Omit<Show, 'id'> | Show) => {
+  const handleSaveShow = (showData: Omit<Show, 'id'> | Show) => {
     if (!db) return;
-    try {
-        if ('id' in showData) {
-            // Update existing show
-            const { id, company, ...dataToSave } = showData as (Show & { company?: Company });
-            await setDoc(doc(db, 'shows', id), dataToSave);
-            toast({ title: "Espectáculo actualizado", description: `${showData.title} ha sido actualizado.` });
-        } else {
-            // Add new show
-            await addDoc(collection(db, 'shows'), showData);
-            toast({ title: "Espectáculo añadido", description: `${showData.title} ha sido añadido.` });
-        }
-    } catch (error) {
-        console.error("Error saving show: ", error);
-        toast({ title: "Error", description: "No se pudo guardar el espectáculo.", variant: "destructive" });
+    const isNew = !('id' in showData);
+    if (isNew) {
+        addDoc(collection(db, 'shows'), showData)
+            .then(() => toast({ title: "Espectáculo añadido", description: `${showData.title} ha sido añadido.` }))
+            .catch(err => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: 'shows',
+                    operation: 'create',
+                    requestResourceData: showData
+                }));
+            });
+    } else {
+        const { id, company, ...dataToSave } = showData as Show & { company?: Company };
+        const docRef = doc(db, 'shows', id);
+        setDoc(docRef, dataToSave)
+            .then(() => toast({ title: "Espectáculo actualizado", description: `${showData.title} ha sido actualizado.` }))
+            .catch(err => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: docRef.path,
+                    operation: 'update',
+                    requestResourceData: dataToSave
+                }));
+            });
     }
   }
 
@@ -611,15 +620,17 @@ export default function ProgrammingClient() {
     handleSaveShow(updatedShow);
   }
 
-  const handleDeleteShow = async (id: string) => {
+  const handleDeleteShow = (id: string) => {
     if (!db) return;
-     try {
-        await deleteDoc(doc(db, 'shows', id));
-        toast({ title: "Espectáculo eliminado", description: "El espectáculo ha sido eliminado." });
-    } catch (error) {
-        console.error("Error deleting show: ", error);
-        toast({ title: "Error", description: "No se pudo eliminar el espectáculo.", variant: "destructive" });
-    }
+    const docRef = doc(db, 'shows', id);
+    deleteDoc(docRef)
+        .then(() => toast({ title: "Espectáculo eliminado", description: "El espectáculo ha sido eliminado." }))
+        .catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete'
+            }));
+        });
   }
 
   const handleRowClick = (show: Show & { company?: Company }) => {

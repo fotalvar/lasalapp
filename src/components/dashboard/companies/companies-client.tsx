@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { collection, onSnapshot, addDoc, setDoc, deleteDoc, doc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 
 function AddEditCompanySheet({ company, onSave, children }: { company?: Company, onSave: (company: Omit<Company, 'id'> | Company) => void, children: React.ReactNode }) {
     const [open, setOpen] = useState(false);
@@ -153,32 +153,43 @@ export default function CompaniesClient() {
 
   const handleSaveCompany = async (companyData: Omit<Company, 'id'> | Company) => {
     if (!db) return;
-    try {
-      if ('id' in companyData) {
-        // Update existing company
+    const isNew = !('id' in companyData);
+    if (isNew) {
+        addDoc(collection(db, 'companies'), companyData)
+            .then(() => toast({ title: "Compañía añadida", description: `${companyData.name} ha sido añadida.` }))
+            .catch(err => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: 'companies',
+                    operation: 'create',
+                    requestResourceData: companyData
+                }));
+            });
+    } else {
         const { id, ...dataToSave } = companyData;
-        await setDoc(doc(db, 'companies', id), dataToSave);
-        toast({ title: "Compañía actualizada", description: `${companyData.name} ha sido actualizada.` });
-      } else {
-        // Add new company
-        await addDoc(collection(db, 'companies'), companyData);
-        toast({ title: "Compañía añadida", description: `${companyData.name} ha sido añadida.` });
-      }
-    } catch (error) {
-      console.error("Error saving company: ", error);
-      toast({ title: "Error", description: "No se pudo guardar la compañía.", variant: "destructive" });
+        const docRef = doc(db, 'companies', id);
+        setDoc(docRef, dataToSave)
+            .then(() => toast({ title: "Compañía actualizada", description: `${companyData.name} ha sido actualizada.` }))
+            .catch(err => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: docRef.path,
+                    operation: 'update',
+                    requestResourceData: dataToSave
+                }));
+            });
     }
   };
   
   const handleDeleteCompany = async (id: string) => {
     if (!db) return;
-     try {
-        await deleteDoc(doc(db, 'companies', id));
-        toast({ title: "Compañía eliminada", description: "La compañía ha sido eliminada." });
-    } catch (error) {
-        console.error("Error deleting company: ", error);
-        toast({ title: "Error", description: "No se pudo eliminar la compañía.", variant: "destructive" });
-    }
+    const docRef = doc(db, 'companies', id);
+    deleteDoc(docRef)
+        .then(() => toast({ title: "Compañía eliminada", description: "La compañía ha sido eliminada." }))
+        .catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete'
+            }));
+        });
   }
 
   return (
