@@ -111,7 +111,7 @@ service cloud.firestore {
      * @principle Enforces Role-Based Access Control (RBAC) using custom claims and DBAC.
      */
     match /team_members/{teamMemberId} {
-      allow get, list: if isTeamAdmin();
+      allow get, list: if isAdmin() || isTeamAdmin();
       allow create: if isAdmin();
       allow update: if isAdmin() && resource != null;
       allow delete: if isAdmin() && resource != null;
@@ -275,3 +275,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
