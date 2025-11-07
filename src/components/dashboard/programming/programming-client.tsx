@@ -540,19 +540,25 @@ export default function ProgrammingClient() {
 
   useEffect(() => {
     if (!db) return;
-    const unsubCompanies = onSnapshot(collection(db, 'companies'), (snapshot) => {
+    const companiesCollection = collection(db, 'companies');
+    const unsubCompanies = onSnapshot(companiesCollection, (snapshot) => {
         const fetchedCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
         setCompanies(fetchedCompanies);
     }, (error) => {
         console.error("Error fetching companies:", error);
-        toast({ title: "Error", description: "No se pudieron cargar las compañías.", variant: "destructive" });
+        const contextualError = new FirestorePermissionError({
+          path: companiesCollection.path,
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', contextualError);
     });
     return () => unsubCompanies();
   }, [db, toast]);
 
   useEffect(() => {
     if (!db || companies.length === 0) return;
-    const unsubShows = onSnapshot(collection(db, 'shows'), (snapshot) => {
+    const showsCollection = collection(db, 'shows');
+    const unsubShows = onSnapshot(showsCollection, (snapshot) => {
         const fetchedShows = snapshot.docs.map(doc => {
             const data = doc.data();
             const timelineWithDates = (data.timeline || []).map((i: any) => ({...i, date: i.date instanceof Timestamp ? i.date.toDate() : (i.date ? new Date(i.date) : null)}));
@@ -567,7 +573,11 @@ export default function ProgrammingClient() {
         setShows(fetchedShows);
     }, (error) => {
         console.error("Error fetching shows:", error);
-        toast({ title: "Error", description: "No se pudieron cargar los espectáculos.", variant: "destructive" });
+        const contextualError = new FirestorePermissionError({
+          path: showsCollection.path,
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', contextualError);
     });
     return () => unsubShows();
   }, [db, toast, companies]);

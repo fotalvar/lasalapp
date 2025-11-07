@@ -143,9 +143,16 @@ export default function CompaniesClient() {
 
   useEffect(() => {
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'companies'), (snapshot) => {
+    const companiesCollection = collection(db, 'companies');
+    const unsub = onSnapshot(companiesCollection, (snapshot) => {
         const fetchedCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
         setCompanies(fetchedCompanies);
+    }, (error) => {
+        const contextualError = new FirestorePermissionError({
+          path: companiesCollection.path,
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', contextualError);
     });
     return () => unsub();
   }, [db]);

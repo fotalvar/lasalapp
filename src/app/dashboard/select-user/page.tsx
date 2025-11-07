@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import type { TeamMember } from '@/lib/types';
 import { useTeamUser } from '@/context/team-user-context';
 import { useRouter } from 'next/navigation';
@@ -28,12 +28,18 @@ export default function SelectUserPage() {
   useEffect(() => {
     if (!db) return;
     setIsLoading(true);
-    const unsub = onSnapshot(collection(db, 'teamMembers'), (snapshot) => {
+    const teamMembersCollection = collection(db, 'teamMembers');
+    const unsub = onSnapshot(teamMembersCollection, (snapshot) => {
         const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
         setTeamMembers(fetchedMembers);
         setIsLoading(false);
     }, (error) => {
         console.error("Error fetching team members: ", error);
+        const contextualError = new FirestorePermissionError({
+          path: teamMembersCollection.path,
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', contextualError);
         setIsLoading(false);
     });
 

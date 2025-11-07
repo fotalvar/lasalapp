@@ -201,9 +201,16 @@ export default function TeamClient() {
 
   useEffect(() => {
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'teamMembers'), (snapshot) => {
+    const teamMembersCollection = collection(db, 'teamMembers');
+    const unsub = onSnapshot(teamMembersCollection, (snapshot) => {
         const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
         setMembers(fetchedMembers);
+    }, (error) => {
+        const contextualError = new FirestorePermissionError({
+            path: teamMembersCollection.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', contextualError);
     });
     return () => unsub();
   }, [db]);
