@@ -107,8 +107,8 @@ service cloud.firestore {
      * @principle Enforces document ownership for reads and admin access for writes.
      */
     match /team_members/{teamMemberId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get: if request.auth != null;
+      allow list: if request.auth != null;
       allow create: if isAdmin();
       allow update: if isAdmin() && resource != null;
       allow delete: if isAdmin() && resource != null;
