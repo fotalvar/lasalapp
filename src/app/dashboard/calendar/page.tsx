@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Calendar as CalendarIcon,
@@ -47,7 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek, subDays } from 'date-fns';
+import { endOfMonth, endOfWeek, isSameDay, startOfMonth, startOfWeek, subDays, setHours, setMinutes, parse } from 'date-fns';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,6 +126,7 @@ function AddEditEventSheet({
 }) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState<Date | undefined>();
+  const [time, setTime] = useState<string>('');
   const [type, setType] = useState<EventType | undefined>();
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [isAssigneePopoverOpen, setIsAssigneePopoverOpen] = useState(false);
@@ -134,7 +135,9 @@ function AddEditEventSheet({
     if (open) {
       const data = event || initialData;
       setTitle(data?.title || '');
-      setDate(data?.date ? (data.date instanceof Timestamp ? data.date.toDate() : data.date) : undefined);
+      const eventDate = data?.date ? (data.date instanceof Timestamp ? data.date.toDate() : data.date) : undefined;
+      setDate(eventDate);
+      setTime(eventDate ? format(eventDate, 'HH:mm') : '');
       setType(data?.type);
       setAssigneeIds(data?.assigneeIds || []);
     }
@@ -142,10 +145,13 @@ function AddEditEventSheet({
 
 
   const handleSave = () => {
-    if (title && date && type) {
+    if (title && date && type && time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const combinedDate = setMinutes(setHours(date, hours), minutes);
+
       const eventData = {
         title,
-        date,
+        date: combinedDate,
         type,
         assigneeIds,
       };
@@ -183,19 +189,25 @@ function AddEditEventSheet({
             <Label htmlFor="title">Título del Evento</Label>
             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="date">Fecha</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={'outline'} className="justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, 'PPP HH:mm', { locale: es }) : <span>Elige una fecha</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-              </PopoverContent>
-            </Popover>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="date">Fecha</Label>
+                <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant={'outline'} className="justify-start text-left font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, 'PPP', { locale: es }) : <span>Elige una fecha</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                </PopoverContent>
+                </Popover>
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="time">Hora</Label>
+                <Input id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="type">Categoría</Label>
