@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, User } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
@@ -37,34 +37,50 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-
-  const handleRedirect = (user: User | null) => {
-    if (!user) return;
-    if (user.email && ADMIN_EMAILS.includes(user.email)) {
-      router.replace('/dashboard/select-user');
-    } else {
-      router.replace('/public');
-    }
-  };
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    if (!isUserLoading && user) {
-      handleRedirect(user);
+    if (!auth || isUserLoading) return;
+    
+    // This is for when user is already signed in
+    if (user) {
+      if (user.email && ADMIN_EMAILS.includes(user.email)) {
+        router.replace('/dashboard/select-user');
+      } else {
+        router.replace('/public');
+      }
+      return;
     }
-  }, [user, isUserLoading, router]);
+    
+    // This is for handling the result after redirect
+    setIsRedirecting(true);
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result && result.user) {
+          if (result.user.email && ADMIN_EMAILS.includes(result.user.email)) {
+            router.replace('/dashboard/select-user');
+          } else {
+            router.replace('/public');
+          }
+        } else {
+          // No user, not a redirect back, stop loading.
+          setIsRedirecting(false);
+        }
+      }).catch(error => {
+        console.error("Error getting redirect result:", error);
+        setIsRedirecting(false);
+      });
+
+  }, [user, isUserLoading, auth, router]);
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
+    setIsRedirecting(true);
     const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      // Redirection is handled by the useEffect hook
-    } catch (error) {
-      console.error('Error during Google sign-in:', error);
-    }
+    await signInWithRedirect(auth, provider);
   };
 
-  if (isUserLoading || user) {
+  if (isUserLoading || isRedirecting || user) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin" />
