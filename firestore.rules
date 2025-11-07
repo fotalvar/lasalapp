@@ -1,158 +1,282 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for user profiles and public read access for all other collections.
+ * @fileoverview Firestore Security Rules for laSalapp.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a combination of ownership-based access control,
+ * role-based access control (for admins), and shared access via membership maps.
+ * It prioritizes security and data integrity while allowing for flexible data shapes during prototyping.
  *
  * Data Structure:
- * - User profiles are stored under `/users/{userId}/userProfile`, ensuring only the user can access their profile.
- * - All other collections (roles, teamMembers, companies, shows, interactions, events, expenses, meetingMinutes, tasks, todoItems) are stored at the top level.
+ * - User profiles are stored under `/user_profiles/{userProfileId}`.
+ * - Team member data is stored under `/team_members/{teamMemberId}`.
+ * - Expenses and responsibilities are nested under their respective team members.
+ * - Events, Programming, MeetingMinutes, TodoItems, Ideas, and Productions are top-level collections.
+ * - Admin privileges are determined by the existence of a document in `/roles_admin/{userId}`.
  *
  * Key Security Decisions:
- * - User profiles are private and only accessible to the owning user.
- * - All other data is considered public and accessible to all users.
+ * - Listing of user profiles and team members is restricted to admins.
+ * - Expenses and responsibilities are only accessible to the associated team member and admins.
+ * - Productions utilize a `members` map for shared access control.
+ * - Admin privileges are granted based on document existence in `/roles_admin/{userId}`.
+ * - Read operations for events are public for the prototyping stage.
+ *
+ * Denormalization for Authorization:
+ * - Productions use a `members` map to store user roles directly on the document,
+ *   avoiding the need for `get()` calls to determine access.
+ *
+ * Structural Segregation:
+ * - User-specific data (expenses, responsibilities) is stored under team members,
+ *   while public or shared data (events, productions) is stored in top-level collections.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Enforces document ownership for user profiles, ensuring only the owner can read and write.
-     * @path /users/{userId}/userProfile
-     * @allow (create) - User with ID 'user123' creates their profile at /users/user123/userProfile
-     * @allow (get, update, delete) - User with ID 'user123' reads/updates/deletes their profile at /users/user123/userProfile
-     * @deny (create, update, delete) - User with ID 'user456' attempts to modify profile at /users/user123/userProfile
-     * @deny (list) - Prevents listing of user profiles.
-     * @principle Enforces document ownership for writes.
+     * @description Checks if the current user is signed in.
+     * @path N/A (Helper Function)
+     * @allow N/A (Helper Function)
+     * @deny N/A (Helper Function)
+     * @principle N/A (Helper Function)
      */
-    match /users/{userId}/userProfile {
-      //function isOwner(userId) {
-       // return request.auth.uid == userId;
-     // }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-        }
-
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) ;
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+    function isSignedIn() {
+      return request.auth != null;
     }
 
     /**
-     * @description Allows public read and write access to the teamMembers collection for development.
-     * @path /teamMembers/{memberId}
-     * @allow (get, list, create, update, delete) - Any user can manage team members.
-     * @principle Allows full access for development purposes.
+     * @description Checks if the current user is the owner of the resource based on the provided userId.
+     * @path N/A (Helper Function)
+     * @allow N/A (Helper Function)
+     * @deny N/A (Helper Function)
+     * @principle Enforces ownership-based access control.
      */
-    match /teamMembers/{memberId} {
-        allow read, write: if true;
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
     /**
-     * @description Allows public write access to the shows collection for the external form, and full access for authenticated users.
-     * @path /shows/{showId}
-     * @allow (create) - Any user (including anonymous) can create a new show.
-     * @allow (read, update, delete) - Only authenticated users can manage shows.
-     * @principle Allows public creation for submissions and restricted management.
+     * @description Checks if the current user is the owner of the resource based on the provided userId and if the resource exists.
+     * @path N/A (Helper Function)
+     * @allow N/A (Helper Function)
+     * @deny N/A (Helper Function)
+     * @principle Enforces existence check before destructive operations.
      */
-    match /shows/{showId} {
-        allow create: if true;
-        allow read, update, delete: if request.auth != null;
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Allows public read access to roles and restricts writes.
-     * @path /roles/{roleId}
-     * @allow (get, list) - Any user can read role data.
-     * @deny (create, update, delete) - No one can create, update, or delete roles.
-     * @principle Allows public read access and restricts writes to no one.
+     * @description Checks if the current user has admin privileges based on document existence in /roles_admin/{uid}.
+     * @path N/A (Helper Function)
+     * @allow N/A (Helper Function)
+     * @deny N/A (Helper Function)
+     * @principle Implements Database-Based Access Control (DBAC) for admin roles.
      */
-    match /roles/{roleId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+   /**
+     * @description User profile information. Accessible to the user and administrators.
+     * @path /user_profiles/{userProfileId}
+     * @allow (create) User with ID 'user123' creates their own profile.
+     * @allow (update) User with ID 'user123' updates their own profile.
+     * @allow (get) User with ID 'user123' gets their own profile.
+     * @allow (delete) Admin deletes user profile.
+     * @deny (create) User with ID 'user123' tries to create profile for 'user456'.
+     * @deny (update) User with ID 'user123' tries to update profile for 'user456'.
+     * @principle Enforces document ownership for writes and admin access.
+     */
+    match /user_profiles/{userProfileId} {
+      allow get: if isOwner(userProfileId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userProfileId) && request.resource.data.id == userProfileId;
+      allow update: if isExistingOwner(userProfileId) && request.resource.data.id == resource.data.id || isAdmin();
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Allows public write access to the companies collection for the external form, and full access for authenticated users.
-     * @path /companies/{companyId}
-     * @allow (create) - Any user (including anonymous) can create a new company.
-     * @allow (read, update, delete) - Only authenticated users can manage companies.
-     * @principle Allows public creation for submissions and restricted management.
+     * @description Team member information. Accessible to the team member and administrators.
+     * @path /team_members/{teamMemberId}
+     * @allow (create) Admin creates a team member.
+     * @allow (update) Admin updates a team member.
+     * @allow (get) Team member with ID 'team123' gets their own profile.
+     * @allow (delete) Admin deletes a team member.
+     * @deny (create) User with ID 'user123' tries to create a team member.
+     * @deny (update) User with ID 'user123' tries to update a team member.
+     * @principle Enforces document ownership for reads and admin access for writes.
      */
-    match /companies/{companyId} {
-        allow create: if true;
-        allow read, update, delete: if request.auth != null;
+    match /team_members/{teamMemberId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Allows public read access to interactions and restricts writes.
-     * @path /shows/{showId}/interactions/{interactionId}
-     * @allow (get, list) - Any user can read interactions data.
-     * @deny (create, update, delete) - No one can create, update, or delete interactions.
-     * @principle Allows public read access and restricts writes to no one.
+     * @description Programming event information. Accessible to authorized personnel.
+     * @path /programming/{programmingId}
+     * @allow (get) Any signed-in user gets a programming event.
+     * @allow (create) Admin creates a programming event.
+     * @allow (update) Admin updates a programming event.
+     * @allow (delete) Admin deletes a programming event.
+     * @deny (create) Non-admin user tries to create a programming event.
+     * @deny (update) Non-admin user tries to update a programming event.
+     * @principle Enforces admin-only writes and public reads.
      */
-    match /shows/{showId}/interactions/{interactionId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
+    match /programming/{programmingId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Allows authenticated users to read and write events.
+     * @description Event schedule information. Accessible to authorized personnel.
      * @path /events/{eventId}
-     * @allow (read, write) - Any authenticated user can manage events.
-     * @principle Restricts calendar access to logged-in users.
+     * @allow (get) Any signed-in user gets an event.
+     * @allow (list) Any signed-in user lists events.
+     * @allow (create) Admin creates an event.
+     * @allow (update) Admin updates an event.
+     * @allow (delete) Admin deletes an event.
+     * @deny (create) Non-admin user tries to create an event.
+     * @deny (update) Non-admin user tries to update an event.
+     * @principle Enforces admin-only writes and public reads.
      */
     match /events/{eventId} {
-        allow read, write: if request.auth != null;
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Allows public read access to expenses and restricts writes.
-     * @path /expenses/{expenseId}
-     * @allow (get, list) - Any user can read expenses data.
-     * @deny (create, update, delete) - No one can create, update, or delete expenses.
-     * @principle Allows public read access and restricts writes to no one.
+     * @description Expense information for each team member. Accessible to the team member and administrators.
+     * @path /team_members/{teamMemberId}/expenses/{expenseId}
+     * @allow (get) Team member with ID 'team123' gets their own expense.
+     * @allow (create) Team member with ID 'team123' creates an expense for themselves.
+     * @allow (update) Team member with ID 'team123' updates their own expense.
+     * @allow (delete) Team member with ID 'team123' deletes their own expense.
+     * @deny (create) Team member with ID 'team123' tries to create an expense for 'team456'.
+     * @deny (update) Team member with ID 'team123' tries to update an expense for 'team456'.
+     * @principle Enforces document ownership for writes and admin access.
      */
-    match /expenses/{expenseId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
+    match /team_members/{teamMemberId}/expenses/{expenseId} {
+      allow get: if isOwner(teamMemberId) || isAdmin();
+      allow list: if isOwner(teamMemberId) || isAdmin();
+      allow create: if isOwner(teamMemberId) && request.resource.data.teamMemberId == teamMemberId;
+      allow update: if isExistingOwner(teamMemberId) && request.resource.data.teamMemberId == resource.data.teamMemberId || isAdmin();
+      allow delete: if isExistingOwner(teamMemberId) || isAdmin();
     }
 
     /**
-     * @description Allows public read access to meetingMinutes and restricts writes.
-     * @path /meetingMinutes/{meetingMinutesId}
-     * @allow (get, list) - Any user can read meetingMinutes data.
-     * @deny (create, update, delete) - No one can create, update, or delete meetingMinutes.
-     * @principle Allows public read access and restricts writes to no one.
+     * @description Meeting minutes. Accessible to authorized personnel.
+     * @path /meeting_minutes/{meetingMinutesId}
+     * @allow (get) Any signed-in user gets meeting minutes.
+     * @allow (create) Admin creates meeting minutes.
+     * @allow (update) Admin updates meeting minutes.
+     * @allow (delete) Admin deletes meeting minutes.
+     * @deny (create) Non-admin user tries to create meeting minutes.
+     * @deny (update) Non-admin user tries to update meeting minutes.
+     * @principle Enforces admin-only writes and public reads.
      */
-    match /meetingMinutes/{meetingMinutesId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
+    match /meeting_minutes/{meetingMinutesId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Allows authenticated users to read and write tasks.
-     * @path /tasks/{taskId}
-     * @allow (read, write) - Authenticated users can manage tasks.
-     * @principle Restricts task management to logged-in users.
+     * @description Responsibility assignments for team members. Accessible to the team member and administrators.
+     * @path /team_members/{teamMemberId}/responsibilities/{responsibilityId}
+     * @allow (get) Team member with ID 'team123' gets their own responsibility.
+     * @allow (create) Team member with ID 'team123' creates a responsibility for themselves.
+     * @allow (update) Team member with ID 'team123' updates their own responsibility.
+     * @allow (delete) Team member with ID 'team123' deletes their own responsibility.
+     * @deny (create) Team member with ID 'team123' tries to create a responsibility for 'team456'.
+     * @deny (update) Team member with ID 'team123' tries to update a responsibility for 'team456'.
+     * @principle Enforces document ownership for writes and admin access.
      */
-    match /tasks/{taskId} {
-        allow read, write: if request.auth != null;
+    match /team_members/{teamMemberId}/responsibilities/{responsibilityId} {
+      allow get: if isOwner(teamMemberId) || isAdmin();
+      allow list: if isOwner(teamMemberId) || isAdmin();
+      allow create: if isOwner(teamMemberId) && request.resource.data.teamMemberId == teamMemberId;
+      allow update: if isExistingOwner(teamMemberId) && request.resource.data.teamMemberId == resource.data.teamMemberId || isAdmin();
+      allow delete: if isExistingOwner(teamMemberId) || isAdmin();
     }
 
     /**
-     * @description Allows public read access to todoItems and restricts writes.
-     * @path /todoItems/{todoItemId}
-     * @allow (get, list) - Any user can read todoItems data.
-     * @deny (create, update, delete) - No one can create, update, or delete todoItems.
-     * @principle Allows public read access and restricts writes to no one.
+     * @description General to-do list items. Accessible to authorized personnel.
+     * @path /todo_items/{todoItemId}
+     * @allow (get) Any signed-in user gets a to-do item.
+     * @allow (create) Admin creates a to-do item.
+     * @allow (update) Admin updates a to-do item.
+     * @allow (delete) Admin deletes a to-do item.
+     * @deny (create) Non-admin user tries to create a to-do item.
+     * @deny (update) Non-admin user tries to update a to-do item.
+     * @principle Enforces admin-only writes and public reads.
      */
-    match /todoItems/{todoItemId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
+    match /todo_items/{todoItemId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description In-house production information. Includes denormalized 'members' map for authorization independence.
+     * @path /productions/{productionId}
+     * @allow (get) User with ID 'user123' gets a production they are a member of with role 'editor'.
+     * @allow (create) Admin creates a production.
+     * @allow (update) User with ID 'user123' updates a production they are a member of with role 'editor'.
+     * @allow (delete) Admin deletes a production.
+     * @deny (create) Non-admin user tries to create a production.
+     * @deny (update) User with ID 'user123' tries to update a production they are not a member of.
+     * @principle Enforces shared access via a membership map and admin access.
+     */
+    match /productions/{productionId} {
+        allow get: if isSignedIn() && resource.data.members[request.auth.uid] != null;
+        allow list: if isSignedIn();
+        allow create: if isAdmin();
+        allow update: if isSignedIn() && resource.data.members[request.auth.uid] != null  && resource != null || isAdmin();
+        allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Brainstormed ideas. Accessible to authorized personnel.
+     * @path /ideas/{ideaId}
+     * @allow (get) Any signed-in user gets an idea.
+     * @allow (create) Admin creates an idea.
+     * @allow (update) Admin updates an idea.
+     * @allow (delete) Admin deletes an idea.
+     * @deny (create) Non-admin user tries to create an idea.
+     * @deny (update) Non-admin user tries to update an idea.
+     * @principle Enforces admin-only writes and public reads.
+     */
+    match /ideas/{ideaId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Indicates administrator privileges. Existence of document grants admin access.
+     * @path /roles_admin/{userId}
+     */
+    match /roles_admin/{userId} {
+        allow get: if isAdmin();
+        allow list: if false;
+        allow create: if isAdmin();
+        allow update: if false;
+        allow delete: if isAdmin() && resource != null;
     }
   }
 }

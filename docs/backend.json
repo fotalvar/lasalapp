@@ -12,47 +12,51 @@
         },
         "googleId": {
           "type": "string",
-          "description": "The user's Google ID (subject to @atresquarts.com domain restriction)."
+          "description": "The user's Google ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's name."
         },
         "email": {
           "type": "string",
           "description": "The user's email address.",
           "format": "email"
         },
-        "name": {
+        "role": {
           "type": "string",
-          "description": "The user's full name."
-        },
-        "roleId": {
-          "type": "string",
-          "description": "Reference to Role. (Relationship: UserProfile 1:1 Role)"
+          "description": "The user's role within the application (e.g., administrator, team member).  Consider creating a separate 'Role' entity for more complex permission management."
         }
       },
       "required": [
         "id",
         "googleId",
-        "email",
         "name",
-        "roleId"
+        "email",
+        "role"
       ]
     },
-    "Role": {
+    "TeamMember": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Role",
+      "title": "TeamMember",
       "type": "object",
-      "description": "Defines the role and permissions of a user within the application.",
+      "description": "Represents a team member within the organization.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the role."
+          "description": "Unique identifier for the team member."
         },
-        "name": {
+        "userProfileId": {
           "type": "string",
-          "description": "The name of the role (e.g., Administrator, Team Member, Viewer)."
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:1 TeamMember)"
+        },
+        "role": {
+          "type": "string",
+          "description": "The team member's role."
         },
         "permissions": {
           "type": "array",
-          "description": "List of permissions associated with this role.",
+          "description": "An array of permissions granted to the team member.",
           "items": {
             "type": "string"
           }
@@ -60,235 +64,98 @@
       },
       "required": [
         "id",
-        "name",
+        "userProfileId",
+        "role",
         "permissions"
       ]
     },
-    "TeamMember": {
+    "Programming": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "TeamMember",
+      "title": "Programming",
       "type": "object",
-      "description": "Represents a team member involved in laSala activities.",
+      "description": "Represents a programming event or show.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the team member."
+          "description": "Unique identifier for the programming event."
         },
-        "name": {
-            "type": "string"
+        "company": {
+          "type": "string",
+          "description": "The name of the company performing."
         },
-        "email": {
-            "type": "string"
+        "showName": {
+          "type": "string",
+          "description": "The name of the show."
         },
-        "role": {
-            "type": "string"
+        "contactPerson": {
+          "type": "string",
+          "description": "Contact person for the company."
         },
-        "avatar": {
-            "type": "object",
-            "properties": {
-                "icon": { "type": "string" },
-                "color": { "type": "string" }
-            }
+        "interactions": {
+          "type": "string",
+          "description": "Summary of interactions and notes about the show/company."
         }
       },
       "required": [
         "id",
-        "name",
-        "email",
-        "role",
-        "avatar"
-      ]
-    },
-    "Show": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Show",
-      "type": "object",
-      "description": "Represents a show or performance being tracked by laSala.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the show."
-        },
-        "title": {
-          "type": "string",
-          "description": "The title of the show."
-        },
-        "companyId": {
-          "type": "string",
-          "description": "Reference to Company. (Relationship: Show N:1 Company)"
-        },
-        "description": {
-            "type": "string",
-            "description": "Synopsis or description of the show."
-        },
-        "duration": {
-            "type": "string",
-            "description": "Duration of the show."
-        },
-        "price": {
-            "type": "string",
-            "description": "Price proposal for the show."
-        },
-        "castSize": {
-            "type": "string",
-            "description": "Number of actors/technicians."
-        },
-        "status": {
-            "type": "string"
-        },
-        "timeline": {
-            "type": "array",
-            "items": {
-                "$ref": "#/entities/TimelineEvent"
-            }
-        }
-      },
-      "required": [
-        "id",
-        "title",
-        "companyId",
-        "status"
-      ]
-    },
-    "Company": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Company",
-      "type": "object",
-      "description": "Represents a company interested in performing at laSala.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the company."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the company."
-        },
-        "contactName": {
-          "type": "string",
-          "description": "Contact person at the company."
-        },
-        "contactEmail": {
-          "type": "string",
-          "description": "Email address for the company contact.",
-          "format": "email"
-        },
-        "contactPhone": {
-          "type": "string",
-          "description": "Phone number for the company contact."
-        },
-        "instagram": {
-            "type": "string"
-        },
-        "website": {
-            "type": "string"
-        },
-        "type": {
-            "type": "string"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "contactName",
-        "contactEmail",
-        "type"
-      ]
-    },
-    "Interaction": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Interaction",
-      "type": "object",
-      "description": "Represents an interaction with a company regarding a show.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the interaction."
-        },
-        "showId": {
-          "type": "string",
-          "description": "Reference to Show. (Relationship: Interaction N:1 Show)"
-        },
-        "date": {
-          "type": "string",
-          "description": "The date of the interaction.",
-          "format": "date-time"
-        },
-        "type": {
-          "type": "string",
-          "description": "The type of interaction (e.g., email, phone call, meeting)."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Notes about the interaction."
-        }
-      },
-      "required": [
-        "id",
-        "showId",
-        "date",
-        "type",
-        "notes"
+        "company",
+        "showName"
       ]
     },
     "Event": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Event",
       "type": "object",
-      "description": "Represents an event in the calendar (performance, marketing activity, etc.).",
+      "description": "Represents a scheduled event, such as a performance or marketing activity.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the event."
         },
-        "title": {
+        "eventType": {
           "type": "string",
-          "description": "The title of the event."
+          "description": "The type of event (e.g., performance, marketing, social media)."
         },
-        "startDateTime": {
+        "startTime": {
           "type": "string",
-          "description": "The start date and time of the event.",
+          "description": "The start time of the event.",
           "format": "date-time"
         },
-        "endDateTime": {
+        "endTime": {
           "type": "string",
-          "description": "The end date and time of the event.",
+          "description": "The end time of the event.",
           "format": "date-time"
         },
-        "type": {
+        "description": {
           "type": "string",
-          "description": "The type of event (e.g., performance, marketing, meeting)."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Additional notes about the event."
-        },
-        "showId": {
-          "type": "string",
-          "description": "Reference to Show. (Relationship: Event 1:1 Show)"
+          "description": "A description of the event."
         }
       },
       "required": [
         "id",
-        "title",
-        "startDateTime",
-        "endDateTime",
-        "type"
+        "eventType",
+        "startTime",
+        "endTime",
+        "description"
       ]
     },
     "Expense": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Expense",
       "type": "object",
-      "description": "Represents an expense incurred by laSala.",
+      "description": "Represents an expense incurred by the organization.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the expense."
         },
+        "teamMemberId": {
+          "type": "string",
+          "description": "Reference to TeamMember. (Relationship: TeamMember 1:N Expense) The team member who incurred the expense."
+        },
         "date": {
           "type": "string",
-          "description": "The date of the expense.",
+          "description": "The date the expense was incurred.",
           "format": "date-time"
         },
         "amount": {
@@ -297,19 +164,16 @@
         },
         "category": {
           "type": "string",
-          "description": "The category of the expense (e.g., team member, structural, materials)."
+          "description": "The category of the expense (e.g., structural, materials, basic)."
         },
         "description": {
           "type": "string",
           "description": "A description of the expense."
-        },
-        "teamMemberId": {
-          "type": "string",
-          "description": "Reference to TeamMember. (Relationship: Expense 1:1 TeamMember)"
         }
       },
       "required": [
         "id",
+        "teamMemberId",
         "date",
         "amount",
         "category",
@@ -340,57 +204,55 @@
         },
         "minutes": {
           "type": "string",
-          "description": "The text content of the meeting minutes."
+          "description": "The minutes of the meeting."
         }
       },
       "required": [
         "id",
         "date",
-        "attendees",
         "minutes"
       ]
     },
-    "Task": {
+    "Responsibility": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Task",
+      "title": "Responsibility",
       "type": "object",
-      "description": "Represents a task assigned to a team member.",
+      "description": "Represents a task or responsibility assigned to a team member.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the task."
+          "description": "Unique identifier for the responsibility."
+        },
+        "teamMemberId": {
+          "type": "string",
+          "description": "Reference to TeamMember. (Relationship: TeamMember 1:N Responsibility) The team member assigned to the responsibility."
         },
         "description": {
           "type": "string",
-          "description": "Description of the task."
+          "description": "A description of the responsibility."
         },
         "deadline": {
           "type": "string",
-          "description": "The deadline for the task.",
+          "description": "The deadline for completing the responsibility.",
           "format": "date-time"
-        },
-        "assigneeId": {
-          "type": "string",
-          "description": "Reference to TeamMember. (Relationship: Task 1:1 TeamMember)"
-        },
-        "isCompleted": {
-          "type": "boolean",
-          "description": "Indicates whether the task has been completed."
         },
         "checklist": {
           "type": "array",
-          "description": "A checklist of items to complete the task.",
+          "description": "A checklist of tasks to complete for the responsibility.",
           "items": {
             "type": "string"
           }
+        },
+        "isCompleted": {
+          "type": "boolean",
+          "description": "Indicates whether the responsibility has been completed."
         }
       },
       "required": [
         "id",
+        "teamMemberId",
         "description",
-        "deadline",
-        "assigneeId",
-        "isCompleted"
+        "deadline"
       ]
     },
     "TodoItem": {
@@ -405,11 +267,11 @@
         },
         "description": {
           "type": "string",
-          "description": "Description of the to-do item."
+          "description": "A description of the to-do item."
         },
         "deadline": {
           "type": "string",
-          "description": "The deadline for the to-do item.",
+          "description": "The deadline for completing the to-do item.",
           "format": "date-time"
         },
         "isCompleted": {
@@ -420,114 +282,116 @@
       "required": [
         "id",
         "description",
-        "deadline",
-        "isCompleted"
+        "deadline"
+      ]
+    },
+    "Production": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Production",
+      "type": "object",
+      "description": "Represents an in-house production.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the production."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the production."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the production."
+        },
+        "googleDriveLink": {
+          "type": "string",
+          "description": "Link to assets stored on Google Drive.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+    "Idea": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Idea",
+      "type": "object",
+      "description": "Represents an idea generated during a brainstorming session.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the idea."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the idea."
+        },
+        "brainstormSession": {
+          "type": "string",
+          "description": "The brainstorm session this idea came from.  Consider creating a separate BrainstormSession entity."
+        }
+      },
+      "required": [
+        "id",
+        "description"
       ]
     }
   },
   "auth": {
     "providers": [
-      "google.com"
+      "password",
+      "anonymous"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}/userProfile",
+        "path": "/user_profiles/{userProfileId}",
         "definition": {
           "entityName": "UserProfile",
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profiles. Path-based ownership ensures only the user can access their profile.",
+          "description": "Stores user profile information. Accessible to the user and administrators.",
           "params": [
             {
-              "name": "userId",
-              "description": "The unique identifier of the user."
+              "name": "userProfileId",
+              "description": "The unique ID of the user profile."
             }
           ]
         }
       },
       {
-        "path": "/roles/{roleId}",
-        "definition": {
-          "entityName": "Role",
-          "schema": {
-            "$ref": "#/backend/entities/Role"
-          },
-          "description": "Stores role definitions.",
-          "params": [
-            {
-              "name": "roleId",
-              "description": "The unique identifier of the role."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/teamMembers/{teamMemberId}",
+        "path": "/team_members/{teamMemberId}",
         "definition": {
           "entityName": "TeamMember",
           "schema": {
             "$ref": "#/backend/entities/TeamMember"
           },
-          "description": "Stores team member information.",
+          "description": "Stores team member information. Accessible to the team member and administrators.",
           "params": [
             {
               "name": "teamMemberId",
-              "description": "The unique identifier of the team member."
+              "description": "The unique ID of the team member."
             }
           ]
         }
       },
       {
-        "path": "/companies/{companyId}",
+        "path": "/programming/{programmingId}",
         "definition": {
-          "entityName": "Company",
+          "entityName": "Programming",
           "schema": {
-            "$ref": "#/backend/entities/Company"
+            "$ref": "#/backend/entities/Programming"
           },
-          "description": "Stores company information.",
+          "description": "Stores programming event information. Accessible to authorized personnel.",
           "params": [
             {
-              "name": "companyId",
-              "description": "The unique identifier of the company."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/shows/{showId}",
-        "definition": {
-          "entityName": "Show",
-          "schema": {
-            "$ref": "#/backend/entities/Show"
-          },
-          "description": "Stores show information.",
-          "params": [
-            {
-              "name": "showId",
-              "description": "The unique identifier of the show."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/shows/{showId}/interactions/{interactionId}",
-        "definition": {
-          "entityName": "Interaction",
-          "schema": {
-            "$ref": "#/backend/entities/Interaction"
-          },
-          "description": "Stores interactions related to a show.",
-          "params": [
-            {
-              "name": "showId",
-              "description": "The unique identifier of the show."
-            },
-            {
-              "name": "interactionId",
-              "description": "The unique identifier of the interaction."
+              "name": "programmingId",
+              "description": "The unique ID of the programming event."
             }
           ]
         }
@@ -539,80 +403,136 @@
           "schema": {
             "$ref": "#/backend/entities/Event"
           },
-          "description": "Stores events.",
+          "description": "Stores event schedule information. Accessible to authorized personnel.",
           "params": [
             {
               "name": "eventId",
-              "description": "The unique identifier of the event."
+              "description": "The unique ID of the event."
             }
           ]
         }
       },
       {
-        "path": "/expenses/{expenseId}",
+        "path": "/team_members/{teamMemberId}/expenses/{expenseId}",
         "definition": {
           "entityName": "Expense",
           "schema": {
             "$ref": "#/backend/entities/Expense"
           },
-          "description": "Stores expenses.",
+          "description": "Stores expense information for each team member. Accessible to the team member and administrators.",
           "params": [
             {
+              "name": "teamMemberId",
+              "description": "The unique ID of the team member."
+            },
+            {
               "name": "expenseId",
-              "description": "The unique identifier of the expense."
+              "description": "The unique ID of the expense."
             }
           ]
         }
       },
       {
-        "path": "/meetingMinutes/{meetingMinutesId}",
+        "path": "/meeting_minutes/{meetingMinutesId}",
         "definition": {
           "entityName": "MeetingMinutes",
           "schema": {
             "$ref": "#/backend/entities/MeetingMinutes"
           },
-          "description": "Stores meeting minutes.",
+          "description": "Stores meeting minutes. Accessible to authorized personnel.",
           "params": [
             {
               "name": "meetingMinutesId",
-              "description": "The unique identifier of the meeting minutes."
+              "description": "The unique ID of the meeting minutes."
             }
           ]
         }
       },
       {
-        "path": "/tasks/{taskId}",
+        "path": "/team_members/{teamMemberId}/responsibilities/{responsibilityId}",
         "definition": {
-          "entityName": "Task",
+          "entityName": "Responsibility",
           "schema": {
-            "$ref": "#/backend/entities/Task"
+            "$ref": "#/backend/entities/Responsibility"
           },
-          "description": "Stores tasks.",
+          "description": "Stores responsibility assignments for team members. Accessible to the team member and administrators.",
           "params": [
             {
-              "name": "taskId",
-              "description": "The unique identifier of the task."
+              "name": "teamMemberId",
+              "description": "The unique ID of the team member."
+            },
+            {
+              "name": "responsibilityId",
+              "description": "The unique ID of the responsibility."
             }
           ]
         }
       },
       {
-        "path": "/todoItems/{todoItemId}",
+        "path": "/todo_items/{todoItemId}",
         "definition": {
           "entityName": "TodoItem",
           "schema": {
             "$ref": "#/backend/entities/TodoItem"
           },
-          "description": "Stores todo items.",
+          "description": "Stores general to-do list items. Accessible to authorized personnel.",
           "params": [
             {
               "name": "todoItemId",
-              "description": "The unique identifier of the todo item."
+              "description": "The unique ID of the to-do item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/productions/{productionId}",
+        "definition": {
+          "entityName": "Production",
+          "schema": {
+            "$ref": "#/backend/entities/Production"
+          },
+          "description": "Stores in-house production information. Includes denormalized 'members' map for authorization independence.",
+          "params": [
+            {
+              "name": "productionId",
+              "description": "The unique ID of the production."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ideas/{ideaId}",
+        "definition": {
+          "entityName": "Idea",
+          "schema": {
+            "$ref": "#/backend/entities/Idea"
+          },
+          "description": "Stores brainstormed ideas. Accessible to authorized personnel.",
+          "params": [
+            {
+              "name": "ideaId",
+              "description": "The unique ID of the idea."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "adminRole",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Indicates administrator privileges. Existence of document grants admin access.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and debuggability, adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization, copying relevant authorization data (like members maps) into subcollections to avoid `get()` calls in security rules. Structural Segregation is used to maintain homogeneous security postures within collections. Access Modeling standardizes authorization using path-based ownership and membership maps.\n\n*   `/users/{userId}/userProfile`: Stores user profiles, ensuring path-based ownership for private user data.\n*   `/roles/{roleId}`: Stores role definitions. UserProfile documents reference the Role document id.\n*   `/teamMembers/{teamMemberId}`: Stores team member information. No subcollections, so no denormalization is needed.\n*   `/companies/{companyId}`: Stores company information. No subcollections, so no denormalization is needed.\n*   `/shows/{showId}`: Stores show information. No subcollections, so no denormalization is needed.\n*   `/shows/{showId}/interactions/{interactionId}`: Stores interactions related to a show. Authorization Independence is achieved because shows are public and require no user data.\n*   `/events/{eventId}`: Stores events. Events are public.  Authorization Independence is achieved because events are public and require no user data.\n*   `/expenses/{expenseId}`: Stores expenses. Expenses are public. Authorization Independence is achieved because expenses are public and require no user data.\n*   `/meetingMinutes/{meetingMinutesId}`: Stores meeting minutes. Meeting minutes are public. Authorization Independence is achieved because meeting minutes are public and require no user data.\n*   `/tasks/{taskId}`: Stores tasks. Tasks are public. Authorization Independence is achieved because tasks are public and require no user data.\n*   `/todoItems/{todoItemId}`: Stores todo items. Todo items are public. Authorization Independence is achieved because todo items are public and require no user data.\n\nThis structure supports QAPs by segregating data with different access needs into separate collections, avoiding the need to filter based on user roles within the rules.  Public data requires no filtering."
+    "reasoning": "This Firestore structure is designed to support the laSalapp application, focusing on secure access, team management, scheduling, and various other features. The structure adheres to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are Not Filters).\n\n**Authorization Independence:**\nAuthorization is primarily managed using path-based ownership and membership maps, avoiding hierarchical `get()` calls in security rules. For example, expenses are stored under a team member's ID (`/team_members/{teamMemberId}/expenses/{expenseId}`), allowing direct authorization based on the `teamMemberId`.\n\n**Structural Segregation:**\nDifferent types of data with varying access requirements are stored in separate collections to ensure homogeneous security postures. User profiles are stored in `/user_profiles/{userProfileId}`, while team member data resides in `/team_members/{teamMemberId}`. This segregation simplifies security rule definitions.\n\n**Access Modeling:**\n*   **Private Data:** User-related data like expenses and responsibilities are placed under `/team_members/{teamMemberId}`, ensuring only the team member and admins can access them.\n*   **Collaborative Data:**  The in-house production hub uses a membership map for collaborative access. The `members` field within each production document (`/productions/{productionId}`) stores a map of user IDs to roles, enabling fine-grained access control without requiring `get()` calls in security rules. For example, `members: {uid1: \"owner\", uid2: \"collaborator\"}`.\n*   **Global Roles (DBAC):** Admin roles are managed via the `/roles_admin/{uid}` collection. The existence of a document in this collection grants admin privileges.\n\n**QAPs Support:**\nThe structure supports secure `list` operations by using structural segregation and path-based ownership. Listing events is restricted using collection-level rules on the `/events` collection, ensuring that only authorized users can access event data.\n\n**Invariants:**\nThe design supports data integrity by enforcing ownership and relationships through the structure. For instance, expenses are linked to team members via the `teamMemberId` field, ensuring expenses are always associated with a valid team member."
   }
 }
