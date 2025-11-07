@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Calendar as CalendarIcon,
@@ -56,7 +56,7 @@ import { cn } from '@/lib/utils';
 import PageHeader from '@/components/dashboard/page-header';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { TeamMember, CalendarEvent } from '@/lib/types';
-import { useFirestore, errorEmitter, FirestorePermissionError, useMemoFirebase } from '@/firebase';
+import { useFirestore, errorEmitter, FirestorePermissionError, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -601,25 +601,26 @@ function CalendarPageContent() {
   const handleSaveEvent = (eventData: Omit<CalendarEvent, 'id'> | CalendarEvent) => {
     if (!db) return;
     
-    const dateToSave = eventData.date instanceof Date ? Timestamp.fromDate(eventData.date) : eventData.date;
-    const dataWithTimestamp = { ...eventData, date: dateToSave };
+    const { ...dataToSave } = eventData;
+    const dateToSave = dataToSave.date instanceof Date ? Timestamp.fromDate(dataToSave.date) : dataToSave.date;
+    const dataWithTimestamp = { ...dataToSave, date: dateToSave };
 
-    if ('id' in eventData) {
-        const { id, ...dataToSave } = dataWithTimestamp;
+    if ('id' in dataWithTimestamp) {
+        const { id, ...finalData } = dataWithTimestamp;
         const docRef = doc(db, 'events', id);
-        setDoc(docRef, dataToSave, { merge: true })
-          .then(() => toast({ title: "Evento actualizado", description: `${eventData.title} ha sido actualizado.` }))
+        setDoc(docRef, finalData, { merge: true })
+          .then(() => toast({ title: "Evento actualizado", description: `${finalData.title} ha sido actualizado.` }))
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                   path: docRef.path,
                   operation: 'update',
-                  requestResourceData: dataToSave
+                  requestResourceData: finalData
               }))
           });
     } else {
         const newDocRef = doc(collection(db, 'events'));
         setDoc(newDocRef, dataWithTimestamp)
-          .then(() => toast({ title: "Evento añadido", description: `${eventData.title} ha sido añadido.` }))
+          .then(() => toast({ title: "Evento añadido", description: `${dataWithTimestamp.title} ha sido añadido.` }))
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                   path: newDocRef.path,
@@ -656,9 +657,6 @@ function CalendarPageContent() {
     batch.commit()
       .then(() => toast({ title: "Publicaciones programadas", description: `Se han añadido ${newEvents.length} nuevos eventos al calendario.`}))
       .catch(err => {
-          // This will only catch client-side errors. Permission errors are now unawaited.
-          console.error("Error committing batch:", err);
-          
           const sampleEventForError = newEvents[0];
           const permissionError = new FirestorePermissionError({
               path: 'events/<auto-id>',
