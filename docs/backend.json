@@ -344,7 +344,12 @@
     "providers": [
       "password",
       "anonymous"
-    ]
+    ],
+    "customClaims": {
+      "teamAdmin": {
+        "type": "boolean"
+      }
+    }
   },
   "firestore": {
     "structure": [

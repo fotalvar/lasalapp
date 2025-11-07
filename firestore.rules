@@ -77,10 +77,10 @@ service cloud.firestore {
     }
     
     /**
-     * @description Checks if the current user has team admin privileges based on the token name.
+     * @description Checks if the current user has team admin privileges based on custom claims.
      */
     function isTeamAdmin() {
-      return request.auth.token.name == "Administrador AtresQuarts";
+      return request.auth.token.teamAdmin == true;
     }
 
    /**
@@ -105,10 +105,10 @@ service cloud.firestore {
     /**
      * @description Team member information. Accessible to team admins for reading and general admins for writing.
      * @path /team_members/{teamMemberId}
-     * @allow (get, list) Team Admin with name "Administrador AtresQuarts" reads team members.
+     * @allow (get, list) Team Admin with the 'teamAdmin' custom claim reads team members.
      * @allow (create, update, delete) General admin modifies team members.
      * @deny (read, write) Any other authenticated or unauthenticated user.
-     * @principle Enforces Role-Based Access Control (RBAC) using token claims and DBAC.
+     * @principle Enforces Role-Based Access Control (RBAC) using custom claims and DBAC.
      */
     match /team_members/{teamMemberId} {
       allow get, list: if isTeamAdmin();
