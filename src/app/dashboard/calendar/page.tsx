@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Calendar as CalendarIcon,
   Megaphone,
@@ -55,7 +56,7 @@ import { cn } from '@/lib/utils';
 import PageHeader from '@/components/dashboard/page-header';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { TeamMember, CalendarEvent } from '@/lib/types';
-import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useFirestore, errorEmitter, FirestorePermissionError, useMemoFirebase } from '@/firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -112,7 +113,8 @@ function AddEditEventSheet({
   event,
   onSave,
   onDelete,
-  teamMembers
+  teamMembers,
+  initialData,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -120,6 +122,7 @@ function AddEditEventSheet({
   onSave: (event: Omit<CalendarEvent, 'id'> | CalendarEvent) => void;
   onDelete: (id: string) => void;
   teamMembers: TeamMember[];
+  initialData?: Partial<CalendarEvent>;
 }) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState<Date | undefined>();
@@ -129,12 +132,13 @@ function AddEditEventSheet({
 
   useEffect(() => {
     if (open) {
-      setTitle(event?.title || '');
-      setDate(event?.date ? (event.date instanceof Timestamp ? event.date.toDate() : event.date) : undefined);
-      setType(event?.type);
-      setAssigneeIds(event?.assigneeIds || []);
+      const data = event || initialData;
+      setTitle(data?.title || '');
+      setDate(data?.date ? (data.date instanceof Timestamp ? data.date.toDate() : data.date) : undefined);
+      setType(data?.type);
+      setAssigneeIds(data?.assigneeIds || []);
     }
-  }, [open, event]);
+  }, [open, event, initialData]);
 
 
   const handleSave = () => {
@@ -500,7 +504,7 @@ function DayEventsDialog({ date, events, teamMembers, open, onOpenChange, onEdit
   );
 }
 
-export default function CalendarPage() {
+function CalendarPageContent() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -508,6 +512,7 @@ export default function CalendarPage() {
   
   const [isAddEditSheetOpen, setIsAddEditSheetOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | undefined>(undefined);
+  const [addEventInitialData, setAddEventInitialData] = useState<Partial<CalendarEvent> | undefined>();
   
   const [isScheduleSheetOpen, setIsScheduleSheetOpen] = useState(false);
 
@@ -519,6 +524,7 @@ export default function CalendarPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const { selectedTeamUser } = useTeamUser();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     // Set the default filter to the currently selected team user
@@ -526,37 +532,47 @@ export default function CalendarPage() {
       setFilteredAssigneeIds([selectedTeamUser.id]);
     }
   }, [selectedTeamUser]);
+  
+   useEffect(() => {
+    const showTitle = searchParams.get('scheduleShow');
+    if (showTitle) {
+      setAddEventInitialData({
+        title: decodeURIComponent(showTitle),
+        type: 'Espectáculos',
+      });
+      openSheetForNew();
+    }
+  }, [searchParams]);
+
+  const teamMembersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'teamMembers');
+  }, [db]);
+  const { data: fetchedMembers } = useCollection<TeamMember>(teamMembersQuery);
+
+  const eventsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'events');
+  }, [db]);
+  const { data: fetchedEvents, isLoading: isLoadingEvents } = useCollection<CalendarEvent>(eventsQuery);
+
+  useEffect(() => {
+    if (fetchedMembers) setTeamMembers(fetchedMembers);
+  }, [fetchedMembers]);
+
+  useEffect(() => {
+    if (fetchedEvents) {
+      const processedEvents = fetchedEvents.map(event => ({
+        ...event,
+        date: event.date instanceof Timestamp ? event.date.toDate() : new Date(event.date),
+      })).sort((a,b) => a.date.getTime() - b.date.getTime());
+      setEvents(processedEvents);
+    }
+  }, [fetchedEvents]);
 
   useEffect(() => {
     setToday(new Date());
-    if (!db) return;
-
-    const unsubMembers = onSnapshot(collection(db, 'teamMembers'), (snapshot) => {
-        const fetchedMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
-        setTeamMembers(fetchedMembers);
-    });
-    
-    const unsubEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
-        const fetchedEvents = snapshot.docs.map(doc => {
-            const data = doc.data();
-            const date = data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date);
-            return { 
-                id: doc.id, 
-                ...data,
-                date,
-            } as CalendarEvent;
-        }).sort((a,b) => a.date.getTime() - b.date.getTime());
-        setEvents(fetchedEvents);
-    }, (error) => {
-        console.error("Error fetching events:", error);
-        toast({ title: "Error al cargar eventos", description: error.message, variant: "destructive" });
-    });
-
-    return () => {
-        unsubMembers();
-        unsubEvents();
-    }
-  }, [db, toast]);
+  }, []);
   
   const handleDayClick = (day: Date) => {
     setDayDialogDate(day);
@@ -573,6 +589,7 @@ export default function CalendarPage() {
 
   const openSheetForEdit = (event: CalendarEvent) => {
     setSelectedEvent(event);
+    setAddEventInitialData(undefined);
     setIsAddEditSheetOpen(true);
   }
 
@@ -591,6 +608,7 @@ export default function CalendarPage() {
         const { id, ...dataToSave } = dataWithTimestamp;
         const docRef = doc(db, 'events', id);
         setDoc(docRef, dataToSave, { merge: true })
+          .then(() => toast({ title: "Evento actualizado", description: `${eventData.title} ha sido actualizado.` }))
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                   path: docRef.path,
@@ -601,6 +619,7 @@ export default function CalendarPage() {
     } else {
         const newDocRef = doc(collection(db, 'events'));
         setDoc(newDocRef, dataWithTimestamp)
+          .then(() => toast({ title: "Evento añadido", description: `${eventData.title} ha sido añadido.` }))
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                   path: newDocRef.path,
@@ -615,6 +634,7 @@ export default function CalendarPage() {
     if (!db) return;
     const docRef = doc(db, 'events', id);
     deleteDoc(docRef)
+      .then(() => toast({ title: "Evento eliminado", description: "El evento ha sido eliminado." }))
       .catch(err => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docRef.path,
@@ -779,7 +799,7 @@ export default function CalendarPage() {
                 <Instagram className="mr-2 h-4 w-4" />
                 Programar Instagram
             </Button>
-            <Button size="sm" onClick={openSheetForNew}>
+            <Button size="sm" onClick={() => { setAddEventInitialData(undefined); openSheetForNew(); }}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Añadir Evento
             </Button>
@@ -855,6 +875,7 @@ export default function CalendarPage() {
         onSave={handleSaveEvent}
         onDelete={handleDeleteEvent}
         teamMembers={teamMembers}
+        initialData={addEventInitialData}
       />
       <ScheduleInstagramSheet 
         open={isScheduleSheetOpen}
@@ -875,4 +896,13 @@ export default function CalendarPage() {
       )}
     </>
   );
+}
+
+
+export default function CalendarPage() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <CalendarPageContent />
+    </React.Suspense>
+  )
 }

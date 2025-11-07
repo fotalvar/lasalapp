@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Show, TimelineEvent, Company } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +22,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, ChevronDown, Users, Mail, Phone, Instagram, Link as LinkIcon, Info } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Check, GripVertical, Edit, ChevronDown, Users, Mail, Phone, Instagram, Link as LinkIcon, Info, CalendarPlus } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -535,6 +536,7 @@ export default function ProgrammingClient() {
   const db = useFirestore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const router = useRouter();
 
   useEffect(() => {
     if (!db) return;
@@ -634,6 +636,10 @@ export default function ProgrammingClient() {
     setIsSheetOpen(true);
   }
 
+  const handleScheduleShow = (show: Show) => {
+    router.push(`/dashboard/calendar?scheduleShow=${encodeURIComponent(show.title)}`);
+  }
+
   const renderDesktopView = () => (
     <div className="border rounded-lg">
       <div className="overflow-x-auto">
@@ -645,6 +651,7 @@ export default function ProgrammingClient() {
               <TableHead>Estado</TableHead>
               <TableHead>Progreso</TableHead>
               <TableHead>Última Interacción</TableHead>
+              <TableHead><span className="sr-only">Acciones</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -702,6 +709,12 @@ export default function ProgrammingClient() {
                     <span className="font-medium">{format(lastInteraction.date!, 'd MMM, yyyy', { locale: es })}</span>
                   </div>
                  )}
+                 {show.status === 'Confirmado' && (
+                    <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => handleScheduleShow(show)}>
+                      <CalendarPlus className="mr-2 h-4 w-4" />
+                      Programar
+                    </Button>
+                  )}
               </CardContent>
             </Card>
           )
@@ -740,6 +753,14 @@ export default function ProgrammingClient() {
                   <Badge variant="outline" className="font-normal truncate max-w-xs">{lastInteractionNote}</Badge>
                 )}
               </div>
+            </TableCell>
+            <TableCell className="text-right">
+              {show.status === 'Confirmado' && (
+                  <Button variant="outline" size="sm" onClick={() => handleScheduleShow(show)}>
+                    <CalendarPlus className="mr-2 h-4 w-4" />
+                    Programar
+                  </Button>
+                )}
             </TableCell>
           </TableRow>
         );
@@ -794,9 +815,3 @@ export default function ProgrammingClient() {
     </Dialog>
   );
 }
-
-    
-
-
-
-    
