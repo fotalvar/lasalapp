@@ -142,7 +142,7 @@ export default function DashboardPage() {
   
   // Fetch all tasks
   const tasksQuery = useMemoFirebase(() => db ? collection(db, 'tasks') : null, [db]);
-  const { data: fetchedTasks } = useCollection<Task>(tasksQuery);
+  const { data: fetchedTasksFromDB } = useCollection<Task>(tasksQuery);
   
   // Fetch my upcoming events
   const myEventsQuery = useMemoFirebase(() => {
@@ -162,8 +162,14 @@ export default function DashboardPage() {
   }, [fetchedMembers]);
 
   useEffect(() => {
-    if (fetchedTasks) setTasks(fetchedTasks);
-  }, [fetchedTasks]);
+    if (fetchedTasksFromDB && teamMembers.length > 0) {
+        const populatedTasks = fetchedTasksFromDB.map(task => {
+            const assignee = teamMembers.find(m => m.id === (task.assignee as unknown as string));
+            return assignee ? { ...task, assignee } : task;
+        }).filter(t => t.assignee) as Task[];
+        setTasks(populatedTasks);
+    }
+  }, [fetchedTasksFromDB, teamMembers]);
 
   useEffect(() => {
     if (fetchedMyEvents) {

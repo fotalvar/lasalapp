@@ -18,6 +18,7 @@ export type Task = {
   deadline: Date;
   completed: boolean;
   subtasks: { id: string; text: string; completed: boolean }[];
+  assigneeId?: string;
 };
 
 export type TimelineEvent = {
