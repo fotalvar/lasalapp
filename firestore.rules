@@ -75,6 +75,13 @@ service cloud.firestore {
     function isAdmin() {
       return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
+    
+    /**
+     * @description Checks if the current user has team admin privileges based on the token name.
+     */
+    function isTeamAdmin() {
+      return request.auth.token.name == "Administrador AtresQuarts";
+    }
 
    /**
      * @description User profile information. Accessible to the user and administrators.
@@ -96,19 +103,15 @@ service cloud.firestore {
     }
 
     /**
-     * @description Team member information. Accessible to the team member and administrators.
+     * @description Team member information. Accessible to team admins for reading and general admins for writing.
      * @path /team_members/{teamMemberId}
-     * @allow (create) Admin creates a team member.
-     * @allow (update) Admin updates a team member.
-     * @allow (get) Team member with ID 'team123' gets their own profile.
-     * @allow (delete) Admin deletes a team member.
-     * @deny (create) User with ID 'user123' tries to create a team member.
-     * @deny (update) User with ID 'user123' tries to update a team member.
-     * @principle Enforces document ownership for reads and admin access for writes.
+     * @allow (get, list) Team Admin with name "Administrador AtresQuarts" reads team members.
+     * @allow (create, update, delete) General admin modifies team members.
+     * @deny (read, write) Any other authenticated or unauthenticated user.
+     * @principle Enforces Role-Based Access Control (RBAC) using token claims and DBAC.
      */
     match /team_members/{teamMemberId} {
-      allow get: if request.auth != null;
-      allow list: if request.auth != null;
+      allow get, list: if isTeamAdmin();
       allow create: if isAdmin();
       allow update: if isAdmin() && resource != null;
       allow delete: if isAdmin() && resource != null;
