@@ -196,7 +196,7 @@ function AddEditEventSheet({
                 <PopoverTrigger asChild>
                     <Button variant={'outline'} className="justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PPP', { locale: es }) : <span>Elige una fecha</span>}
+                    {date ? format(date, 'P', { locale: es }) : <span>Elige una fecha</span>}
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -613,20 +613,19 @@ function CalendarPageContent() {
   const handleSaveEvent = (eventData: Omit<CalendarEvent, 'id'> | CalendarEvent) => {
     if (!db) return;
     
-    const { ...dataToSave } = eventData;
+    const { id, ...dataToSave } = 'id' in eventData ? eventData : { id: null, ...eventData };
     const dateToSave = dataToSave.date instanceof Date ? Timestamp.fromDate(dataToSave.date) : dataToSave.date;
     const dataWithTimestamp = { ...dataToSave, date: dateToSave };
 
-    if ('id' in dataWithTimestamp) {
-        const { id, ...finalData } = dataWithTimestamp;
+    if (id) {
         const docRef = doc(db, 'events', id);
-        setDoc(docRef, finalData, { merge: true })
-          .then(() => toast({ title: "Evento actualizado", description: `${finalData.title} ha sido actualizado.` }))
+        setDoc(docRef, dataWithTimestamp, { merge: true })
+          .then(() => toast({ title: "Evento actualizado", description: `${dataWithTimestamp.title} ha sido actualizado.` }))
           .catch(err => {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                   path: docRef.path,
                   operation: 'update',
-                  requestResourceData: finalData
+                  requestResourceData: dataWithTimestamp
               }))
           });
     } else {
