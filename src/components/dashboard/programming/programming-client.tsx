@@ -532,7 +532,7 @@ export default function ProgrammingClient() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<Show & { company?: Company } | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<Show['status'] | 'all'>('all');
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const db = useFirestore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -574,21 +574,17 @@ export default function ProgrammingClient() {
 
   const filteredShows = useMemo(() => {
     return shows.filter(show => {
-      const completedSteps = show.timeline?.filter(t => !t.isCustom && t.date).length || 0;
-      const progress = (completedSteps / FIXED_STEPS.length) * 100;
-      
-      const isCompleted = progress === 100;
-      if (!showCompleted && isCompleted) {
+      if (!showArchived && show.status === 'Archivado') {
         return false;
       }
-
+      
       if (statusFilter !== 'all' && show.status !== statusFilter) {
         return false;
       }
 
       return true;
     });
-  }, [shows, statusFilter, showCompleted]);
+  }, [shows, statusFilter, showArchived]);
 
 
   const handleSaveShow = async (showData: Omit<Show, 'id'> | Show) => {
@@ -789,12 +785,12 @@ export default function ProgrammingClient() {
                 </SelectContent>
             </Select>
             <div className="flex items-center space-x-2">
-                <Checkbox id="show-completed" checked={showCompleted} onCheckedChange={(checked) => setShowCompleted(!!checked)} />
+                <Checkbox id="show-archived" checked={showArchived} onCheckedChange={(checked) => setShowArchived(!!checked)} />
                 <label
-                    htmlFor="show-completed"
+                    htmlFor="show-archived"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                    Mostrar completados
+                    Mostrar archivados
                 </label>
             </div>
         </div>
