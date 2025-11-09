@@ -1,15 +1,16 @@
-'use client';
-    
-import { useState, useEffect } from 'react';
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   DocumentReference,
   onSnapshot,
   DocumentData,
   FirestoreError,
   DocumentSnapshot,
-} from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+} from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
+import { useUser } from "@/firebase";
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -20,14 +21,14 @@ type WithId<T> = T & { id: string };
  */
 export interface UseDocResult<T> {
   data: WithId<T> | null; // Document data with ID, or null.
-  isLoading: boolean;       // True if loading.
+  isLoading: boolean; // True if loading.
   error: FirestoreError | Error | null; // Error object, or null.
 }
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
  * Handles nullable references.
- * 
+ *
  * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
  * use useMemo to memoize it per React guidence.  Also make sure that it's dependencies are stable
  * references
@@ -39,7 +40,7 @@ export interface UseDocResult<T> {
  * @returns {UseDocResult<T>} Object with data, isLoading, error.
  */
 export function useDoc<T = any>(
-  memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
+  memoizedDocRef: DocumentReference<DocumentData> | null | undefined
 ): UseDocResult<T> {
   type StateDataType = WithId<T> | null;
 
@@ -47,7 +48,24 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
+  // CRITICAL: Get user authentication state
+  const { user, isUserLoading } = useUser();
+
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (isUserLoading) {
+      setIsLoading(true);
+      return;
+    }
+
+    // Don't make requests if not authenticated
+    if (!user) {
+      setData(null);
+      setIsLoading(false);
+      setError(new Error("Usuario no autenticado"));
+      return;
+    }
+
     if (!memoizedDocRef) {
       setData(null);
       setIsLoading(false);
@@ -73,21 +91,21 @@ export function useDoc<T = any>(
       },
       (error: FirestoreError) => {
         const contextualError = new FirestorePermissionError({
-          operation: 'get',
+          operation: "get",
           path: memoizedDocRef.path,
-        })
+        });
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false);
 
         // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
+        errorEmitter.emit("permission-error", contextualError);
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
+  }, [memoizedDocRef, user, isUserLoading]); // Re-run if the memoizedDocRef changes.
 
   return { data, isLoading, error };
 }

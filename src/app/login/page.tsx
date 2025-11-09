@@ -1,12 +1,12 @@
+"use client";
 
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth, useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, User } from 'firebase/auth';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth, useUser } from "@/firebase";
+import { GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 function GoogleIcon() {
   return (
@@ -31,56 +31,51 @@ function GoogleIcon() {
   );
 }
 
-const ADMIN_EMAILS = ['info@atresquarts.com', 'admin@atresquarts.com'];
+const ADMIN_EMAILS = ["info@atresquarts.com", "admin@atresquarts.com"];
 
 export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
     if (!auth || isUserLoading) return;
-    
+
     // This is for when user is already signed in
     if (user) {
       if (user.email && ADMIN_EMAILS.includes(user.email)) {
-        router.replace('/dashboard/select-user');
+        router.replace("/dashboard/select-user");
       } else {
-        router.replace('/public');
+        router.replace("/public");
       }
-      return;
     }
-    
-    // This is for handling the result after redirect
-    setIsRedirecting(true);
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result && result.user) {
-          if (result.user.email && ADMIN_EMAILS.includes(result.user.email)) {
-            router.replace('/dashboard/select-user');
-          } else {
-            router.replace('/public');
-          }
-        } else {
-          // No user, not a redirect back, stop loading.
-          setIsRedirecting(false);
-        }
-      }).catch(error => {
-        console.error("Error getting redirect result:", error);
-        setIsRedirecting(false);
-      });
-
   }, [user, isUserLoading, auth, router]);
 
   const handleGoogleSignIn = async () => {
-    if (!auth) return;
-    setIsRedirecting(true);
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
+    if (!auth) {
+      logger.error("[Login] Auth is not initialized");
+      return;
+    }
+
+    try {
+      logger.debug("[Login] Starting Google sign in");
+      setIsSigningIn(true);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      logger.info("[Login] Sign in successful", { email: result.user.email });
+
+      // The useEffect will handle the redirect based on the user email
+    } catch (error: any) {
+      logger.error("[Login] Error during sign in", {
+        code: error.code,
+        message: error.message,
+      });
+      setIsSigningIn(false);
+    }
   };
 
-  if (isUserLoading || isRedirecting || user) {
+  if (isUserLoading || isSigningIn || user) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -89,22 +84,112 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm text-center">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <span className="font-bold text-2xl">laSalapp</span>
+    <div
+      className="relative flex h-screen w-full items-center justify-center overflow-hidden p-4"
+      style={{ backgroundColor: "#1C1C1C" }}
+    >
+      {/* Animated blur effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          className="absolute rounded-full blur-3xl"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "linear-gradient(45deg, #6366f1, #8b5cf6)",
+            opacity: 0.12,
+            top: "10%",
+            left: "10%",
+            animation: "float 30s ease-in-out infinite",
+          }}
+        />
+        <div
+          className="absolute rounded-full blur-3xl"
+          style={{
+            width: "350px",
+            height: "350px",
+            background: "linear-gradient(45deg, #ec4899, #f43f5e)",
+            opacity: 0.1,
+            bottom: "15%",
+            right: "15%",
+            animation: "float 35s ease-in-out infinite reverse",
+          }}
+        />
+        <div
+          className="absolute rounded-full blur-3xl"
+          style={{
+            width: "300px",
+            height: "300px",
+            background: "linear-gradient(45deg, #3b82f6, #06b6d4)",
+            opacity: 0.08,
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            animation: "float 40s ease-in-out infinite",
+          }}
+        />
+      </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%,
+          100% {
+            transform: translate(0, 0) scale(1);
+          }
+          33% {
+            transform: translate(15px, -15px) scale(1.02);
+          }
+          66% {
+            transform: translate(-10px, 10px) scale(0.98);
+          }
+        }
+      `}</style>
+
+      <div className="relative flex items-center justify-center">
+        {/* Login Card with Border */}
+        <div className="relative z-10 w-full max-w-md border-2 border-border rounded-lg bg-background p-8 shadow-lg">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-6">
+              <img src="/logo.png" alt="laSala" className="h-16 w-auto" />
+            </div>
+            <p className="text-muted-foreground mb-8">Portal de Acceso</p>
+            <div className="space-y-4">
+              <Button
+                onClick={handleGoogleSignIn}
+                className="w-full"
+                size="lg"
+                disabled={isSigningIn}
+              >
+                {isSigningIn ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Iniciando sesión...</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon />
+                    <span>Acceso de Administrador</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="secondary"
+                className="w-full"
+                size="lg"
+                onClick={() => router.push("/public")}
+                disabled={isSigningIn}
+              >
+                Acceso Externo
+              </Button>
+            </div>
+          </div>
         </div>
-        <p className="text-muted-foreground mb-8">
-          Portal de Acceso
-        </p>
-        <div className="space-y-4">
-           <Button onClick={handleGoogleSignIn} className="w-full" size="lg">
-              <GoogleIcon />
-              <span>Acceso de Administrador</span>
-            </Button>
-            <Button variant="secondary" className="w-full" size="lg" onClick={() => router.push('/public')}>
-              Acceso Externo
-            </Button>
+
+        {/* Logo 2 protruding from right side */}
+        <div
+          className="absolute z-[11] hidden lg:block"
+          style={{ right: "-5rem", top: "50%", transform: "translateY(-50%)" }}
+        >
+          <img src="/logo_2.png" alt="laSala" className="h-32 w-auto" />
         </div>
       </div>
     </div>

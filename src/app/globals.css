@@ -31,7 +31,7 @@ body {
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    
+
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 224 71.4% 4.1%;
@@ -63,7 +63,7 @@ body {
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 85.7% 97.3%;
-    
+
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
     --ring: 218.3 93.3% 66.3%;
@@ -82,9 +82,14 @@ body {
 }
 
 .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom class for programming page container */
+.programming-page-container {
+  padding: 0 !important;
 }

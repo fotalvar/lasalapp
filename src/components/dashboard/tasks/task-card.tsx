@@ -1,105 +1,212 @@
 "use client";
-import { Task as TaskType } from "@/lib/types";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { CalendarEvent, TeamMember } from "@/lib/types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Trash2, CheckCircle2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  Trash2,
+  CheckCircle2,
+  Theater,
+  Megaphone,
+  Ticket,
+  Users,
+  Music,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import * as LucideIcons from "lucide-react";
 
 type TaskCardProps = {
-  task: TaskType;
-  onUpdate: (task: TaskType) => void;
+  event: CalendarEvent;
+  teamMembers: TeamMember[];
+  onUpdate: (event: CalendarEvent) => void;
   onDelete: (id: string) => void;
 };
 
-export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
-  const { title, assignee, deadline, subtasks, completed } = task;
-  const userImage = PlaceHolderImages.find((img) => img.id === assignee.avatar);
+const eventConfig: Record<
+  string,
+  { icon: React.ReactNode; color: string; bgColor: string }
+> = {
+  "Publicaciones en redes": {
+    icon: <Megaphone className="h-4 w-4" />,
+    color: "text-sky-600",
+    bgColor: "bg-sky-100",
+  },
+  "Venta de entradas": {
+    icon: <Ticket className="h-4 w-4" />,
+    color: "text-amber-600",
+    bgColor: "bg-amber-100",
+  },
+  Espectáculos: {
+    icon: <Theater className="h-4 w-4" />,
+    color: "text-rose-600",
+    bgColor: "bg-rose-100",
+  },
+  Reuniones: {
+    icon: <Users className="h-4 w-4" />,
+    color: "text-indigo-600",
+    bgColor: "bg-indigo-100",
+  },
+  Ensayos: {
+    icon: <Music className="h-4 w-4" />,
+    color: "text-teal-600",
+    bgColor: "bg-teal-100",
+  },
+};
 
-  const completedSubtasks = subtasks.filter((task) => task.completed).length;
-  const progress = subtasks.length > 0 ? (completedSubtasks / subtasks.length) * 100 : (completed ? 100 : 0);
+function MemberIcon({
+  member,
+  className,
+}: {
+  member: TeamMember;
+  className?: string;
+}) {
+  const IconComponent = (LucideIcons as any)[
+    member.avatar.icon
+  ] as React.ElementType;
+  if (!IconComponent)
+    return <LucideIcons.User className={cn("h-5 w-5", className)} />;
+  return <IconComponent className={cn("h-5 w-5", className)} />;
+}
 
-  const handleSubtaskChange = (taskId: string, isChecked: boolean) => {
-    const updatedSubtasks = subtasks.map(task => 
-      task.id === taskId ? { ...task, completed: isChecked } : task
-    );
-    onUpdate({ ...task, subtasks: updatedSubtasks });
-  };
-  
+export default function TaskCard({
+  event,
+  teamMembers,
+  onUpdate,
+  onDelete,
+}: TaskCardProps) {
+  const { title, date, type, assigneeIds = [], completed = false } = event;
+  const config = eventConfig[type];
+
+  const assignedMembers = teamMembers.filter((m) => assigneeIds.includes(m.id));
+  const isOverdue = new Date() > date && !completed;
+
   const handleToggleComplete = () => {
-    onUpdate({ ...task, completed: !completed });
+    onUpdate({ ...event, completed: !completed });
   };
 
   return (
     <Card className={cn("flex flex-col", completed && "bg-muted/50")}>
       <CardHeader>
-        <CardTitle className="flex justify-between items-start">
-            <span className={cn("text-lg", completed && "line-through text-muted-foreground")}>{title}</span>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleToggleComplete}>
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        <span>{completed ? 'Marcar como Incompleta' : 'Marcar como Completa'}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={() => onDelete(task.id)}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Borrar</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+        <CardTitle className="flex justify-between items-start gap-2">
+          <div className="flex items-start gap-3 flex-1">
+            <div
+              className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-full flex-shrink-0",
+                config.bgColor,
+                config.color
+              )}
+            >
+              {config.icon}
+            </div>
+            <span
+              className={cn(
+                "text-base",
+                completed && "line-through text-muted-foreground"
+              )}
+            >
+              {title}
+            </span>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 flex-shrink-0"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleToggleComplete}>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                <span>
+                  {completed
+                    ? "Marcar como Incompleta"
+                    : "Marcar como Completa"}
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => onDelete(event.id)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Borrar</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardTitle>
         <CardDescription
           className={cn(
-            "text-sm",
-            new Date() > deadline && !completed ? "text-destructive font-semibold" : ""
+            "text-sm ml-11",
+            isOverdue ? "text-destructive font-semibold" : ""
           )}
         >
-          Vence {formatDistanceToNow(deadline, { addSuffix: true, locale: es })} ({format(deadline, "d MMM", { locale: es })})
+          {formatDistanceToNow(date, { addSuffix: true, locale: es })} ·{" "}
+          {format(date, "d MMM, HH:mm", { locale: es })}h
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="space-y-2">
-          {subtasks.map((subtask) => (
-            <div key={subtask.id} className="flex items-center gap-3">
-              <Checkbox
-                id={subtask.id}
-                checked={subtask.completed}
-                onCheckedChange={(checked) => handleSubtaskChange(subtask.id, !!checked)}
-                disabled={completed}
-              />
-              <label
-                htmlFor={subtask.id}
-                className={cn("text-sm", subtask.completed && "line-through text-muted-foreground")}
-              >
-                {subtask.text}
-              </label>
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="text-sm text-muted-foreground">Tipo:</span>
+            <span className="text-sm font-medium">{type}</span>
+          </div>
+          {assignedMembers.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground">
+                Responsables:
+              </span>
+              {assignedMembers.map((member) => (
+                <div key={member.id} className="flex items-center gap-1">
+                  <Avatar
+                    className="h-5 w-5 text-white"
+                    style={{ backgroundColor: member.avatar.color }}
+                  >
+                    <AvatarFallback className="bg-transparent text-xs">
+                      <MemberIcon member={member} className="h-3 w-3" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm">{member.name}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-4">
-        <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                    <AvatarImage src={userImage?.imageUrl} alt={assignee.name} data-ai-hint={userImage?.imageHint} />
-                    <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium">{assignee.name}</span>
+      <CardFooter className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {completed ? (
+            <div className="flex items-center gap-1 text-green-600">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="text-sm font-medium">Completada</span>
             </div>
-            <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
+          ) : isOverdue ? (
+            <div className="flex items-center gap-1 text-destructive">
+              <span className="text-sm font-medium">Vencida</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <span className="text-sm">Pendiente</span>
+            </div>
+          )}
         </div>
-        <Progress value={progress} aria-label={`${Math.round(progress)}% completado`} />
       </CardFooter>
     </Card>
   );

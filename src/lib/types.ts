@@ -2,23 +2,13 @@ export type TeamMember = {
   id: string;
   name: string;
   email: string;
-  role: 'Administrador' | 'Técnico' | 'Usuario';
+  role: "Administrador" | "Técnico" | "Usuario";
   avatar: {
     icon: string;
     color: string;
   };
   currentTasks?: string[];
   upcomingDeadlines?: string[];
-};
-
-export type Task = {
-  id: string;
-  title: string;
-  assignee: TeamMember;
-  deadline: Date;
-  completed: boolean;
-  subtasks: { id: string; text: string; completed: boolean }[];
-  assigneeId?: string;
 };
 
 export type TimelineEvent = {
@@ -30,21 +20,26 @@ export type TimelineEvent = {
 };
 
 export type Company = {
-    id: string;
-    name: string;
-    contactName: string;
-    contactEmail: string;
-    contactPhone?: string;
-    instagram?: string;
-    website?: string;
-    type: string;
-}
+  id: string;
+  name: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  instagram?: string;
+  website?: string;
+  type: string;
+};
 
 export type Show = {
   id: string;
   title: string;
   companyId: string;
-  status: 'Idea' | 'En conversaciones' | 'Confirmado' | 'Archivado' | 'Proposta Pendent';
+  status:
+    | "Idea"
+    | "En conversaciones"
+    | "Confirmado"
+    | "Archivado"
+    | "Proposta Pendent";
   timeline: TimelineEvent[];
   description?: string;
   duration?: string;
@@ -56,16 +51,25 @@ export type CalendarEvent = {
   id: string;
   title: string;
   date: Date;
-  type: 'Publicaciones en redes' | 'Venta de entradas' | 'Espectáculos' | 'Reuniones' | 'Ensayos';
+  type:
+    | "Publicaciones en redes"
+    | "Venta de entradas"
+    | "Espectáculos"
+    | "Reunión de Equipo"
+    | "Reunión Externa"
+    | "Ensayos"
+    | "Tarea de laSala";
   assigneeIds?: string[];
+  completed?: boolean;
+  archived?: boolean;
+  status?: "Pendiente" | "En Progreso" | "Completada";
 };
-
 
 export type Expense = {
   id: string;
   date: Date;
   description: string;
-  category: 'Estructural' | 'Materiales' | 'Producción' | 'Marketing' | 'Otros';
+  category: "Estructural" | "Materiales" | "Producción" | "Marketing" | "Otros";
   amount: number;
   amortization: number;
 };

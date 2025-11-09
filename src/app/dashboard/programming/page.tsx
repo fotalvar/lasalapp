@@ -1,13 +1,9 @@
-import PageHeader from "@/components/dashboard/page-header";
 import ProgrammingClient from "@/components/dashboard/programming/programming-client";
 
 export default function ProgrammingPage() {
   return (
-    <>
-      <PageHeader title="Gestión de Programación" />
-      <main className="p-4 md:px-6">
-        <ProgrammingClient />
-      </main>
-    </>
+    <main className="programming-page-container p-4 md:px-6">
+      <ProgrammingClient />
+    </main>
   );
 }
