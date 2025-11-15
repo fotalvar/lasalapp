@@ -1,8 +1,120 @@
-# Firebase Studio
+# LaSala App
 
-This is a NextJS starter in Firebase Studio.
+Aplicación de gestión integral para La Sala de Atresquarts. Sistema completo para administrar programación de espectáculos, gastos, tareas, responsabilidades, equipos y calendario.
 
-To get started, take a look at src/app/page.tsx.
+## 📋 Historial de Versiones
+
+### Versión 0.1.0 (Noviembre 2024)
+
+**Versión inicial del proyecto**
+
+#### Características principales:
+
+- **Autenticación**: Sistema de login con Google Firebase Auth
+- **Dashboard principal**: Vista general con acceso rápido a todas las secciones
+- **Interfaz moderna**: Diseño limpio en blanco con tipografía Poppins
+- **Responsive**: Adaptación completa para desktop y mobile
+- **Idioma**: Toda la interfaz en español
+
+#### Módulos implementados:
+
+**1. Gestión de Programación**
+
+- Vista general de espectáculos con estados (Propuesta Pendiente, En Progreso, Confirmado, Archivado)
+- Sistema de interacciones personalizables para tracking de progreso
+- Pasos fijos: "Descripción e imágenes"
+- Editor de eventos con todos los detalles
+- Filtros por estado y visualización de completados/archivados
+- Barra de progreso visual para cada espectáculo
+- Historial de interacciones con fechas editables
+- Vista optimizada para mobile con menú inferior
+- Programación de contenido para Instagram
+- Integración con calendario de responsables
+
+**2. Calendario**
+
+- Vista mensual con eventos por categorías
+- Sistema de colores para diferentes tipos de eventos
+- Creación y edición de eventos con fecha y hora
+- Vista de agenda con eventos del día
+- Integración con responsabilidades y tareas
+- Filtros por responsable
+- Programador de Instagram integrado
+
+**3. Gestión de Gastos** (v0.1.1)
+
+- Lista completa de gastos con estados (Pendiente, Pagado, Rechazado)
+- Visualización mejorada con badges de estado
+- Descripción truncada para mejor legibilidad
+- Filtros y búsqueda
+- Detalles de cada gasto (cantidad, categoría, responsable, fecha)
+
+**4. Tareas (antes Responsabilidades)**
+
+- Gestión de tareas del equipo
+- Asignación de responsables
+- Fechas límite
+- Estados de progreso
+- Vista general y detallada
+
+**5. Gestión de Equipo**
+
+- Creación y edición de miembros del equipo
+- Iconos personalizables (animales y emojis)
+- Roles y permisos
+- Vista de perfiles
+- Persistencia en Firebase
+
+**6. Portal Público**
+
+- Formulario externo para propuestas de espectáculos
+- Acceso sin autenticación
+- Creación automática de espectáculos con estado "Propuesta Pendiente"
+- Separación clara entre área pública y privada
+
+**7. Compañías**
+
+- Gestión de compañías y productoras
+- Información de contacto
+- Historial de colaboraciones
+
+#### Tecnologías:
+
+- **Frontend**: Next.js 14 con App Router, React 18, TypeScript
+- **Backend**: Firebase (Firestore, Auth, Functions)
+- **UI**: Shadcn/ui con Radix UI, Tailwind CSS
+- **Despliegue**: Firebase Hosting
+- **AI**: Genkit (Google) para funciones inteligentes
+
+#### Integraciones:
+
+- Firebase Authentication (Google OAuth)
+- Firestore para base de datos en tiempo real
+- Firebase Functions para backend serverless
+
+### Versión 0.1.1 (Noviembre 2024)
+
+**Mejoras en visualización y UX**
+
+#### Actualizaciones:
+
+- **Gastos**: Mejora en la visualización con badges de estado y descripción truncada
+- **Dashboard**: Optimización de tipos TypeScript para gastos
+- **UI/UX**: Refinamiento de componentes y mejor feedback visual
+- **Performance**: Optimizaciones en carga de datos
+
+### Versión 0.2.0 (En desarrollo)
+
+**Integración Weeztix OAuth2**
+
+#### Nuevas características:
+
+- Integración OAuth2 con Weeztix para gestión de eventos
+- Sistema de autorización y tokens seguros
+- Vista de eventos próximos desde Weeztix
+- Sincronización automática de eventos
+
+---
 
 ## Integración de Weeztix (OAuth2) - PENDIENTE DE CONFIGURACIÓN EN PRODUCCIÓN
 
