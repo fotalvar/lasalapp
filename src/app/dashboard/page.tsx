@@ -268,11 +268,14 @@ function TeamProgressWidget({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Progreso del Equipo</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-2xl font-bold flex items-center gap-2">
+          <Users className="h-6 w-6" />
+          Progreso del Equipo
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {memberProgress.map((member) => {
             const status = getProgressStatus(member);
             const radius = 35; // Further reduced to prevent clipping
@@ -362,6 +365,97 @@ function TeamProgressWidget({
             );
           })}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TodayEventsWidget({ events }: { events: CalendarEvent[] }) {
+  const todayEvents = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return events
+      .filter((event) => {
+        const eventDate =
+          event.date instanceof Date ? event.date : new Date(event.date);
+        return eventDate >= today && eventDate < tomorrow && !event.archived;
+      })
+      .sort((a, b) => {
+        const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+        const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+        return dateA.getTime() - dateB.getTime();
+      });
+  }, [events]);
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-2xl font-bold flex items-center gap-2">
+          <Calendar className="h-6 w-6" />
+          Eventos de Hoy
+        </CardTitle>
+        <CardDescription>
+          {todayEvents.length} {todayEvents.length === 1 ? "evento" : "eventos"}{" "}
+          programados
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {todayEvents.length > 0 ? (
+          <div className="space-y-2">
+            {todayEvents.map((event) => {
+              const config = eventConfig[event.type] || {
+                icon: <Calendar className="h-4 w-4" />,
+                color: "text-gray-600",
+                bgColor: "bg-gray-100",
+              };
+              const eventDate =
+                event.date instanceof Date ? event.date : new Date(event.date);
+              const isTask = event.assigneeIds && event.assigneeIds.length > 0;
+
+              return (
+                <div
+                  key={event.id}
+                  className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div
+                    className={cn(
+                      "rounded-full p-2 flex-shrink-0",
+                      config.bgColor
+                    )}
+                  >
+                    <div className={config.color}>{config.icon}</div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{event.title}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-muted-foreground">
+                        {format(eventDate, "HH:mm", { locale: es })} ·{" "}
+                        {event.type}
+                      </p>
+                      {isTask && (
+                        <Badge
+                          variant={event.completed ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {event.completed
+                            ? "Completada"
+                            : event.status || "Pendiente"}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            No hay eventos programados para hoy
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -589,7 +683,10 @@ function MyTasksWidget({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Mis Tareas</CardTitle>
+          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <ListTodo className="h-6 w-6" />
+            Mis Tareas
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
@@ -603,22 +700,28 @@ function MyTasksWidget({
   return (
     <Card>
       <CardHeader className="pb-4">
-        <div className="flex items-center gap-3">
-          <Avatar
-            className="h-12 w-12 text-white"
-            style={{ backgroundColor: member.avatar.color }}
-          >
-            <AvatarFallback className="bg-transparent">
-              <MemberIcon member={member} className="h-6 w-6" />
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <CardTitle className="text-lg">{member.name}</CardTitle>
-            <CardDescription>
-              {completedCount} de {totalCount} tareas completadas
-            </CardDescription>
+        <CardTitle className="text-2xl font-bold flex items-center gap-2">
+          <ListTodo className="h-6 w-6" />
+          Mis Tareas
+        </CardTitle>
+        {member && (
+          <div className="flex items-center gap-3 mt-3">
+            <Avatar
+              className="h-10 w-10 text-white"
+              style={{ backgroundColor: member.avatar.color }}
+            >
+              <AvatarFallback className="bg-transparent">
+                <MemberIcon member={member} className="h-5 w-5" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="font-medium">{member.name}</p>
+              <CardDescription>
+                {completedCount} de {totalCount} tareas completadas
+              </CardDescription>
+            </div>
           </div>
-        </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         {userTasks.length > 0 ? (
@@ -1032,8 +1135,9 @@ export default function DashboardPage() {
           </Alert>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <MyTasksWidget events={allEvents} member={selectedTeamUser} />
+          <TodayEventsWidget events={allEvents} />
           <TeamProgressWidget teamMembers={teamMembers} events={allEvents} />
         </div>
       </main>

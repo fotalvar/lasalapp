@@ -69,9 +69,23 @@ export type Expense = {
   id: string;
   date: Date;
   description: string;
-  category: "Estructural" | "Materiales" | "Producción" | "Marketing" | "Otros";
+  type: "Gasto" | "Ingreso";
+  category:
+    | "Mobiliario"
+    | "Reformas"
+    | "Materiales"
+    | "Comida"
+    | "Suministros"
+    | "Producciones"
+    | "Documentación"
+    | "Fungible"
+    | "Pago de bolos"
+    | "Subvenciones"
+    | "Aportación de miembro"
+    | "Otros ingresos";
   amount: number;
   amortization: number;
+  paidBy: string; // Nombre del miembro del equipo o "Tarjeta de la empresa"
 };
 
 export type Todo = {
