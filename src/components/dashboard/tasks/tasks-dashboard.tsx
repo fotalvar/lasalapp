@@ -381,52 +381,135 @@ export default function TasksDashboard() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Main content: Tasks table and Team Progress side by side */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        {/* Filters and Task Table - Main section */}
-        <Card className="shadow-md border-2">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Todas las Tareas
-              </CardTitle>
-              <div className="flex gap-2">
-                <Select
-                  value={selectedMember}
-                  onValueChange={setSelectedMember}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filtrar por persona" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas las personas</SelectItem>
-                    {teamMembers?.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+    <div className="flex h-[calc(100vh-120px)] px-6 md:px-8 py-6">
+      {/* Sidebar */}
+      <aside className="w-64 pr-4 space-y-6 overflow-y-auto">
+        <div className="space-y-2">
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-3">
+            Filtros
+          </h3>
 
-                <Select
-                  value={selectedStatus}
-                  onValueChange={setSelectedStatus}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filtrar por estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los estados</SelectItem>
-                    <SelectItem value="pending">Pendientes</SelectItem>
-                    <SelectItem value="completed">Completadas</SelectItem>
-                    <SelectItem value="overdue">Caducadas</SelectItem>
-                    <SelectItem value="archived">Archivadas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">
+                Persona
+              </label>
+              <Select value={selectedMember} onValueChange={setSelectedMember}>
+                <SelectTrigger className="w-full bg-white/60 backdrop-blur-sm shadow-soft hover:shadow-md transition-all border-white/60">
+                  <SelectValue placeholder="Filtrar por persona" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las personas</SelectItem>
+                  {teamMembers?.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">
+                Estado
+              </label>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-full bg-white/60 backdrop-blur-sm shadow-soft hover:shadow-md transition-all border-white/60">
+                  <SelectValue placeholder="Filtrar por estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="pending">Pendientes</SelectItem>
+                  <SelectItem value="completed">Completadas</SelectItem>
+                  <SelectItem value="overdue">Caducadas</SelectItem>
+                  <SelectItem value="archived">Archivadas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Team Progress in Sidebar */}
+        <Card className="bg-white/40 backdrop-blur-md border-white/60 shadow-xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-800">
+              <Users className="h-4 w-4" />
+              Progreso del Equipo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              {teamMembers?.map((member) => {
+                const memberTasks = tasks.filter(
+                  (t) => t.assigneeIds?.includes(member.id) && !t.archived
+                );
+                const completed = memberTasks.filter(
+                  (t) => t.status === "Completada"
+                ).length;
+                const total = memberTasks.length;
+                const overdue = memberTasks.filter(
+                  (t) =>
+                    t.status === "Pendiente" &&
+                    t.date &&
+                    new Date(t.date) < new Date()
+                ).length;
+                const progress = total > 0 ? (completed / total) * 100 : 0;
+
+                return (
+                  <div key={member.id} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          className="h-7 w-7 text-white"
+                          style={{ backgroundColor: member.avatar.color }}
+                        >
+                          <AvatarFallback className="bg-transparent">
+                            {(() => {
+                              const IconComponent = (LucideIcons as any)[
+                                member.avatar.icon
+                              ] as React.ElementType;
+                              return IconComponent ? (
+                                <IconComponent className="h-4 w-4" />
+                              ) : (
+                                <LucideIcons.User className="h-4 w-4" />
+                              );
+                            })()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <p className="text-xs font-medium text-gray-800">
+                          {member.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {completed}/{total} completadas
+                        </p>
+                      </div>
+                      {overdue > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="h-5 text-xs px-1.5"
+                        >
+                          {overdue}
+                        </Badge>
+                      )}
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        {/* Task Table */}
+        <Card className="bg-white/40 backdrop-blur-md border-white/60 shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-800">
+              <Filter className="h-5 w-5" />
+              Todas las Tareas
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {filteredTasks.length === 0 ? (
@@ -611,54 +694,7 @@ export default function TasksDashboard() {
             )}
           </CardContent>
         </Card>
-
-        {/* Team Progress - Right sidebar */}
-        <Card className="border-0 shadow-sm lg:sticky lg:top-4 lg:h-fit">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Progreso del Equipo
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pb-4">
-            <div className="space-y-4">
-              {tasksByMember.map(
-                ({ member, total, completed, overdue, progress }) => (
-                  <div key={member.id} className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        className="h-8 w-8 text-white"
-                        style={{ backgroundColor: member.avatar.color }}
-                      >
-                        <AvatarFallback className="bg-transparent">
-                          <MemberIcon member={member} className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {member.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {completed}/{total} completadas
-                        </p>
-                      </div>
-                      {overdue > 0 && (
-                        <Badge
-                          variant="destructive"
-                          className="h-5 text-xs px-1.5"
-                        >
-                          {overdue}
-                        </Badge>
-                      )}
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                  </div>
-                )
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      </main>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

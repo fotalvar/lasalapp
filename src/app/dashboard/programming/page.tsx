@@ -2,7 +2,7 @@ import ProgrammingClient from "@/components/dashboard/programming/programming-cl
 
 export default function ProgrammingPage() {
   return (
-    <main className="programming-page-container p-4 md:px-6">
+    <main className="programming-page-container">
       <ProgrammingClient />
     </main>
   );

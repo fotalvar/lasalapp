@@ -6,7 +6,7 @@ export default function ResponsibilitiesPage() {
   return (
     <div className="flex-1">
       <PageHeader title="Gestión de Responsabilidades" />
-      <main className="p-4 md:px-6">
+      <main className="px-6 md:px-8 py-6">
         <ResponsibilitiesClient
           initialResponsibilities={responsibilities}
           teamMembers={teamMembers}

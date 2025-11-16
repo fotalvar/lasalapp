@@ -10,7 +10,6 @@ import {
   Theater,
   Calendar,
   Banknote,
-  BookUser,
   ListTodo,
   Loader2,
   User,
@@ -76,13 +75,6 @@ const navItems = [
     label: "Gastos",
     color: "text-emerald-500",
     bgColor: "bg-emerald-100",
-  },
-  {
-    href: "/dashboard/meetings",
-    icon: BookUser,
-    label: "Reuniones",
-    color: "text-indigo-500",
-    bgColor: "bg-indigo-100",
   },
   {
     href: "/dashboard/tasks",
@@ -156,27 +148,35 @@ function UserMenu({ onOpenAdmin }: { onOpenAdmin: () => void }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2">
-          <Avatar
-            className="h-8 w-8 text-white"
-            style={{ backgroundColor: selectedTeamUser.avatar.color }}
-          >
-            <AvatarFallback className="bg-transparent">
-              <MemberIcon member={selectedTeamUser} className="h-4 w-4" />
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-sm font-medium text-left">
-              {selectedTeamUser.name}
-            </p>
-            <p className="text-xs text-muted-foreground text-left">
-              Viendo como
-            </p>
-          </div>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="transition-all rounded-2xl w-12 h-12 hover:scale-110 hover:bg-white/50 p-0"
+              >
+                <Avatar
+                  className="h-9 w-9 text-white"
+                  style={{ backgroundColor: selectedTeamUser.avatar.color }}
+                >
+                  <AvatarFallback className="bg-transparent">
+                    <MemberIcon member={selectedTeamUser} className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-gray-900 text-white">
+            <p>{selectedTeamUser.name}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <DropdownMenuContent
+        align="end"
+        className="w-56 bg-white/90 backdrop-blur-md border-white/60"
+      >
         <DropdownMenuLabel>
           <p>Sesión iniciada como</p>
           <p className="font-normal text-muted-foreground">{user?.email}</p>
@@ -209,17 +209,21 @@ function DesktopNav() {
   };
 
   return (
-    <nav className="hidden md:flex gap-2 items-center">
+    <nav className="hidden md:flex gap-2 items-center bg-white rounded-full p-1.5 shadow-soft">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         return (
           <Link href={item.href} key={item.href}>
             <Button
-              variant={isActive ? "secondary" : "ghost"}
+              variant="ghost"
               size="sm"
-              className={cn(isActive && `${item.color} ${item.bgColor}`)}
+              className={cn(
+                "transition-smooth font-medium rounded-full px-4 py-2",
+                isActive
+                  ? "bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
             >
-              <item.icon className="h-5 w-5 mr-2" />
               {item.label}
             </Button>
           </Link>
@@ -229,15 +233,15 @@ function DesktopNav() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant={pathname === "/dashboard/weeztix" ? "secondary" : "ghost"}
+            variant="ghost"
             size="sm"
             className={cn(
-              pathname === "/dashboard/weeztix" &&
-                "text-purple-600 bg-purple-100",
-              pathname !== "/dashboard/weeztix" && "text-purple-600"
+              "transition-smooth font-medium rounded-full px-4 py-2",
+              pathname === "/dashboard/weeztix"
+                ? "bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            <Ticket className="h-5 w-5 mr-2" />
             Weeztix
             <ChevronDown className="h-4 w-4 ml-1" />
           </Button>
@@ -302,7 +306,7 @@ function BottomNavBar({ onOpenAdmin }: { onOpenAdmin: () => void }) {
 
   return (
     <TooltipProvider>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-white backdrop-blur-md shadow-soft-lg">
         <div className="flex h-16 items-center justify-around">
           {mobileNavItems.map((item) => {
             const isActive = pathname === item.href;
@@ -312,8 +316,10 @@ function BottomNavBar({ onOpenAdmin }: { onOpenAdmin: () => void }) {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex h-full w-full flex-col items-center justify-center gap-1 text-xs transition-colors",
-                      !isActive && "text-muted-foreground hover:text-foreground"
+                      "flex h-full w-full flex-col items-center justify-center gap-1 text-xs transition-smooth",
+                      !isActive &&
+                        "text-muted-foreground hover:text-foreground",
+                      isActive && "scale-110"
                     )}
                   >
                     <item.icon
@@ -447,26 +453,138 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <div className="min-h-screen w-full bg-background pb-16 md:pb-0">
-        <header className="flex h-[60px] items-center justify-between border-b bg-gray-50/80 backdrop-blur-sm sticky top-0 z-40 px-4 lg:px-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="flex items-center">
-              <Image
-                src="/logo.png"
-                alt="La Sala Logo"
-                width={40}
-                height={40}
-                className="object-contain"
-              />
-            </Link>
-            <DesktopNav />
+      <div className="min-h-screen w-full bg-gradient-to-br from-cyan-100 via-purple-100 to-pink-100 pb-24 relative">
+        {children}
+
+        {/* Floating Dock - Mac Style */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-2xl p-3">
+            <div className="flex items-center gap-2">
+              {/* Logo */}
+              <Link
+                href="/dashboard"
+                className="flex items-center px-2 transition-all hover:scale-110"
+              >
+                <Image
+                  src="/logo.png"
+                  alt="La Sala"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              </Link>
+
+              {/* Separator */}
+              <div className="w-px h-10 bg-white/40 mx-1"></div>
+
+              {/* Navigation Icons */}
+              <TooltipProvider>
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <Tooltip key={item.href}>
+                      <TooltipTrigger asChild>
+                        <Link href={item.href}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "transition-all rounded-2xl w-12 h-12 hover:scale-110",
+                              isActive
+                                ? "bg-gradient-to-br from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+                                : "text-gray-700 hover:bg-white/50"
+                            )}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </Button>
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        className="bg-gray-900 text-white"
+                      >
+                        <p>{item.label}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+
+                {/* Weeztix Dropdown */}
+                <DropdownMenu>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "transition-all rounded-2xl w-12 h-12 hover:scale-110",
+                            pathname === "/dashboard/weeztix"
+                              ? "bg-gradient-to-br from-purple-500 to-pink-500 text-white"
+                              : "text-gray-700 hover:bg-white/50"
+                          )}
+                        >
+                          <Ticket className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-gray-900 text-white"
+                    >
+                      <p>Weeztix</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-56 bg-white/90 backdrop-blur-md border-white/60"
+                  >
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                      <Ticket className="h-4 w-4" />
+                      Weeztix
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() =>
+                        window.open(
+                          "https://pro.weezevent.com/evenements/?id_utilisateur=1875881",
+                          "_blank"
+                        )
+                      }
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Abrir Weezevent
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        window.open("https://www.weezevent.com/", "_blank")
+                      }
+                    >
+                      <Home className="h-4 w-4 mr-2" />
+                      Página Principal
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/dashboard/weeztix"
+                        className="cursor-pointer"
+                      >
+                        <List className="h-4 w-4 mr-2" />
+                        Ver Eventos Sincronizados
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TooltipProvider>
+
+              {/* Separator */}
+              <div className="w-px h-10 bg-white/40 mx-1"></div>
+
+              {/* User Menu */}
+              <UserMenu onOpenAdmin={() => setAdminDialogOpen(true)} />
+            </div>
           </div>
-          <div className="md:ml-auto">
-            <UserMenu onOpenAdmin={() => setAdminDialogOpen(true)} />
-          </div>
-        </header>
-        <div className="flex flex-col">{children}</div>
-        <BottomNavBar onOpenAdmin={() => setAdminDialogOpen(true)} />
+        </div>
       </div>
       <AdminDialog open={adminDialogOpen} onOpenChange={setAdminDialogOpen} />
     </>

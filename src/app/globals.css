@@ -8,7 +8,7 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 220 20% 92%;
     --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
@@ -36,7 +36,16 @@ body {
     --input: 220 13% 91%;
     --ring: 224 71.4% 4.1%;
 
-    --radius: 0.8rem;
+    --radius: 1rem;
+
+    /* Nuevas variables para diseño moderno */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+      0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   }
 
   .dark {
@@ -68,7 +77,16 @@ body {
     --input: 215 27.9% 16.9%;
     --ring: 218.3 93.3% 66.3%;
 
-    --radius: 0.8rem;
+    --radius: 1rem;
+
+    /* Sombras para modo oscuro */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.3),
+      0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.3),
+      0 8px 10px -6px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.5);
   }
 }
 
@@ -78,15 +96,184 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Efectos de blur de color en el fondo - Estilo moderno */
+  body::before {
+    content: "";
+    position: fixed;
+    top: -20%;
+    right: -10%;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(
+      circle,
+      rgba(251, 191, 36, 0.15) 0%,
+      rgba(245, 158, 11, 0.1) 30%,
+      transparent 70%
+    );
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+    animation: float 20s ease-in-out infinite;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    bottom: -20%;
+    left: -10%;
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(
+      circle,
+      rgba(167, 139, 250, 0.12) 0%,
+      rgba(139, 92, 246, 0.08) 30%,
+      transparent 70%
+    );
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    animation: float 25s ease-in-out infinite reverse;
+  }
+
+  /* Efecto adicional en el centro */
+  body > div:first-child::before {
+    content: "";
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(
+      circle,
+      rgba(34, 211, 238, 0.08) 0%,
+      rgba(14, 165, 233, 0.05) 30%,
+      transparent 70%
+    );
+    filter: blur(90px);
+    pointer-events: none;
+    z-index: 0;
+    animation: pulse 15s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(30px, 30px) scale(1.1);
+    }
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+@layer utilities {
+  /* Clases de sombra modernas */
+  .shadow-soft {
+    box-shadow: var(--shadow);
+  }
+  .shadow-soft-md {
+    box-shadow: var(--shadow-md);
+  }
+  .shadow-soft-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Glassmorphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Gradientes suaves */
+  .gradient-primary {
+    background: linear-gradient(
+      135deg,
+      hsl(220, 90%, 55%) 0%,
+      hsl(220, 90%, 65%) 100%
+    );
+  }
+
+  .gradient-card {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.7) 100%
+    );
+  }
+
+  /* Animaciones suaves */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Calendar specific styles */
+  .space-y-4.w-full.rdp-caption_start.rdp-caption_end {
+    padding: 1rem;
+  }
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+/* Scrollbar styles */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
 }
 
 /* Custom class for programming page container */

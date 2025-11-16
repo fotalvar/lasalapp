@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
+import { CustomCalendarGrid } from "@/components/dashboard/calendar/custom-calendar-grid";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -1065,10 +1066,23 @@ function CalendarPageContent() {
 
   const [filteredAssigneeIds, setFilteredAssigneeIds] = useState<string[]>([]);
 
-  const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
+  const [viewMode, setViewMode] = useState<"calendar" | "agenda">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("calendar-view-mode");
+      return saved === "agenda" || saved === "calendar" ? saved : "calendar";
+    }
+    return "calendar";
+  });
 
   const [dayDialogDate, setDayDialogDate] = useState<Date | null>(null);
   const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
+
+  // Guardar viewMode en localStorage cuando cambie
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("calendar-view-mode", viewMode);
+    }
+  }, [viewMode]);
 
   const db = useFirestore();
   const { toast } = useToast();
@@ -1308,16 +1322,16 @@ function CalendarPageContent() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-60px)]">
+      <div className="flex h-[calc(100vh-120px)] px-6 md:px-8 py-6">
         {/* Sidebar */}
-        <aside className="w-64 border-r bg-background p-4 space-y-2 overflow-y-auto">
+        <aside className="w-64 pr-4 space-y-6 overflow-y-auto">
           <div className="space-y-2">
             <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-3">
               Acciones
             </h3>
 
             <Button
-              className="w-full justify-start"
+              className="w-full justify-start bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-soft hover:shadow-md transition-all"
               onClick={() => {
                 setAddEventInitialData(undefined);
                 openSheetForNew();
@@ -1329,7 +1343,7 @@ function CalendarPageContent() {
 
             <Button
               variant="outline"
-              className="w-full justify-start"
+              className="w-full justify-start bg-white/60 backdrop-blur-sm shadow-soft hover:shadow-md transition-all border-white/60"
               onClick={() => setIsScheduleSheetOpen(true)}
             >
               <Instagram className="mr-2 h-4 w-4" />
@@ -1337,24 +1351,38 @@ function CalendarPageContent() {
             </Button>
           </div>
 
-          <div className="space-y-2 pt-4 border-t">
+          <div className="space-y-2">
             <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-3">
               Vistas
             </h3>
 
-            <Button
-              variant={viewMode === "agenda" ? "default" : "outline"}
-              className="w-full justify-start"
-              onClick={() =>
-                setViewMode(viewMode === "calendar" ? "agenda" : "calendar")
-              }
-            >
-              <BookCopy className="mr-2 h-4 w-4" />
-              {viewMode === "calendar" ? "Ver Agenda" : "Ver Calendario"}
-            </Button>
+            <div className="flex bg-white/60 backdrop-blur-sm rounded-lg shadow-soft p-1 border border-white/60">
+              <button
+                onClick={() => setViewMode("calendar")}
+                className={cn(
+                  "flex-1 flex items-center justify-center py-2.5 px-3 rounded-md transition-all",
+                  viewMode === "calendar"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <CalendarIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("agenda")}
+                className={cn(
+                  "flex-1 flex items-center justify-center py-2.5 px-3 rounded-md transition-all",
+                  viewMode === "agenda"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <BookCopy className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-2 pt-4 border-t">
+          <div className="space-y-2">
             <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-3">
               Filtros
             </h3>
@@ -1364,8 +1392,8 @@ function CalendarPageContent() {
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start",
-                    filteredAssigneeIds.length > 0 && "bg-secondary"
+                    "w-full justify-start bg-white/60 backdrop-blur-sm shadow-soft hover:shadow-md transition-all border-white/60",
+                    filteredAssigneeIds.length > 0 && "bg-secondary/60"
                   )}
                 >
                   <Filter className="mr-2 h-4 w-4" />
@@ -1412,107 +1440,16 @@ function CalendarPageContent() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:px-6">
+        <main className="flex-1 flex flex-col p-6 overflow-hidden">
           {viewMode === "calendar" ? (
-            <Calendar
-              mode="single"
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
+            <CustomCalendarGrid
+              currentMonth={currentMonth}
+              filteredEvents={filteredEvents}
+              teamMembers={teamMembers}
+              eventConfig={eventConfig}
+              today={today}
               onDayClick={handleDayClick}
-              className="p-0"
-              classNames={{
-                months:
-                  "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                month: "space-y-4 w-full",
-                caption_label: "text-base font-bold",
-                table: "w-full border-collapse space-y-1",
-                head_row: "grid grid-cols-7 gap-1",
-                head_cell:
-                  "text-muted-foreground font-normal text-sm text-center py-2",
-                row: "grid grid-cols-7 gap-1 mt-2",
-                cell: "h-28 text-sm text-center p-0 relative focus-within:relative focus-within:z-20",
-                day: "h-full w-full p-1 font-normal aria-selected:opacity-100 flex flex-col items-start justify-start hover:bg-accent transition-colors rounded-md border cursor-pointer",
-                day_selected:
-                  "bg-primary text-primary-foreground hover:bg-primary",
-                day_today: "bg-accent text-accent-foreground",
-                day_outside: "text-muted-foreground opacity-50",
-              }}
-              components={{
-                DayContent: ({ date: dayDate }) => {
-                  const dayEvents = filteredEvents.filter((event) => {
-                    const eventDate =
-                      event.date instanceof Timestamp
-                        ? event.date.toDate()
-                        : event.date;
-                    return isSameDay(eventDate, dayDate);
-                  });
-                  return (
-                    <div className="relative h-full w-full">
-                      <time
-                        dateTime={dayDate.toISOString()}
-                        className={cn(
-                          "absolute top-1 left-1.5",
-                          today &&
-                            isSameDay(dayDate, today) &&
-                            "font-bold text-primary"
-                        )}
-                      >
-                        {dayDate.getDate()}
-                      </time>
-                      <div
-                        className="space-y-1 mt-6 overflow-y-auto max-h-[80px] no-scrollbar"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {dayEvents.map((event) => {
-                          const config = eventConfig[event.type];
-                          const assignedMembers = teamMembers.filter((m) =>
-                            event.assigneeIds?.includes(m.id)
-                          );
-                          return (
-                            <div
-                              key={event.id}
-                              role="button"
-                              onClick={() => openSheetForEdit(event)}
-                              className={cn(
-                                "w-full text-left text-xs p-1 rounded-sm flex items-start overflow-hidden cursor-pointer relative",
-                                config.bgColor,
-                                config.color
-                              )}
-                            >
-                              <div className="flex-shrink-0 mt-0.5">
-                                {config.icon}
-                              </div>
-                              <span className="ml-1 truncate flex-grow">
-                                {event.title}
-                              </span>
-                              {assignedMembers.length > 0 && (
-                                <div className="absolute bottom-0.5 right-0.5 flex -space-x-1">
-                                  {assignedMembers.slice(0, 2).map((member) => (
-                                    <Avatar
-                                      key={member.id}
-                                      className="h-4 w-4 text-white border-background"
-                                      style={{
-                                        backgroundColor: member.avatar.color,
-                                      }}
-                                    >
-                                      <AvatarFallback className="bg-transparent text-[8px] font-bold">
-                                        <MemberIcon
-                                          member={member}
-                                          className="h-2 w-2"
-                                        />
-                                      </AvatarFallback>
-                                    </Avatar>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                },
-              }}
+              onEventClick={openSheetForEdit}
             />
           ) : (
             <WeekAgendaView

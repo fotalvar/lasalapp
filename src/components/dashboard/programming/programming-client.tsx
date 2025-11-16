@@ -910,7 +910,10 @@ function AllProposalsDialog({
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start">
+          <Button
+            variant="outline"
+            className="w-full justify-start bg-white/60 backdrop-blur-sm shadow-soft hover:shadow-md transition-all border-white/60"
+          >
             <FileText className="mr-2 h-4 w-4" />
             Ver Propuestas
             {proposals.length > 0 && (
@@ -1497,15 +1500,18 @@ export default function ProgrammingClient() {
 
   return (
     <Dialog>
-      <div className="flex h-[calc(100vh-60px)]">
+      <div className="flex h-[calc(100vh-120px)] px-6 md:px-8 py-6">
         {/* Sidebar */}
-        <aside className="w-64 border-r bg-background p-4 space-y-2 overflow-y-auto">
+        <aside className="w-64 pr-4 space-y-6 overflow-y-auto">
           <div className="space-y-2">
             <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-3">
               Acciones
             </h3>
 
-            <Button onClick={handleAddNew} className="w-full justify-start">
+            <Button
+              onClick={handleAddNew}
+              className="w-full justify-start bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-soft hover:shadow-md transition-all"
+            >
               <PlusCircle className="mr-2 h-4 w-4" />
               Añadir Espectáculo
             </Button>
@@ -1513,21 +1519,23 @@ export default function ProgrammingClient() {
             <AllProposalsDialog shows={shows} />
           </div>
 
-          <div className="space-y-2 pt-4 border-t">
+          <div className="space-y-2">
             <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-3">
               Filtros
             </h3>
 
             <div className="space-y-3">
               <div>
-                <Label className="text-xs text-muted-foreground">Estado</Label>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">
+                  Estado
+                </Label>
                 <Select
                   value={statusFilter}
                   onValueChange={(value: Show["status"] | "all") =>
                     setStatusFilter(value)
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full bg-white/60 backdrop-blur-sm shadow-soft hover:shadow-md transition-all border-white/60">
                     <SelectValue placeholder="Filtrar por estado" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1541,7 +1549,7 @@ export default function ProgrammingClient() {
                 </Select>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm rounded-lg shadow-soft p-3 hover:shadow-md transition-all border border-white/60">
                 <Checkbox
                   id="show-archived"
                   checked={showArchived}
@@ -1559,7 +1567,7 @@ export default function ProgrammingClient() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:px-6">
+        <main className="flex-1 overflow-y-auto">
           <AddEditShowSheet
             show={selectedShow}
             companies={companies || []}

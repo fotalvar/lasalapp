@@ -3,7 +3,7 @@
 import {
   Users,
   Theater,
-  Calendar,
+  Calendar as CalendarIcon,
   Banknote,
   BookUser,
   ListTodo,
@@ -267,101 +267,119 @@ function TeamProgressWidget({
   };
 
   return (
-    <Card>
+    <Card className="bg-white/40 backdrop-blur-md border-white/60 shadow-xl">
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold flex items-center gap-2">
-          <Users className="h-6 w-6" />
+        <CardTitle className="text-xl font-semibold flex items-center gap-2">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+            <Users className="h-5 w-5 text-purple-600" />
+          </div>
           Progreso del Equipo
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3">
           {memberProgress.map((member) => {
             const status = getProgressStatus(member);
-            const radius = 35; // Further reduced to prevent clipping
+            const radius = 28;
             const circumference = 2 * Math.PI * radius;
             const strokeDashoffset =
               circumference - (member.progress / 100) * circumference;
 
             return (
-              <Card
+              <div
                 key={member.id}
-                className={cn("border-2 shadow-sm", status.bgColor)}
+                className={cn(
+                  "flex items-center gap-4 p-3 rounded-xl border transition-smooth hover:shadow-md backdrop-blur-sm",
+                  "bg-white/30 border-white/50 hover:bg-white/40"
+                )}
               >
-                <CardContent className="p-4">
-                  <div className="flex flex-col items-center gap-3">
-                    {/* Circular Progress */}
-                    <div className="relative w-20 h-20 flex items-center justify-center">
-                      <svg
-                        className="transform -rotate-90"
-                        width="76"
-                        height="76"
-                        viewBox="0 0 76 76"
-                      >
-                        {/* Background circle */}
-                        <circle
-                          cx="38"
-                          cy="38"
-                          r={radius}
-                          stroke="#e5e7eb"
-                          strokeWidth="6"
-                          fill="none"
-                        />
-                        {/* Progress circle */}
-                        <circle
-                          cx="38"
-                          cy="38"
-                          r={radius}
-                          stroke={status.strokeColor}
-                          strokeWidth="6"
-                          fill="none"
-                          strokeDasharray={circumference}
-                          strokeDashoffset={strokeDashoffset}
-                          strokeLinecap="round"
-                          className="transition-all duration-300"
-                        />
-                      </svg>
-                      {/* Center icon */}
-                      <div
-                        className={cn(
-                          "absolute inset-0 flex items-center justify-center",
-                          status.color
-                        )}
-                      >
-                        {status.icon}
-                      </div>
-                    </div>
-
-                    {/* Member info */}
-                    <div className="text-center w-full">
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <Avatar
-                          className="h-6 w-6 text-white"
-                          style={{ backgroundColor: member.avatar.color }}
-                        >
-                          <AvatarFallback className="bg-transparent">
-                            <MemberIcon member={member} className="h-3 w-3" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <p className="text-sm font-medium truncate">
-                          {member.name}
-                        </p>
-                      </div>
-                      {member.taskCount > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          {member.completedCount}/{member.taskCount} completadas
-                        </p>
-                      )}
-                      {member.overdueCount > 0 && (
-                        <p className="text-xs text-red-600 font-medium mt-1">
-                          {member.overdueCount} caducada
-                          {member.overdueCount !== 1 ? "s" : ""}
-                        </p>
-                      )}
-                    </div>
+                {/* Circular Progress */}
+                <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="transform -rotate-90"
+                    width="64"
+                    height="64"
+                    viewBox="0 0 64 64"
+                  >
+                    {/* Background circle */}
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r={radius}
+                      stroke="currentColor"
+                      strokeWidth="6"
+                      fill="none"
+                      className="text-gray-200"
+                    />
+                    {/* Progress circle */}
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r={radius}
+                      stroke={status.strokeColor}
+                      strokeWidth="6"
+                      fill="none"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      strokeLinecap="round"
+                      className="transition-all duration-500 ease-out"
+                    />
+                  </svg>
+                  {/* Center percentage */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={cn("text-xs font-bold", status.color)}>
+                      {Math.round(member.progress)}%
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Member info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Avatar
+                      className="h-6 w-6 text-white flex-shrink-0"
+                      style={{ backgroundColor: member.avatar.color }}
+                    >
+                      <AvatarFallback className="bg-transparent">
+                        <MemberIcon member={member} className="h-3 w-3" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="text-sm font-medium truncate text-gray-800">
+                      {member.name}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    {member.taskCount > 0 ? (
+                      <>
+                        <p className="text-xs text-gray-600">
+                          {member.completedCount}/{member.taskCount}
+                        </p>
+                        {member.overdueCount > 0 && (
+                          <Badge
+                            variant="destructive"
+                            className="text-[10px] h-4 px-1"
+                          >
+                            {member.overdueCount} caducada
+                            {member.overdueCount !== 1 ? "s" : ""}
+                          </Badge>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-gray-600">Sin tareas</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status Icon */}
+                <div
+                  className={cn(
+                    "p-2 rounded-full flex-shrink-0",
+                    status.bgColor
+                  )}
+                >
+                  <div className={status.color}>{status.icon}</div>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -370,118 +388,77 @@ function TeamProgressWidget({
   );
 }
 
-function TodayEventsWidget({ events }: { events: CalendarEvent[] }) {
-  const todayEvents = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    return events
-      .filter((event) => {
-        const eventDate =
-          event.date instanceof Date ? event.date : new Date(event.date);
-        return eventDate >= today && eventDate < tomorrow && !event.archived;
-      })
-      .sort((a, b) => {
-        const dateA = a.date instanceof Date ? a.date : new Date(a.date);
-        const dateB = b.date instanceof Date ? b.date : new Date(b.date);
-        return dateA.getTime() - dateB.getTime();
-      });
-  }, [events]);
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold flex items-center gap-2">
-          <Calendar className="h-6 w-6" />
-          Eventos de Hoy
-        </CardTitle>
-        <CardDescription>
-          {todayEvents.length} {todayEvents.length === 1 ? "evento" : "eventos"}{" "}
-          programados
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {todayEvents.length > 0 ? (
-          <div className="space-y-2">
-            {todayEvents.map((event) => {
-              const config = eventConfig[event.type] || {
-                icon: <Calendar className="h-4 w-4" />,
-                color: "text-gray-600",
-                bgColor: "bg-gray-100",
-              };
-              const eventDate =
-                event.date instanceof Date ? event.date : new Date(event.date);
-              const isTask = event.assigneeIds && event.assigneeIds.length > 0;
-
-              return (
-                <div
-                  key={event.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div
-                    className={cn(
-                      "rounded-full p-2 flex-shrink-0",
-                      config.bgColor
-                    )}
-                  >
-                    <div className={config.color}>{config.icon}</div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{event.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-xs text-muted-foreground">
-                        {format(eventDate, "HH:mm", { locale: es })} ·{" "}
-                        {event.type}
-                      </p>
-                      {isTask && (
-                        <Badge
-                          variant={event.completed ? "default" : "secondary"}
-                          className="text-xs"
-                        >
-                          {event.completed
-                            ? "Completada"
-                            : event.status || "Pendiente"}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No hay eventos programados para hoy
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function MyTasksWidget({
+// Nueva función unificada de Agenda
+function MyAgendaWidget({
   events,
   member,
+  teamMembers,
 }: {
   events: CalendarEvent[];
   member: TeamMember | null;
+  teamMembers: TeamMember[];
 }) {
   const db = useFirestore();
+  const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
-
-  const userTasks = useMemo(() => {
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null); // Organizar eventos por días
+  const eventsByDay = useMemo(() => {
     if (!member) return [];
-    return events.filter(
-      (event) =>
-        event.assigneeIds &&
-        event.assigneeIds.includes(member.id) &&
-        !event.archived
-    );
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Filtrar eventos relevantes (del usuario y no archivados, o eventos generales)
+    const relevantEvents = events.filter((event) => {
+      if (event.archived) return false;
+
+      const eventDate =
+        event.date instanceof Date ? event.date : new Date(event.date);
+
+      // Incluir si es una tarea asignada al usuario
+      if (event.assigneeIds && event.assigneeIds.includes(member.id)) {
+        return true;
+      }
+
+      // Incluir eventos generales (sin assigneeIds) que sean de hoy o futuros
+      if (!event.assigneeIds || event.assigneeIds.length === 0) {
+        return eventDate >= now;
+      }
+
+      return false;
+    });
+
+    // Agrupar por fecha
+    const grouped = new Map<string, CalendarEvent[]>();
+
+    relevantEvents.forEach((event) => {
+      const eventDate =
+        event.date instanceof Date ? event.date : new Date(event.date);
+      const dayKey = format(eventDate, "yyyy-MM-dd");
+
+      if (!grouped.has(dayKey)) {
+        grouped.set(dayKey, []);
+      }
+      grouped.get(dayKey)!.push(event);
+    });
+
+    // Convertir a array y ordenar
+    const days = Array.from(grouped.entries())
+      .map(([dayKey, dayEvents]) => ({
+        date: new Date(dayKey),
+        events: dayEvents.sort((a, b) => {
+          const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+          const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+          return dateA.getTime() - dateB.getTime();
+        }),
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Mostrar solo los próximos 7 días
+    return days.slice(0, 7);
   }, [events, member]);
 
+  // Tareas archivadas
   const archivedTasks = useMemo(() => {
     if (!member) return [];
     return events
@@ -492,49 +469,27 @@ function MyTasksWidget({
           event.archived === true
       )
       .sort((a, b) => {
-        // Sort by archivedAt date, most recent first
         const aDate = (a as any).archivedAt;
         const bDate = (b as any).archivedAt;
-
-        // If both have archivedAt dates
         if (aDate && bDate) {
           const dateA = aDate instanceof Date ? aDate : new Date(aDate);
           const dateB = bDate instanceof Date ? bDate : new Date(bDate);
-          return dateB.getTime() - dateA.getTime(); // Most recent first
+          return dateB.getTime() - dateA.getTime();
         }
-
-        // If only one has archivedAt, prioritize the one with date
         if (aDate) return -1;
         if (bDate) return 1;
-
-        // If neither has archivedAt, sort by event date
         return b.date.getTime() - a.date.getTime();
       });
   }, [events, member]);
 
-  const completedCount = useMemo(
-    () =>
-      userTasks.filter((task) => task.completed || task.status === "Completada")
-        .length,
-    [userTasks]
-  );
-  const totalCount = userTasks.length;
-  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
-
-  // Helper function to get the computed status of a task
-  const getTaskStatus = (
-    task: CalendarEvent
-  ): "Pendiente" | "En Progreso" | "Completada" | "Caducada" | "Archivada" => {
+  const getTaskStatus = (task: CalendarEvent): string => {
     if (task.archived) return "Archivada";
     if (task.status === "Completada" || task.completed) return "Completada";
-
     const now = new Date();
     const taskDate =
       task.date instanceof Date ? task.date : new Date(task.date);
     const isOverdue = taskDate < now;
-
     if (isOverdue && !task.completed) return "Caducada";
-
     return task.status || "Pendiente";
   };
 
@@ -543,18 +498,14 @@ function MyTasksWidget({
     newStatus: "Pendiente" | "En Progreso" | "Completada"
   ) => {
     if (!db) return;
-
     try {
       const taskRef = doc(db, "events", taskId);
       const updateData: any = { status: newStatus };
-
-      // Update completed flag based on status
       if (newStatus === "Completada") {
         updateData.completed = true;
       } else {
         updateData.completed = false;
       }
-
       await setDoc(taskRef, updateData, { merge: true });
     } catch (error: any) {
       console.error("Error updating task status:", error);
@@ -571,39 +522,13 @@ function MyTasksWidget({
     }
   };
 
-  const handleUpdate = async (taskId: string, completed: boolean) => {
-    if (!db) return;
-
-    try {
-      const taskRef = doc(db, "events", taskId);
-      const status = completed ? "Completada" : "Pendiente";
-      await setDoc(taskRef, { completed, status }, { merge: true });
-    } catch (error: any) {
-      console.error("Error updating task:", error);
-      if (error.code === "permission-denied") {
-        errorEmitter.emit(
-          "permission-error",
-          new FirestorePermissionError({
-            path: `events/${taskId}`,
-            operation: "update",
-            requestResourceData: { completed },
-          })
-        );
-      }
-    }
-  };
-
   const handleArchive = async (taskId: string) => {
     if (!db) return;
-
     try {
       const taskRef = doc(db, "events", taskId);
       await setDoc(
         taskRef,
-        {
-          archived: true,
-          archivedAt: new Date(),
-        },
+        { archived: true, archivedAt: new Date() },
         { merge: true }
       );
     } catch (error: any) {
@@ -623,15 +548,11 @@ function MyTasksWidget({
 
   const handleUnarchive = async (taskId: string) => {
     if (!db) return;
-
     try {
       const taskRef = doc(db, "events", taskId);
       await setDoc(
         taskRef,
-        {
-          archived: false,
-          archivedAt: null,
-        },
+        { archived: false, archivedAt: null },
         { merge: true }
       );
     } catch (error: any) {
@@ -656,7 +577,6 @@ function MyTasksWidget({
 
   const confirmDelete = async () => {
     if (!db || !taskToDelete) return;
-
     try {
       const taskRef = doc(db, "events", taskToDelete);
       await deleteDoc(taskRef);
@@ -679,192 +599,279 @@ function MyTasksWidget({
     }
   };
 
+  const getDayLabel = (date: Date) => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayDate = new Date(date);
+    dayDate.setHours(0, 0, 0, 0);
+
+    if (dayDate.getTime() === now.getTime()) {
+      return "Hoy";
+    } else if (dayDate.getTime() === tomorrow.getTime()) {
+      return "Mañana";
+    } else {
+      return format(date, "EEEE, d 'de' MMMM", { locale: es });
+    }
+  };
+
   if (!member) {
     return (
-      <Card>
+      <Card className="bg-white/40 backdrop-blur-md border-white/60 shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold flex items-center gap-2">
-            <ListTodo className="h-6 w-6" />
-            Mis Tareas
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+              <CalendarIcon className="h-5 w-5 text-purple-600" />
+            </div>
+            Mi Agenda
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Selecciona un usuario
-          </p>
+          <div className="text-center py-12">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/50 mb-3">
+              <CalendarIcon className="h-6 w-6 text-gray-600" />
+            </div>
+            <p className="text-sm font-medium text-gray-700">
+              Selecciona un usuario
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-2xl font-bold flex items-center gap-2">
-          <ListTodo className="h-6 w-6" />
-          Mis Tareas
-        </CardTitle>
-        {member && (
-          <div className="flex items-center gap-3 mt-3">
-            <Avatar
-              className="h-10 w-10 text-white"
-              style={{ backgroundColor: member.avatar.color }}
-            >
-              <AvatarFallback className="bg-transparent">
-                <MemberIcon member={member} className="h-5 w-5" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <p className="font-medium">{member.name}</p>
-              <CardDescription>
-                {completedCount} de {totalCount} tareas completadas
-              </CardDescription>
-            </div>
+    <Card className="bg-white/40 backdrop-blur-md border-white/60 shadow-xl">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xl font-semibold flex items-center gap-2">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+            <CalendarIcon className="h-5 w-5 text-purple-600" />
           </div>
-        )}
+          Mi Agenda
+        </CardTitle>
+        <CardDescription className="mt-2 text-gray-600">
+          Tareas y eventos organizados cronológicamente
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {userTasks.length > 0 ? (
-          <>
-            <div className="space-y-2">
-              {userTasks.map((task) => {
-                const config = eventConfig[task.type] || {
-                  icon: <Calendar className="h-4 w-4" />,
-                  color: "text-gray-600",
-                  bgColor: "bg-gray-100",
-                };
+      <CardContent className="space-y-4">
+        {eventsByDay.length > 0 ? (
+          <div className="space-y-6">
+            {eventsByDay.map((day, dayIndex) => {
+              const now = new Date();
+              const isToday =
+                format(day.date, "yyyy-MM-dd") === format(now, "yyyy-MM-dd");
 
-                const now = new Date();
-                const taskDate =
-                  task.date instanceof Date ? task.date : new Date(task.date);
-                const isOverdue = !task.completed && taskDate < now;
-                const daysOverdue = isOverdue
-                  ? differenceInDays(now, taskDate)
-                  : 0;
-
-                return (
+              return (
+                <div key={dayIndex} className="space-y-3">
+                  {/* Día header */}
                   <div
-                    key={task.id}
                     className={cn(
-                      "flex items-start gap-3 p-3 rounded-lg border",
-                      isOverdue ? "bg-red-50 border-red-200" : "bg-card"
+                      "flex items-center gap-2 pb-2 border-b",
+                      isToday ? "border-purple-400/50" : "border-white/30"
                     )}
                   >
-                    <div
+                    <h3
                       className={cn(
-                        "rounded-full p-2 flex-shrink-0",
-                        isOverdue ? "bg-red-100" : config.bgColor
+                        "font-semibold text-sm capitalize",
+                        isToday ? "text-purple-700" : "text-gray-700"
                       )}
                     >
-                      <div
-                        className={isOverdue ? "text-red-600" : config.color}
-                      >
-                        {config.icon}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={cn(
-                          "font-medium text-sm",
-                          task.completed &&
-                            "line-through text-muted-foreground",
-                          isOverdue && "text-red-700"
-                        )}
-                      >
-                        {task.title}
-                      </p>
-                      <p
-                        className={cn(
-                          "text-xs mt-1",
-                          isOverdue
-                            ? "text-red-600 font-medium"
-                            : "text-muted-foreground"
-                        )}
-                      >
-                        {isOverdue ? (
-                          <>
-                            Tarea Pendiente · {daysOverdue}{" "}
-                            {daysOverdue === 1 ? "día" : "días"} de retraso
-                          </>
-                        ) : (
-                          format(taskDate, "eeee, d 'de' MMMM", { locale: es })
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Select
-                        value={getTaskStatus(task)}
-                        onValueChange={(value: any) => {
-                          if (
-                            value === "Pendiente" ||
-                            value === "En Progreso" ||
-                            value === "Completada"
-                          ) {
-                            handleStatusChange(task.id, value);
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-[140px] h-8">
-                          <SelectValue>{getTaskStatus(task)}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pendiente">Pendiente</SelectItem>
-                          <SelectItem value="En Progreso">
-                            En Progreso
-                          </SelectItem>
-                          <SelectItem value="Completada">Completada</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {task.completed && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleArchive(task.id)}
-                          className="text-muted-foreground hover:text-foreground"
-                          title="Archivar"
-                        >
-                          <Archive className="h-4 w-4" />
-                        </Button>
+                      {getDayLabel(day.date)}
+                    </h3>
+                    <Badge
+                      variant={isToday ? "default" : "secondary"}
+                      className={cn(
+                        "text-xs",
+                        isToday &&
+                          "bg-gradient-to-r from-purple-500 to-pink-500"
                       )}
-                    </div>
+                    >
+                      {day.events.length}
+                    </Badge>
                   </div>
-                );
-              })}
-            </div>
-            <div className="pt-2">
-              <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                <span>Progreso</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-          </>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No tienes tareas asignadas
-          </p>
-        )}
 
-        {/* Archived Tasks Section - Collapsible Accordion */}
-        <div className="mt-6 pt-6 border-t">
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="archived-tasks" className="border-none">
-              <AccordionTrigger className="hover:no-underline py-3 px-0">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Archive className="h-4 w-4 text-muted-foreground" />
-                  Tareas Archivadas ({archivedTasks.length})
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                {archivedTasks.length > 0 ? (
-                  <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 pt-2">
-                    {archivedTasks.map((task) => {
-                      const config = eventConfig[task.type] || {
-                        icon: <Calendar className="h-4 w-4" />,
+                  {/* Eventos del día */}
+                  <div className="space-y-2">
+                    {day.events.map((event) => {
+                      const config = eventConfig[event.type] || {
+                        icon: <CalendarIcon className="h-4 w-4" />,
                         color: "text-gray-600",
                         bgColor: "bg-gray-100",
                       };
 
+                      const eventDate =
+                        event.date instanceof Date
+                          ? event.date
+                          : new Date(event.date);
+                      const isTask =
+                        event.assigneeIds &&
+                        event.assigneeIds.includes(member.id);
+                      const isOverdue = !event.completed && eventDate < now;
+                      const daysOverdue = isOverdue
+                        ? differenceInDays(now, eventDate)
+                        : 0;
+
+                      return (
+                        <div
+                          key={event.id}
+                          className={cn(
+                            "flex items-start gap-3 p-3 rounded-xl border transition-smooth backdrop-blur-sm",
+                            isOverdue
+                              ? "bg-red-100/40 border-red-300/60"
+                              : "bg-white/30 border-white/50 hover:bg-white/40 hover:shadow-md"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "rounded-full p-2 flex-shrink-0",
+                              isOverdue ? "bg-red-200/60" : config.bgColor
+                            )}
+                          >
+                            <div
+                              className={
+                                isOverdue ? "text-red-600" : config.color
+                              }
+                            >
+                              {config.icon}
+                            </div>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={cn(
+                                "font-medium text-sm text-gray-800",
+                                event.completed && "line-through text-gray-500",
+                                isOverdue && "text-red-700"
+                              )}
+                            >
+                              {event.title}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <p
+                                className={cn(
+                                  "text-xs text-gray-600",
+                                  isOverdue
+                                    ? "text-red-600 font-medium"
+                                    : "text-muted-foreground"
+                                )}
+                              >
+                                {format(eventDate, "HH:mm", { locale: es })}
+                              </p>
+                              <span className="text-xs text-muted-foreground">
+                                ·
+                              </span>
+                              <p className="text-xs text-muted-foreground">
+                                {event.type}
+                              </p>
+                              {isTask && (
+                                <Badge
+                                  variant={
+                                    event.completed ? "default" : "secondary"
+                                  }
+                                  className="text-[10px] h-5 px-1.5"
+                                >
+                                  {event.completed
+                                    ? "Completada"
+                                    : event.status || "Pendiente"}
+                                </Badge>
+                              )}
+                              {isOverdue && (
+                                <Badge
+                                  variant="destructive"
+                                  className="text-[10px] h-5 px-1.5"
+                                >
+                                  {daysOverdue}{" "}
+                                  {daysOverdue === 1 ? "día" : "días"} de
+                                  retraso
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          {isTask && (
+                            <div className="flex gap-2 flex-shrink-0">
+                              <Select
+                                value={getTaskStatus(event)}
+                                onValueChange={(value: any) => {
+                                  if (
+                                    value === "Pendiente" ||
+                                    value === "En Progreso" ||
+                                    value === "Completada"
+                                  ) {
+                                    handleStatusChange(event.id, value);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-[140px] h-8">
+                                  <SelectValue>
+                                    {getTaskStatus(event)}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Pendiente">
+                                    Pendiente
+                                  </SelectItem>
+                                  <SelectItem value="En Progreso">
+                                    En Progreso
+                                  </SelectItem>
+                                  <SelectItem value="Completada">
+                                    Completada
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {event.completed && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleArchive(event.id)}
+                                  className="text-muted-foreground hover:text-foreground"
+                                  title="Archivar"
+                                >
+                                  <Archive className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/50 mb-3">
+              <CalendarIcon className="h-6 w-6 text-gray-600" />
+            </div>
+            <p className="text-sm font-medium text-gray-700">
+              No hay eventos próximos
+            </p>
+            <p className="text-xs text-gray-600 mt-1">Tu agenda está limpia</p>
+          </div>
+        )}
+
+        {/* Tareas Archivadas */}
+        {archivedTasks.length > 0 && (
+          <div className="pt-6 border-t">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="archived-tasks" className="border-none">
+                <AccordionTrigger className="hover:no-underline py-3 px-0">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Archive className="h-4 w-4 text-muted-foreground" />
+                    Tareas Archivadas ({archivedTasks.length})
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 pt-2">
+                    {archivedTasks.map((task) => {
+                      const config = eventConfig[task.type] || {
+                        icon: <CalendarIcon className="h-4 w-4" />,
+                        color: "text-gray-600",
+                        bgColor: "bg-gray-100",
+                      };
                       const taskDate =
                         task.date instanceof Date
                           ? task.date
@@ -873,7 +880,7 @@ function MyTasksWidget({
                       return (
                         <div
                           key={task.id}
-                          className="flex items-start gap-3 p-3 rounded-lg border bg-muted/50"
+                          className="flex items-start gap-3 p-3 rounded-xl border bg-white/20 border-white/40 backdrop-blur-sm"
                         >
                           <div
                             className={cn(
@@ -917,15 +924,11 @@ function MyTasksWidget({
                       );
                     })}
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No hay tareas archivadas
-                  </p>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        )}
       </CardContent>
 
       {/* Delete Confirmation Dialog */}
@@ -1078,39 +1081,54 @@ export default function DashboardPage() {
   }, [fetchedMyEvents]);
 
   return (
-    <div className="flex-1">
-      {/* Top Bar for Pending Proposals */}
+    <div className="flex-1 min-h-screen">
+      {/* Notifications Bar */}
       {pendingProposalsCount > 0 && (
-        <div className="bg-[#eab308] text-white py-3 px-4 md:px-6 flex items-center justify-between shadow-md">
-          <div className="flex items-center gap-3">
-            <Bell className="h-5 w-5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-sm md:text-base">
-                {pendingProposalsCount === 1
-                  ? "Hay 1 propuesta pendiente"
-                  : `Hay ${pendingProposalsCount} propuestas pendientes`}
-              </p>
-              <p className="text-xs md:text-sm opacity-90">
-                {pendingProposalsCount === 1
-                  ? "Tienes una propuesta de espectáculo que requiere tu atención para programarla."
-                  : `Tienes ${pendingProposalsCount} propuestas de espectáculo que requieren tu atención para programarlas.`}
-              </p>
+        <div className="px-6 md:px-8 pt-6 md:pt-8 pb-6">
+          <div className="bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl p-4 shadow-lg animate-fade-in">
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400/40 to-orange-400/40 backdrop-blur-sm flex items-center justify-center">
+                  <Bell className="h-5 w-5 text-amber-700" />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-gray-800 font-semibold text-base mb-1">
+                  {pendingProposalsCount === 1
+                    ? "Hay 1 propuesta pendiente"
+                    : `Hay ${pendingProposalsCount} propuestas pendientes`}
+                </h3>
+                <p className="text-gray-700 text-sm">
+                  {pendingProposalsCount === 1
+                    ? "Tienes una propuesta de espectáculo que requiere tu atención para programarla."
+                    : `Tienes ${pendingProposalsCount} propuestas de espectáculo que requieren tu atención para programarlas.`}
+                </p>
+              </div>
+
+              {/* Action Button */}
+              <div className="flex-shrink-0">
+                <Button
+                  onClick={() => router.push("/dashboard/programming")}
+                  size="sm"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg transition-all"
+                >
+                  Ver Programación
+                </Button>
+              </div>
             </div>
           </div>
-          <Button
-            onClick={() => router.push("/dashboard/programming")}
-            variant="secondary"
-            size="sm"
-            className="bg-white text-[#eab308] hover:bg-gray-100 flex-shrink-0"
-          >
-            Ver Programación
-          </Button>
         </div>
       )}
 
-      <main className="p-4 md:p-6">
+      <main className="px-6 md:px-8 py-6 space-y-8">
         {permissionError && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert
+            variant="destructive"
+            className="bg-white/40 backdrop-blur-md border-white/60 shadow-xl animate-fade-in"
+          >
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error de Permisos de Firestore</AlertTitle>
             <AlertDescription>
@@ -1135,10 +1153,21 @@ export default function DashboardPage() {
           </Alert>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <MyTasksWidget events={allEvents} member={selectedTeamUser} />
-          <TodayEventsWidget events={allEvents} />
-          <TeamProgressWidget teamMembers={teamMembers} events={allEvents} />
+        {/* Main Grid Layout */}
+        <div className="grid gap-6 lg:grid-cols-3 animate-fade-in">
+          {/* Left Column - Takes 2 columns on large screens */}
+          <div className="lg:col-span-2">
+            <MyAgendaWidget
+              events={allEvents}
+              member={selectedTeamUser}
+              teamMembers={teamMembers}
+            />
+          </div>
+
+          {/* Right Column - Team Progress */}
+          <div className="lg:col-span-1">
+            <TeamProgressWidget teamMembers={teamMembers} events={allEvents} />
+          </div>
         </div>
       </main>
     </div>

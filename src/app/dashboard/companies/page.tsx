@@ -5,7 +5,7 @@ export default function CompaniesPage() {
   return (
     <>
       <PageHeader title="Gestión de Compañías" />
-      <main className="p-4 md:px-6">
+      <main className="px-6 md:px-8 py-6">
         <CompaniesClient />
       </main>
     </>

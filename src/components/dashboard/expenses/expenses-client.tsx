@@ -86,7 +86,7 @@ function AddExpenseSheet({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button>
+        <Button className="w-full justify-start bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-soft hover:shadow-md transition-all">
           <PlusCircle className="mr-2 h-4 w-4" />
           Añadir Transacción
         </Button>
@@ -341,7 +341,10 @@ function BulkImportSheet({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline">
+        <Button
+          variant="outline"
+          className="w-full justify-start bg-white/60 backdrop-blur-sm shadow-soft hover:shadow-md transition-all border-white/60"
+        >
           <Upload className="mr-2 h-4 w-4" />
           Importación Masiva
         </Button>
@@ -567,19 +570,29 @@ export default function ExpensesClient({
   }
 
   return (
-    <div className="grid gap-6">
-      <div>
-        <div className="flex justify-end gap-2 mb-4">
-          <BulkImportSheet
-            onSave={handleSaveBulkExpenses}
-            teamMembers={teamMembers}
-          />
+    <div className="flex h-[calc(100vh-120px)] px-6 md:px-8 py-6">
+      {/* Sidebar */}
+      <aside className="w-64 pr-4 space-y-6 overflow-y-auto">
+        <div className="space-y-2">
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-3">
+            Acciones
+          </h3>
+
           <AddExpenseSheet
             onSave={handleSaveExpense}
             teamMembers={teamMembers}
           />
+
+          <BulkImportSheet
+            onSave={handleSaveBulkExpenses}
+            teamMembers={teamMembers}
+          />
         </div>
-        <div className="border rounded-lg">
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="border rounded-lg bg-white/40 backdrop-blur-md border-white/60 shadow-xl">
           <Table>
             <TableHeader>
               <TableRow>
@@ -646,7 +659,7 @@ export default function ExpensesClient({
             </TableBody>
           </Table>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
